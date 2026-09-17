@@ -87,8 +87,8 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   </div>
   <div class="section">Acciones rápidas</div>
   <div class="quick-actions">
-    <button class="quick-action" onclick="openModal('orderModal')"><span class="line-icon">▤＋</span><span>Nuevo pedido</span></button>
-    <button class="quick-action" onclick="show('production')"><span class="line-icon">◡⌁</span><span>Producción</span></button>
+    <button class="quick-action" onclick="openModal('orderModal')"><span class="line-icon">🧾</span><span>Nuevo pedido</span></button>
+    <button class="quick-action" onclick="show('production')"><span class="line-icon">🍰</span><span>Producción</span></button>
   </div>
 </section>
 
@@ -116,7 +116,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 
 <section id="stock" class="hidden">
   <div class="titleline"><b>Stock actual</b><span class="pill" id="stockPossible">Calculando…</span></div>
-  <div class="helper">El stock se actualiza automáticamente cuando registras una compra y cuando un pedido pasa a <b>Preparado</b>. La producción descuenta los ingredientes de la receta.</div>
+  <div class="helper">El stock se actualiza automáticamente cuando registras una compra y cuando un pedido pasa a <b>Preparado</b>. La  descuenta los ingredientes de la receta.</div>
   <div class="card" style="margin-top:12px" id="stockList"></div>
   <button class="btn light" onclick="show('purchase')">+ Registrar compra</button>
 </section>
@@ -144,13 +144,13 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <section id="more" class="hidden">
   <div class="titleline"><b>Más</b><span class="pill">Administración</span></div>
   <div class="more-menu">
-    <button class="more-item" onclick="show('clients')"><span class="line-icon">♙</span><span>Clientes</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('recipes')"><span class="line-icon">▧</span><span>Recetas</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('suppliers')"><span class="line-icon">▱</span><span>Proveedores</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('otherSupplies')"><span class="line-icon">□</span><span>Otros insumos</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('reports')"><span class="line-icon">▥</span><span>Reportes</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="alert('Configuración estará disponible en una próxima versión.')"><span class="line-icon">⚙</span><span>Configuración</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="alert('Ayuda estará disponible en una próxima versión.')"><span class="line-icon">?</span><span>Ayuda</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="show('clients')"><span class="line-icon">🚹</span><span>Clientes</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="show('recipes')"><span class="line-icon">🆕</span><span>Recetas</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="show('suppliers')"><span class="line-icon">🅿️</span><span>Proveedores</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="show('otherSupplies')"><span class="line-icon">🛄</span><span>Otros insumos</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="show('reports')"><span class="line-icon">📶</span><span>Reportes</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="alert('Configuración estará disponible en una próxima versión.')"><span class="line-icon">🔄️</span><span>Configuración</span><span class="chev">›</span></button>
+    <button class="more-item" onclick="alert('Ayuda estará disponible en una próxima versión.')"><span class="line-icon">ℹ️</span><span>Ayuda</span><span class="chev">›</span></button>
   </div>
   <div class="more-sticker">
     <img src="maida-notebook-sticker.png" alt="Maida con recetas">
@@ -221,7 +221,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 
 <div id="productionModal" class="modal hidden" onclick="closeModal(event,'productionModal')">
  <div class="sheet" onclick="event.stopPropagation()">
-  <div class="titleline"><b>Registrar producción</b><button class="btn small light" onclick="closeModal(null,'productionModal')">Cerrar</button></div>
+  <div class="titleline"><b>Registrar </b><button class="btn small light" onclick="closeModal(null,'productionModal')">Cerrar</button></div>
   <div class="helper">Al marcar el pedido como preparado, se descontarán automáticamente los ingredientes y otros insumos definidos en la receta.</div>
   <div id="productionOrderInfo" class="card" style="margin:12px 0"></div>
   <div id="productionNeeds"></div>
