@@ -53,8 +53,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .more-item{width:100%;display:flex;align-items:center;gap:12px;padding:15px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .more-item:last-child{border-bottom:0}
 .more-item .line-icon{width:24px;text-align:center;font-size:21px;color:var(--accent);font-weight:500}
-.more-item .chev{margin-left:auto;color:var(--muted);font-size:20px}
-  .more-icon{
+.more-item .more-icon{
   width:44px;
   height:44px;
   display:flex;
@@ -64,13 +63,17 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   color:var(--accent);
   flex-shrink:0;
 }
-
-.more-icon svg{
+.more-item .more-icon svg{
   width:25px;
   height:25px;
   display:block;
+  fill:none;
   stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
+.more-item .chev{margin-left:auto;color:var(--muted);font-size:20px;line-height:1}
 
 .clientes-icon{background:#f8dfe2}
 .proveedores-icon{background:#f3e6d7}
@@ -110,7 +113,8 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .confirm-actions{display:grid;gap:8px}
 .confirm-actions .btn{margin-top:0}
 .add-row-btn{margin:8px 0 4px;width:100%}
-.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 105px 38px;gap:8px;align-items:center;margin:7px 0}
+.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 105px 44px 38px;gap:8px;align-items:center;margin:7px 0}
+.recipe-line.supply-line{grid-template-columns:minmax(0,1fr) 105px 38px}
 .recipe-unit{min-width:44px;padding:12px 8px;color:var(--muted);font-size:14px;font-weight:700;text-align:center;background:#f7eeee;border:1px solid var(--line);border-radius:14px;align-self:center;}
 
 .recipe-line select,.recipe-line input{margin:0;width:100%}
@@ -329,7 +333,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 
 </div>
   <div class="more-sticker">
-    <img src="assets/maida-notebook.png" alt="Maida con recetas">
+    <img src="maida-notebook-sticker.png" alt="Maida con recetas">
   </div>
 </section>
 
@@ -578,7 +582,12 @@ function show(id,btn){
   const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4};
   const activeBtn=btn||document.querySelectorAll('.nav button')[navMap[id]];if(activeBtn)activeBtn.classList.add('active');
   const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Actualiza tu inventario'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad']};
-  if(titles[id]){document.getElementById('pageTitle').textContent=titles[id][0];document.getElementById('pageSub').textContent=titles[id][1]}
+  if(titles[id]){
+    const pageTitle=document.getElementById('pageTitle');
+    const pageSub=document.getElementById('pageSub');
+    if(pageTitle)pageTitle.textContent=titles[id][0];
+    if(pageSub)pageSub.textContent=titles[id][1];
+  }
   if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();refreshPurchaseOptions()}if(id==='home')renderHome()
 }
 function monthKey(d){const m=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return m[d.getMonth()]}
@@ -623,7 +632,7 @@ function renderProduction(){
 function setProductionTab(tab){localStorage.setItem('maidas-production-tab',tab);applyProductionTab()}
 function applyProductionTab(){const tab=localStorage.getItem('maidas-production-tab')||'toMake',a=document.getElementById('productionPending'),b=document.getElementById('productionReady');if(!a||!b)return;a.classList.toggle('hidden',tab!=='toMake');b.classList.toggle('hidden',tab!=='ready');document.getElementById('tabToMake').classList.toggle('active',tab==='toMake');document.getElementById('tabReady').classList.toggle('active',tab==='ready')}
 function getRecipe(product){return db.recipes.find(r=>r.name===product)||null}
-function openProduction(id){const o=db.orders.find(x=>x.id===id),r=getRecipe(o?.product);if(!o||o.status!=='Preparación'||!r){alert('No se encontró la receta de este producto.');return}document.getElementById('productionOrder').value=id;document.getElementById('productionQty').value=o.qty;document.getElementById('productionOrderInfo').innerHTML='<b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+' · '+o.qty+' × '+esc(o.product)+'</div>';const items=[...Object.entries(r.ingredients||{}).map(([n,g])=>({type:'ingredient',name:n,qty:Number(g)*o.qty,unit:'g'})),...Object.entries(r.supplies||{}).map(([n,g])=>({type:'supply',name:n,qty:Number(g)*o.qty,unit:(db.otherSupplies.find(s=>s.name===n)||{}).unit||'un'}))];document.getElementById('productionNeeds').innerHTML='<div class="section" style="margin-top:0">Necesitas</div>'+items.map(i=>'<div class="row"><span>'+esc(i.name)+'</span><b>'+i.qty+' '+esc(i.unit)+'</b></div>').join('');updateProductionCheck();openModal('productionModal')}
+function openProduction(id){const o=db.orders.find(x=>x.id===id),r=getRecipe(o?.product);if(!o||o.status!=='Preparación'||!r){alert('No se encontró la receta de este producto.');return}document.getElementById('productionOrder').value=id;document.getElementById('productionQty').value=o.qty;document.getElementById('productionOrderInfo').innerHTML='<b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+' · '+o.qty+' × '+esc(o.product)+'</div>';const items=[...Object.entries(r.ingredients||{}).map(([n,g])=>({type:'ingredient',name:n,qty:Number(g)*o.qty,unit:(db.ingredientUnits&&db.ingredientUnits[n])||'g'})),...Object.entries(r.supplies||{}).map(([n,g])=>({type:'supply',name:n,qty:Number(g)*o.qty,unit:(db.otherSupplies.find(s=>s.name===n)||{}).unit||'un'}))];document.getElementById('productionNeeds').innerHTML='<div class="section" style="margin-top:0">Necesitas</div>'+items.map(i=>'<div class="row"><span>'+esc(i.name)+'</span><b>'+i.qty+' '+esc(i.unit)+'</b></div>').join('');updateProductionCheck();openModal('productionModal')}
 function updateProductionCheck(){const id=document.getElementById('productionOrder').value,o=db.orders.find(x=>x.id===id),r=o&&getRecipe(o.product);if(!o||!r)return;const lacking=[];Object.entries(r.ingredients||{}).forEach(([ing,g])=>{const need=Number(g)*o.qty,avail=Number(db.inventory[ing]||0);if(avail<need)lacking.push(ing+' (faltan '+(need-avail).toLocaleString('es-CL')+' g)')});Object.entries(r.supplies||{}).forEach(([name,g])=>{const need=Number(g)*o.qty,avail=Number(db.otherInventory[name]||0),unit=(db.otherSupplies.find(s=>s.name===name)||{}).unit||'un';if(avail<need)lacking.push(name+' (faltan '+(need-avail).toLocaleString('es-CL')+' '+unit+')')});const el=document.getElementById('productionStockCheck'),btn=document.getElementById('saveProductionBtn');if(lacking.length){el.innerHTML='⚠️ <b>Stock insuficiente:</b> '+lacking.map(esc).join(', ');el.style.color='var(--red)';btn.disabled=true;btn.style.opacity='.55';btn.style.cursor='not-allowed'}else{el.innerHTML='✓ Hay stock suficiente para registrar esta producción.';el.style.color='var(--green)';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'}}
 function saveProduction(){const id=document.getElementById('productionOrder').value,o=db.orders.find(x=>x.id===id),r=o&&getRecipe(o.product);if(!o||o.status!=='Preparación'||!r)return;const lacking=[];Object.entries(r.ingredients||{}).forEach(([ing,g])=>{const need=Number(g)*o.qty,avail=Number(db.inventory[ing]||0);if(avail<need)lacking.push(ing)});Object.entries(r.supplies||{}).forEach(([name,g])=>{const need=Number(g)*o.qty,avail=Number(db.otherInventory[name]||0);if(avail<need)lacking.push(name)});if(lacking.length){alert('No hay stock suficiente para preparar este pedido.');return}Object.entries(r.ingredients||{}).forEach(([ing,g])=>{db.inventory[ing]=(db.inventory[ing]||0)-Number(g)*o.qty});Object.entries(r.supplies||{}).forEach(([name,g])=>{db.otherInventory[name]=(db.otherInventory[name]||0)-Number(g)*o.qty});o.status='Preparado';o.preparedAt=new Date().toISOString();o.stockApplied=true;db.movements.push({id:Date.now(),type:'production',orderId:o.id,date:new Date().toISOString(),product:o.product,qty:o.qty,ingredients:r.ingredients||{},supplies:r.supplies||{}});persist();closeModal(null,'productionModal');renderOrders()}
 function markDelivered(id){const o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparado')return;o.status='Entregado';o.deliveredAt=new Date().toISOString();persist();renderOrders()}
@@ -655,7 +664,7 @@ function renderPurchaseSuppliers(){const s=document.getElementById('purchaseSupp
 function refreshPurchaseOptions(){const type=document.getElementById('purchaseType')?.value||'ingredient',sel=document.getElementById('purchaseItem');if(!sel)return;if(type==='ingredient'){sel.innerHTML='<option value="">Selecciona ingrediente</option>'+Object.keys(INGREDIENTS).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')}else{sel.innerHTML='<option value="">Selecciona otro insumo</option>'+db.otherSupplies.map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+'</option>').join('')}}
 function registerPurchase(){const type=document.getElementById('purchaseType').value,item=document.getElementById('purchaseItem').value,supplier=document.getElementById('purchaseSupplier').value,qty=Math.max(0,Number(document.getElementById('purchaseQty').value)||0),cost=parseMoney(document.getElementById('purchaseCost').value);if(!item||!supplier||!qty||!cost){alert('Completa todos los campos para registrar la compra.');return}if(type==='ingredient')db.inventory[item]=(db.inventory[item]||0)+qty;else db.otherInventory[item]=(db.otherInventory[item]||0)+qty;db.movements.push({id:Date.now(),type:'purchase',date:new Date().toISOString(),category:type,item,quantity:qty,cost,supplier});persist();document.getElementById('purchaseQty').value='';document.getElementById('purchaseCost').value='';document.getElementById('purchaseSupplier').selectedIndex=0;refreshPurchaseOptions();renderStock();showFeedback('¡Compra registrada!','El stock ha sido actualizado correctamente.','assets/Compra registrada.png','Ver stock',()=>{closeFeedback();show('stock')},'Registrar otra',()=>{closeFeedback();show('purchase')})}
   // RECETAS
-function renderRecipes(){const el=document.getElementById('recipeList');if(!el)return;el.innerHTML=db.recipes.map(r=>{const ingredientCost=Object.entries(r.ingredients||{}).reduce((sum,[i,g])=>sum+(Number(g)||0),0);return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')">✎ Editar</button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+g+' g').join(' · ')+'</div>'+((r.supplies&&Object.keys(r.supplies).length)?'<div class="muted" style="margin-top:5px">Otros insumos: '+Object.entries(r.supplies).map(([i,g])=>esc(i)+' '+g).join(' · ')+'</div>':'')+'</div>'}).join('')}
+function renderRecipes(){const el=document.getElementById('recipeList');if(!el)return;el.innerHTML=db.recipes.map(r=>{const ingredientCost=Object.entries(r.ingredients||{}).reduce((sum,[i,g])=>sum+(Number(g)||0),0);return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')">✎ Editar</button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+g+' '+esc((db.ingredientUnits&&db.ingredientUnits[i])||'g')).join(' · ')+'</div>'+((r.supplies&&Object.keys(r.supplies).length)?'<div class="muted" style="margin-top:5px">Otros insumos: '+Object.entries(r.supplies).map(([i,g])=>esc(i)+' '+g).join(' · ')+'</div>':'')+'</div>'}).join('')}
 function openRecipeModal(id){
   const r=id?db.recipes.find(x=>x.id===id):{id:'',name:'',salePrice:'',labor:0,ingredients:{},supplies:{}};
   document.getElementById('recipeId').value=r.id;
@@ -686,7 +695,7 @@ function updateRecipeIngredientUnit(select){
 function addRecipeSupplyRow(selected='',qty=''){
   const wrap=document.getElementById('recipeSupplyFields');
   if(!db.otherSupplies.length){showFeedback('Sin otros insumos','Primero crea un otro insumo en Más → Otros insumos.','assets/Compra registrada.png','Ver otros insumos',()=>{closeFeedback();show('otherSupplies')},'Cerrar',()=>closeFeedback());return}
-  const row=document.createElement('div'); row.className='recipe-line';
+  const row=document.createElement('div'); row.className='recipe-line supply-line';
   const options=db.otherSupplies.map(s=>'<option value="'+esc(s.name)+'" '+(s.name===selected?'selected':'')+'>'+esc(s.name)+'</option>').join('');
   row.innerHTML='<select data-recipe-supply-name>'+options+'</select><input data-recipe-supply-qty type="number" min="0" placeholder="Cantidad" value="'+(qty||'')+'"><button type="button" class="icon-btn" onclick="this.parentElement.remove()">×</button>';
   wrap.appendChild(row);
