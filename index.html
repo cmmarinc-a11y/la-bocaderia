@@ -73,20 +73,37 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   stroke-linecap:round;
   stroke-linejoin:round;
 }
+.more-item .more-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:2px;
+}
+.more-item .more-label{
+  display:block;
+  font-size:16px;
+  line-height:1.2;
+  font-weight:500;
+}
+.more-item .more-desc{
+  display:block;
+  font-size:13px;
+  line-height:1.25;
+  color:var(--muted);
+}
 .more-item .chev{margin-left:auto;color:var(--muted);font-size:20px;line-height:1}
 
-.clientes-icon{background:#f8dfe2}
-.proveedores-icon{background:#f3e6d7}
-.recetas-icon{background:#f9dfe3}
-
-.ingredientes-icon{
-  background:#dff0e9;
-  color:#4f8a6d;
-}
-
-.insumos-icon{
-  background:#f6ead5;
-  color:#7d5b35;
+.clientes-icon,
+.proveedores-icon,
+.recetas-icon,
+.ingredientes-icon,
+.insumos-icon,
+.reportes-icon,
+.configuracion-icon,
+.ayuda-icon{
+  background:#f8dfe2;
+  color:var(--accent);
 }
 
 .reportes-icon{
@@ -220,7 +237,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Clientes</span>
-      <span class="more-desc">Gestiona tu lista de clientes</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -236,7 +253,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Proveedores</span>
-      <span class="more-desc">Ingredientes, insumos y más</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -252,7 +269,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Recetas</span>
-      <span class="more-desc">Crea y edita tus recetas</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -266,7 +283,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Ingredientes</span>
-      <span class="more-desc">Stock y unidades de medida</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -281,7 +298,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Otros insumos</span>
-      <span class="more-desc">Packaging, decoración, etc.</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -297,7 +314,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Reportes</span>
-      <span class="more-desc">Revisa tu información</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -311,7 +328,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Configuración</span>
-      <span class="more-desc">Ajustes de la aplicación</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
@@ -326,7 +343,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     </span>
     <span class="more-copy">
       <span class="more-label">Ayuda</span>
-      <span class="more-desc">Preguntas frecuentes</span>
+      
     </span>
     <span class="chev">›</span>
   </button>
