@@ -192,6 +192,32 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   stroke-linejoin:round;
 }
 
+
+.report-product-card{margin-bottom:12px}
+.report-product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.report-product-stat{background:#faf2f2;border-radius:11px;padding:9px}
+.report-product-stat b{display:block;color:var(--muted);font-size:11px;font-weight:700}
+.report-product-stat span{display:block;color:var(--ink);font-size:13px;font-weight:800;margin-top:3px}
+
+
+.report-period{
+  width:auto;
+  min-width:96px;
+  max-width:120px;
+  border:0;
+  background:#f3e6e0;
+  color:var(--accent);
+  border-radius:18px;
+  padding:7px 10px;
+  font:inherit;
+  font-size:12px;
+  font-weight:800;
+  outline:none;
+  cursor:pointer;
+  appearance:auto;
+  margin-left:10px;
+}
+
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -491,17 +517,58 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <!-- REPORTES -->
 <section id="reports" class="hidden">
   <button class="back-btn" onclick="show('more')">← Volver</button>
-  <div class="titleline"><b>Reportes</b><span class="pill">Este mes</span></div>
-  <div class="kpi">
-    <div class="card"><div class="muted">Ventas</div><div class="big">$75.000</div></div>
-    <div class="card"><div class="muted">Ganancia</div><div class="big">$46.377</div></div>
+  <div class="titleline">
+    <b>Reportes</b>
+    <select class="report-period" id="reportPeriod">
+      <option>Este mes</option>
+      <option>Esta semana</option>
+      <option>Todo el período</option>
+    </select>
   </div>
+
+  <div class="kpi">
+    <div class="card">
+      <div class="muted">Ventas</div>
+      <div class="big">$75.000</div>
+    </div>
+    <div class="card">
+      <div class="muted">Ganancia</div>
+      <div class="big">$46.377</div>
+    </div>
+  </div>
+
   <div class="section">Resumen</div>
   <div class="card">
     <div class="statline"><span>Pedidos entregados</span><b>3</b></div>
-    <div class="statline"><span>Cheesecakes producidos</span><b>3</b></div>
+    <div class="statline"><span>Productos producidos</span><b>3</b></div>
     <div class="statline"><span>Costo promedio</span><b>$9.541</b></div>
     <div class="statline"><span>Margen promedio</span><b>61,8%</b></div>
+  </div>
+
+  <div class="section">🧁 Rentabilidad por producto</div>
+  <div class="card report-product-card">
+    <div class="titleline" style="margin-bottom:8px">
+      <div>
+        <b>Cheesecake Frambuesa</b>
+        <div class="muted">3 vendidos</div>
+      </div>
+      <b style="color:var(--accent)">61,8%</b>
+    </div>
+
+    <div class="report-product-grid">
+      <div class="report-product-stat">
+        <b>Ventas</b>
+        <span>$75.000</span>
+      </div>
+      <div class="report-product-stat">
+        <b>Costo</b>
+        <span>$28.623</span>
+      </div>
+      <div class="report-product-stat">
+        <b>Margen</b>
+        <span>$46.377</span>
+      </div>
+    </div>
   </div>
 </section>
 
