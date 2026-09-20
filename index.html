@@ -158,16 +158,131 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <!-- MÁS / ADMINISTRACIÓN -->
 <section id="more" class="hidden">
   <div class="titleline"><b>Más</b><span class="pill">Administración</span></div>
-  <div class="more-menu">
-    <button class="more-item" onclick="show('clients')"><span class="line-icon">♙</span><span>Clientes</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('suppliers')"><span class="line-icon">⌂</span><span>Proveedores</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('recipes')"><span class="line-icon">◇</span><span>Recetas</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('ingredients')"><span class="line-icon">◌</span><span>Ingredientes</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('otherSupplies')"><span class="line-icon">□</span><span>Otros insumos</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="show('reports')"><span class="line-icon">▤</span><span>Reportes</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="alert('Configuración estará disponible en una próxima versión.')"><span class="line-icon">⚙</span><span>Configuración</span><span class="chev">›</span></button>
-    <button class="more-item" onclick="alert('Ayuda estará disponible en una próxima versión.')"><span class="line-icon">i</span><span>Ayuda</span><span class="chev">›</span></button>
-  </div>
+ <div class="more-menu">
+
+  <button class="more-item" onclick="show('clients')">
+    <span class="more-icon clientes-icon">
+      <svg viewBox="0 0 24 24">
+        <circle cx="9" cy="8" r="3"/>
+        <circle cx="17" cy="9" r="2.3"/>
+        <path d="M3.5 19c.5-3.2 2.4-4.8 5.5-4.8s5 1.6 5.5 4.8"/>
+        <path d="M14.5 15.2c2.6-.3 4.5 1.1 5 3.8"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Clientes</span>
+      <span class="more-desc">Gestiona tu lista de clientes</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="show('suppliers')">
+    <span class="more-icon proveedores-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 7h11v10H3z"/>
+        <path d="M14 10h4l3 3v4h-7z"/>
+        <circle cx="7" cy="18" r="2"/>
+        <circle cx="18" cy="18" r="2"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Proveedores</span>
+      <span class="more-desc">Ingredientes, insumos y más</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="show('recipes')">
+    <span class="more-icon recetas-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 10h14"/>
+        <path d="M6 10c.5-3.7 2.6-6 6-6s5.5 2.3 6 6"/>
+        <path d="M4 10h16l-1.5 9h-13z"/>
+        <path d="M9 14h6"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Recetas</span>
+      <span class="more-desc">Crea y edita tus recetas</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="show('ingredients')">
+    <span class="more-icon ingredientes-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M19 4C11 4 5 8 5 15c0 3 1.8 5 4.5 5C15 20 19 13 19 4z"/>
+        <path d="M5 19c2-3 5-5.5 9-7.5"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Ingredientes</span>
+      <span class="more-desc">Stock y unidades de medida</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="show('otherSupplies')">
+    <span class="more-icon insumos-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 8l8-4 8 4-8 4z"/>
+        <path d="M4 8v9l8 4 8-4V8"/>
+        <path d="M12 12v9"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Otros insumos</span>
+      <span class="more-desc">Packaging, decoración, etc.</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="show('reports')">
+    <span class="more-icon reportes-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 19V10"/>
+        <path d="M12 19V5"/>
+        <path d="M19 19v-7"/>
+        <path d="M3 19h18"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Reportes</span>
+      <span class="more-desc">Revisa tu información</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="alert('Configuración estará disponible en una próxima versión.')">
+    <span class="more-icon configuracion-icon">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.3 3h-4.6l-.3 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.3 2.6h4.6l.3-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Configuración</span>
+      <span class="more-desc">Ajustes de la aplicación</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="alert('Ayuda estará disponible en una próxima versión.')">
+    <span class="more-icon ayuda-icon">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5"/>
+        <path d="M9.7 9a2.4 2.4 0 1 1 4.5 1.2c-.7 1-2.2 1.2-2.2 2.7"/>
+        <circle cx="12" cy="16.8" r=".7"/>
+      </svg>
+    </span>
+    <span class="more-copy">
+      <span class="more-label">Ayuda</span>
+      <span class="more-desc">Preguntas frecuentes</span>
+    </span>
+    <span class="chev">›</span>
+  </button>
+
+</div>
   <div class="more-sticker">
     <img src="assets/maida-notebook.png" alt="Maida con recetas">
   </div>
