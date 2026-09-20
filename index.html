@@ -138,6 +138,60 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .feedback-cat{font-size:92px;line-height:1;display:flex;align-items:center;justify-content:center;width:145px;height:120px;margin:-2px auto 0}
 .feedback-cat span{display:block;filter:drop-shadow(0 5px 4px rgba(73,54,40,.10))}
 
+
+/* AYUDA */
+.help-intro{margin:4px 0 14px;color:var(--muted);line-height:1.45}
+.help-grid{display:grid;gap:10px}
+.help-card{display:flex;align-items:center;gap:13px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow)}
+.help-card-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#f8dfe2;color:var(--accent);flex-shrink:0}
+.help-card-icon svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.help-card b{display:block;margin-bottom:3px}
+.help-card span{display:block;color:var(--muted);font-size:13px;line-height:1.35}
+.help-card{position:relative;width:100%;text-align:left;cursor:pointer;font:inherit}
+.help-card-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex:0 0 44px}
+.help-card-icon svg{width:25px;height:25px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.help-copy{min-width:0;flex:1}
+.help-chevron{color:var(--muted)!important;font-size:22px!important;line-height:1!important;margin-left:auto}
+.help-topic-title{margin:0 0 5px;font-size:20px;color:var(--ink)}
+.help-topic-intro{margin:0 0 14px;color:var(--muted);line-height:1.45}
+.help-topic-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-top:10px}
+.help-topic-card > b{display:block;margin-bottom:6px}
+.help-topic-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.help-steps{margin:0;padding-left:22px;color:var(--muted);font-size:13px;line-height:1.6}
+.help-steps li{margin:4px 0}
+.help-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.help-flow span{background:#f8dfe2;color:var(--accent);border-radius:10px;padding:7px 9px;font-size:11px;font-weight:800}
+.help-flow i{font-style:normal;color:var(--muted)}
+
+
+.help-card-icon{
+  width:44px;
+  height:44px;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 44px;
+  border-radius:50%;
+  background:#f8dfe2;
+  color:var(--accent);
+  overflow:hidden;
+}
+.help-card-icon svg{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:24px;
+  height:24px;
+  display:block;
+  transform:translate(-50%,-50%);
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -333,7 +387,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <span class="chev">›</span>
   </button>
 
-  <button class="more-item" onclick="alert('Ayuda estará disponible en una próxima versión.')">
+  <button class="more-item" onclick="show('help')">
     <span class="more-icon ayuda-icon">
       <svg viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="8.5"/>
@@ -351,6 +405,55 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 </div>
   <div class="more-sticker">
     <img src="maida-notebook-sticker.png" alt="Maida con recetas">
+  </div>
+</section>
+
+
+  <!-- AYUDA -->
+<section id="help" class="hidden">
+  <button class="back-btn" onclick="show('more')">← Volver</button>
+  <div class="titleline"><b>Ayuda</b></div>
+  <div id="helpHome">
+    <div class="help-intro">Todo lo que necesitas para entender y usar La Bocadería.</div>
+
+    <div class="help-grid">
+      <button class="help-card" onclick="openHelpTopic('how')">
+        <span class="help-card-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg>
+        </span>
+        <span class="help-copy"><b>Cómo funciona</b><span>Conoce el flujo de La Bocadería.</span></span>
+        <span class="help-chevron">›</span>
+      </button>
+
+      <button class="help-card" onclick="openHelpTopic('recipes')">
+        <span class="help-card-icon">
+          <svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+        </span>
+        <span class="help-copy"><b>Recetas e ingredientes</b><span>Aprende a crear y administrar tus recetas.</span></span>
+        <span class="help-chevron">›</span>
+      </button>
+
+      <button class="help-card" onclick="openHelpTopic('orders')">
+        <span class="help-card-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"/><path d="M8 7V4h8v3M8 12h8M8 16h5"/></svg>
+        </span>
+        <span class="help-copy"><b>Pedidos y producción</b><span>Cómo llevar un pedido desde que entra hasta que se entrega.</span></span>
+        <span class="help-chevron">›</span>
+      </button>
+
+      <button class="help-card" onclick="openHelpTopic('stock')">
+        <span class="help-card-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4-8 4-8-4Z"/><path d="M4 8v8l8 4 8-4V8M12 12v8"/></svg>
+        </span>
+        <span class="help-copy"><b>Stock y compras</b><span>Cómo funcionan las entradas, salidas y capacidad de producción.</span></span>
+        <span class="help-chevron">›</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="helpTopic" class="hidden">
+    <button class="back-btn" onclick="closeHelpTopic()">← Volver a Ayuda</button>
+    <div id="helpTopicContent"></div>
   </div>
 </section>
 
@@ -596,9 +699,9 @@ function show(id,btn){
   const section=document.getElementById(id);if(section)section.classList.remove('hidden');
   document.getElementById('app').classList.toggle('home-active',id==='home');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4};
+  const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4,help:4};
   const activeBtn=btn||document.querySelectorAll('.nav button')[navMap[id]];if(activeBtn)activeBtn.classList.add('active');
-  const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Actualiza tu inventario'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad']};
+  const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Actualiza tu inventario'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad'],help:['Ayuda','Cómo usar La Bocadería']};
   if(titles[id]){
     const pageTitle=document.getElementById('pageTitle');
     const pageSub=document.getElementById('pageSub');
@@ -607,6 +710,131 @@ function show(id,btn){
   }
   if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();refreshPurchaseOptions()}if(id==='home')renderHome()
 }
+
+function openHelpTopic(topic){
+  const home=document.getElementById('helpHome');
+  const detail=document.getElementById('helpTopic');
+  const content=document.getElementById('helpTopicContent');
+  if(!home||!detail||!content)return;
+
+  const topics={
+    how:{
+      title:'Cómo funciona',
+      intro:'La Bocadería está organizada para que puedas llevar tu negocio desde los insumos hasta la entrega de cada pedido.',
+      body:`
+        <div class="help-topic-card">
+          <b>El flujo general</b>
+          <p>La información se conecta entre las distintas áreas de la aplicación:</p>
+          <div class="help-flow">
+            <span>Insumos</span><i>→</i><span>Recetas</span><i>→</i><span>Pedidos</span><i>→</i><span>Producción</span><i>→</i><span>Stock</span>
+          </div>
+        </div>
+        <div class="help-topic-card">
+          <b>¿Por dónde empezar?</b>
+          <ol class="help-steps">
+            <li>Crea tus <b>ingredientes</b> y define su unidad.</li>
+            <li>Registra tus <b>otros insumos</b> si corresponde.</li>
+            <li>Crea las <b>recetas</b> de tus productos.</li>
+            <li>Registra tus <b>proveedores</b> y compras para mantener el stock actualizado.</li>
+            <li>Crea los <b>pedidos</b> de tus clientes y sigue su avance desde Producción.</li>
+          </ol>
+        </div>
+      `
+    },
+    recipes:{
+      title:'Recetas e ingredientes',
+      intro:'Las recetas definen qué necesitas para preparar cada producto y permiten que La Bocadería calcule el consumo de stock.',
+      body:`
+        <div class="help-topic-card">
+          <b>Ingredientes</b>
+          <p>Los ingredientes forman parte de un catálogo común. Un mismo ingrediente puede utilizarse en varias recetas y comparte el mismo stock.</p>
+        </div>
+        <div class="help-topic-card">
+          <b>Crear una receta</b>
+          <ol class="help-steps">
+            <li>En <b>Más → Recetas</b>, selecciona <b>+ Nueva</b>.</li>
+            <li>Ingresa el nombre del producto y sus datos de venta.</li>
+            <li>Agrega los ingredientes y sus cantidades.</li>
+            <li>Agrega otros insumos cuando sean necesarios.</li>
+            <li>Guarda la receta.</li>
+          </ol>
+        </div>
+        <div class="help-topic-card">
+          <b>¿Qué pasa al preparar?</b>
+          <p>Cuando un pedido pasa a <b>Preparado</b>, se descuentan automáticamente del stock los ingredientes y otros insumos definidos en su receta.</p>
+        </div>
+      `
+    },
+    orders:{
+      title:'Pedidos y producción',
+      intro:'Cada pedido sigue un flujo claro para que sepas qué está pendiente, qué estás preparando y qué ya está listo.',
+      body:`
+        <div class="help-topic-card">
+          <b>Estados de un pedido</b>
+          <div class="help-flow">
+            <span>Solicitado</span><i>→</i><span>Preparación</span><i>→</i><span>Preparado</span><i>→</i><span>Entregado</span>
+          </div>
+        </div>
+        <div class="help-topic-card">
+          <b>Cómo avanzar un pedido</b>
+          <ol class="help-steps">
+            <li>Crea el pedido desde <b>Pedidos</b> o <b>Nuevo pedido</b>.</li>
+            <li>Mientras esté <b>Solicitado</b>, puedes corregir o eliminar un pedido de creación.</li>
+            <li>Cuando pase a <b>Preparación</b>, su avance se gestiona desde <b>Producción</b>.</li>
+            <li>Al marcarlo como <b>Preparado</b>, se descuenta el stock de la receta.</li>
+            <li>Vuelve a <b>Pedidos</b> para marcarlo como <b>Entregado</b>.</li>
+          </ol>
+        </div>
+        <div class="help-topic-card">
+          <b>Si falta stock</b>
+          <p>Producción muestra los ingredientes o insumos que faltan y la cantidad necesaria para poder preparar el pedido.</p>
+        </div>
+      `
+    },
+    stock:{
+      title:'Stock y compras',
+      intro:'El stock refleja lo que tienes disponible y se actualiza a partir de tus compras y de la producción.',
+      body:`
+        <div class="help-topic-card">
+          <b>Entrada de stock</b>
+          <p>Cuando registras una compra, la cantidad ingresada aumenta el stock del ingrediente o de los otros insumos correspondientes.</p>
+        </div>
+        <div class="help-topic-card">
+          <b>Salida de stock</b>
+          <p>Cuando un pedido pasa a <b>Preparado</b>, se descuentan automáticamente los ingredientes y otros insumos definidos en la receta.</p>
+        </div>
+        <div class="help-topic-card">
+          <b>Capacidad de producción</b>
+          <p>La aplicación utiliza el stock disponible para estimar cuántas unidades puedes producir según las recetas.</p>
+        </div>
+        <div class="help-topic-card">
+          <b>Compras</b>
+          <ol class="help-steps">
+            <li>Selecciona el ingrediente o insumo.</li>
+            <li>Selecciona el proveedor.</li>
+            <li>Ingresa la cantidad comprada.</li>
+            <li>Ingresa el total pagado.</li>
+            <li>Registra la compra para actualizar el stock.</li>
+          </ol>
+        </div>
+      `
+    }
+  };
+
+  const data=topics[topic];
+  if(!data)return;
+  content.innerHTML='<div class="help-topic-title">'+data.title+'</div><div class="help-topic-intro">'+data.intro+'</div>'+data.body;
+  home.classList.add('hidden');
+  detail.classList.remove('hidden');
+}
+
+function closeHelpTopic(){
+  const home=document.getElementById('helpHome');
+  const detail=document.getElementById('helpTopic');
+  if(home)home.classList.remove('hidden');
+  if(detail)detail.classList.add('hidden');
+}
+
 function monthKey(d){const m=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return m[d.getMonth()]}
   // PEDIDOS
 function saveOrder(){
