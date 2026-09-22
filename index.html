@@ -35,7 +35,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .recipe-table{width:100%;border-collapse:collapse;font-size:13px}.recipe-table th{text-align:left;color:var(--muted);font-weight:700}.recipe-table td,.recipe-table th{padding:9px 4px;border-bottom:1px solid var(--line)}
 .total{font-size:18px;font-weight:800}.margin{font-size:30px;font-weight:900;color:var(--green)}
 
-.order-item-head{display:grid;grid-template-columns:minmax(0,1fr) 58px 96px 32px;gap:6px;margin:-2px 0 3px;padding:0 3px;color:var(--muted);font-size:10px;font-weight:700}.order-item-line{display:grid;grid-template-columns:minmax(0,1fr) 58px 96px 32px;gap:6px;align-items:center;margin:7px 0}.order-item-line select,.order-item-line input{margin:0;height:42px;padding:8px 9px;font-size:13px}.order-item-line select{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.order-item-price{font-size:13px;color:var(--ink);text-align:right}.order-item-line .order-item-unit-price{width:100%;text-align:right}.order-item-line .icon-btn{width:32px;height:36px;padding:0}.trash-icon{display:inline-flex;align-items:center;justify-content:center}.trash-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.order-total-box{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px;padding:13px 14px;border-radius:14px;background:#f7eeee;font-weight:800}.calc-value{padding:13px;border:1px solid var(--line);border-radius:12px;background:#f7eeee;margin:6px 0 12px;font-weight:800}.recipe-cost-summary{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f7eeee}.recipe-cost-summary>div{display:flex;justify-content:space-between;padding:6px 0}.recipe-cost-summary b{font-size:15px}.recipe-cost-summary .margin-value{color:var(--green)}
+.order-item-head{display:grid;grid-template-columns:minmax(0,1.55fr) 54px 86px 32px;gap:6px;margin:-2px 0 3px;padding:0 3px;color:var(--muted);font-size:10px;font-weight:700}.order-item-line{display:grid;grid-template-columns:minmax(0,1.55fr) 54px 86px 32px;gap:6px;align-items:center;margin:7px 0}.order-item-line select,.order-item-line input{margin:0;height:40px;padding:7px 8px;font-size:12px}.order-item-line select{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.order-item-price{font-size:13px;color:var(--ink);text-align:right}.order-item-line .order-item-unit-price{width:100%;text-align:right}.order-item-line .icon-btn{width:32px;height:36px;padding:0}.trash-icon{display:inline-flex;align-items:center;justify-content:center}.trash-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.order-total-box{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px;padding:13px 14px;border-radius:14px;background:#f7eeee;font-weight:800}.calc-value{padding:13px;border:1px solid var(--line);border-radius:12px;background:#f7eeee;margin:6px 0 12px;font-weight:800}.recipe-cost-summary{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f7eeee}.recipe-cost-summary>div{display:flex;justify-content:space-between;padding:6px 0}.recipe-cost-summary b{font-size:15px}.recipe-cost-summary .margin-value{color:var(--green)}
 .modal{position:fixed;inset:0;background:rgba(61,52,45,.28);display:flex;align-items:flex-end;z-index:20}
 .modal.hidden{display:none}.sheet{background:var(--card);width:min(430px,100%);border-radius:26px 26px 0 0;padding:20px;max-height:90vh;overflow:auto}
 .statline{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -133,7 +133,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .add-row-btn{margin:8px 0 4px;width:100%}
 .recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 105px 44px 38px;gap:8px;align-items:center;margin:7px 0}
 .recipe-line.supply-line{grid-template-columns:minmax(0,1fr) 105px 44px 38px}
-.recipe-line .recipe-unit{display:flex;align-items:center;justify-content:center;height:44px;color:var(--muted);font-weight:700;font-size:13px}.recipe-line .trash-btn{height:40px;width:36px;padding:0}.recipe-line .trash-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.recipe-line .recipe-unit{display:flex;align-items:center;justify-content:flex-start;height:44px;color:var(--muted);font-weight:700;font-size:13px;padding-left:2px}.recipe-line .trash-btn{height:40px;width:36px;padding:0}.recipe-line .trash-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .recipe-unit{min-width:44px;padding:12px 8px;color:var(--muted);font-size:14px;font-weight:700;text-align:center;background:#f7eeee;border:1px solid var(--line);border-radius:14px;align-self:center;}
 
 .recipe-line select,.recipe-line input{margin:0;width:100%}
@@ -221,7 +221,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 }
 
 
-.purchase-line{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:10px;margin:12px 0;padding:14px 52px 14px 12px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:11px 10px;font-size:14px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-unit-hint{display:block;margin:4px 2px 0;font-size:10px;color:var(--muted);min-height:12px}.purchase-line .icon-btn{position:absolute;right:10px;top:14px;width:34px;height:34px;padding:0;border-radius:10px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:1fr 1.35fr;padding-right:52px}.form-grid-2{grid-template-columns:1fr}}.report-download-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.purchase-history-card{margin-bottom:12px}.purchase-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.purchase-history-lines{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.purchase-history-line{display:grid;grid-template-columns:minmax(0,1.4fr) .7fr .9fr .9fr;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4e0;font-size:12px}.purchase-history-line:last-child{border-bottom:0}.purchase-history-line b{display:block}.purchase-history-line .muted{font-size:11px}@media(max-width:700px){.report-download-grid{grid-template-columns:1fr 1fr}.purchase-history-line{grid-template-columns:1.4fr .8fr .9fr .9fr;font-size:11px}}
+.purchase-line{position:relative;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.75fr);gap:10px 12px;margin:12px 0;padding:14px 12px 48px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:10px 10px;font-size:13px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-unit-hint{display:none}.purchase-line .icon-btn{position:absolute;right:10px;bottom:10px;width:34px;height:34px;padding:0;border-radius:10px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:minmax(0,.82fr) minmax(0,1.65fr);gap:9px 10px}.purchase-line input,.purchase-line select{font-size:12.5px}.form-grid-2{grid-template-columns:1fr}}.report-download-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.purchase-history-card{margin-bottom:12px}.purchase-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.purchase-history-lines{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.purchase-history-line{display:grid;grid-template-columns:minmax(0,1.4fr) .7fr .9fr .9fr;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4e0;font-size:12px}.purchase-history-line:last-child{border-bottom:0}.purchase-history-line b{display:block}.purchase-history-line .muted{font-size:11px}@media(max-width:700px){.report-download-grid{grid-template-columns:1fr 1fr}.purchase-history-line{grid-template-columns:1.4fr .8fr .9fr .9fr;font-size:11px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -293,8 +293,8 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 
   <!-- COMPRAS -->
 <section id="purchase" class="hidden">
-  <button class="back-btn" onclick="show('stock')">← Volver a Stock</button>
-  <div class="titleline"><b>Nueva compra</b><span class="pill">Stock +</span></div>
+  <button class="back-btn" onclick="show('purchases')">← Volver a Compras</button>
+  <div class="titleline"><b id="purchaseFormTitle">Nueva compra</b><span class="pill">Stock +</span></div>
   <div class="card">
     <div class="form-grid-2">
       <div><label>Tipo de documento</label><select id="purchaseDocType"><option value="Boleta">Boleta</option><option value="Factura">Factura</option><option value="Otro">Otro</option></select></div>
@@ -308,11 +308,15 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <div id="purchaseLineFields"></div>
     <button type="button" class="btn light" onclick="addPurchaseLine()">+ Agregar producto</button>
     <div class="purchase-total-row"><span>Total compra</span><b id="purchaseGrandTotal">$0</b></div>
-    <button class="btn" onclick="registerPurchase()">✓ Registrar compra</button>
+    <button class="btn" id="purchaseSaveBtn" onclick="registerPurchase()">✓ Registrar compra</button>
   </div>
+</section>
 
-  <div class="section">Historial de compras</div>
-  <div class="helper">Aquí puedes revisar las compras registradas, sus productos, cantidades, costo unitario y lote.</div>
+<!-- HISTORIAL DE COMPRAS -->
+<section id="purchases" class="hidden">
+  <button class="back-btn" onclick="show('more')">← Volver</button>
+  <div class="titleline"><b>Compras</b><button class="btn small" onclick="openNewPurchase()">+ Nueva</button></div>
+  <div class="helper">Aquí puedes consultar y editar las compras registradas, junto con sus productos, costos y lotes.</div>
   <div id="purchaseHistory"></div>
 </section>
 
@@ -395,6 +399,18 @@ label{font-size:12px;color:var(--muted);font-weight:700}
       <span class="more-label">Otros insumos</span>
       
     </span>
+    <span class="chev">›</span>
+  </button>
+
+  <button class="more-item" onclick="show('purchases')">
+    <span class="more-icon compras-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 6h2l2 10h10l2-7H7"/>
+        <circle cx="10" cy="20" r="1.5"/>
+        <circle cx="18" cy="20" r="1.5"/>
+      </svg>
+    </span>
+    <span class="more-copy"><span class="more-label">Compras</span></span>
     <span class="chev">›</span>
   </button>
 
@@ -560,17 +576,6 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <div class="statline"><span>Margen promedio</span><b>61,8%</b></div>
   </div>
 
-  <div class="section">Descargar información</div>
-  <div class="card">
-    <div class="helper" style="margin-top:0">Descarga los datos para trabajarlos en Excel. Los archivos respetan el período seleccionado.</div>
-    <div class="report-download-grid">
-      <button class="btn light" onclick="downloadReportCSV('orders')">Pedidos</button>
-      <button class="btn light" onclick="downloadReportCSV('purchases')">Compras</button>
-      <button class="btn light" onclick="downloadReportCSV('stock')">Stock</button>
-      <button class="btn light" onclick="downloadReportCSV('profitability')">Rentabilidad</button>
-    </div>
-  </div>
-
   <div class="section">🧁 Rentabilidad por producto</div>
   <div class="card report-product-card">
     <div class="titleline" style="margin-bottom:8px">
@@ -594,6 +599,17 @@ label{font-size:12px;color:var(--muted);font-weight:700}
         <b>Margen</b>
         <span>$46.377</span>
       </div>
+    </div>
+  </div>
+
+  <div class="section">Descargar reportes</div>
+  <div class="card">
+    <div class="helper" style="margin-top:0">Descarga los datos para trabajarlos en Excel. Los archivos respetan el período seleccionado.</div>
+    <div class="report-download-grid">
+      <button class="btn light" onclick="downloadReportCSV('orders')">Pedidos</button>
+      <button class="btn light" onclick="downloadReportCSV('purchases')">Compras</button>
+      <button class="btn light" onclick="downloadReportCSV('stock')">Stock</button>
+      <button class="btn light" onclick="downloadReportCSV('profitability')">Rentabilidad</button>
     </div>
   </div>
 </section>
@@ -807,16 +823,16 @@ function show(id,btn){
   const section=document.getElementById(id);if(section)section.classList.remove('hidden');
   document.getElementById('app').classList.toggle('home-active',id==='home');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4,help:4};
+  const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,purchases:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4,help:4};
   const activeBtn=btn||document.querySelectorAll('.nav button')[navMap[id]];if(activeBtn)activeBtn.classList.add('active');
-  const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Actualiza tu inventario'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad'],help:['Ayuda','Cómo usar La Bocadería']};
+  const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Registra una compra'],purchases:['Compras','Registro e historial de compras'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad'],help:['Ayuda','Cómo usar La Bocadería']};
   if(titles[id]){
     const pageTitle=document.getElementById('pageTitle');
     const pageSub=document.getElementById('pageSub');
     if(pageTitle)pageTitle.textContent=titles[id][0];
     if(pageSub)pageSub.textContent=titles[id][1];
   }
-  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();resetPurchaseForm();renderPurchaseHistory()}if(id==='reports'){renderReports()}if(id==='home')renderHome()
+  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();if(!window.editingPurchaseId)resetPurchaseForm()}if(id==='purchases'){renderPurchaseHistory()}if(id==='reports'){renderReports()}if(id==='home')renderHome()
 }
 
 function openHelpTopic(topic){
@@ -1090,15 +1106,15 @@ function updatePurchaseLineUnit(row){
   if(label)label.textContent=unit?'Cantidad ('+unit+')':'Cantidad';
   if(hint)hint.textContent=unit?'La cantidad se registra en '+unit+'.':'';
 }
-function addPurchaseLine(type='ingredient',item='',qty='',cost=''){
+function addPurchaseLine(type='ingredient',item='',qty='',cost='',lotId=''){
   const wrap=document.getElementById('purchaseLineFields');
   if(!wrap)return;
   const row=document.createElement('div');
   row.className='purchase-line';
   row.innerHTML='<div class="purchase-field purchase-field-type"><label>Tipo</label><select class="purchase-line-type" onchange="refreshPurchaseLine(this)"><option value="ingredient" '+(type==='ingredient'?'selected':'')+'>Ingrediente</option><option value="other" '+(type==='other'?'selected':'')+'>Otro insumo</option></select></div>'+
     '<div class="purchase-field purchase-field-item"><label>Producto</label><select class="purchase-line-item" onchange="updatePurchaseLineUnit(this.closest(".purchase-line"));updatePurchaseTotal()">'+purchaseOptionsHtml(type,item)+'</select></div>'+
-    '<div class="purchase-field purchase-field-qty"><label class="purchase-qty-label">Cantidad</label><input class="purchase-line-qty" type="number" min="0" step="any" placeholder="Ej. 1000" value="'+(qty||'')+'" oninput="updatePurchaseTotal()"><span class="purchase-unit-hint"></span></div>'+
-    '<div class="purchase-field purchase-field-cost"><label>Costo total ($)</label><input class="purchase-line-cost" inputmode="numeric" placeholder="Ej. 12000" value="'+(cost||'')+'" oninput="updatePurchaseTotal()"><span class="purchase-unit-hint">Costo de esta línea de la boleta.</span></div>'+
+    '<div class="purchase-field purchase-field-qty"><label class="purchase-qty-label">Cantidad</label><input class="purchase-line-qty" type="number" min="0" step="any" placeholder="Ej. 1000" value="'+(qty||'')+'" oninput="updatePurchaseTotal()"></div>'+
+    '<div class="purchase-field purchase-field-cost"><label>Costo total ($)</label><input class="purchase-line-cost" inputmode="numeric" placeholder="Ej. 12000" value="'+(cost||'')+'" oninput="updatePurchaseTotal()"></div>'+
     '<button type="button" class="icon-btn trash-btn" aria-label="Eliminar producto" title="Eliminar producto" onclick="this.parentElement.remove();updatePurchaseTotal()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>';
   wrap.appendChild(row);
   updatePurchaseLineUnit(row);
@@ -1110,65 +1126,65 @@ function refreshPurchaseLine(typeEl){
   updatePurchaseLineUnit(row);
   updatePurchaseTotal();
 }
+let editingPurchaseId=null;
+function openNewPurchase(){editingPurchaseId=null;show('purchase');renderPurchaseSuppliers();resetPurchaseForm()}
+function openPurchaseEdit(id){
+  const p=(db.purchases||[]).find(x=>x.id===id);if(!p)return;
+  editingPurchaseId=id;show('purchase');renderPurchaseSuppliers();
+  document.getElementById('purchaseFormTitle').textContent='Editar compra';
+  document.getElementById('purchaseSaveBtn').textContent='✓ Guardar cambios';
+  document.getElementById('purchaseDocType').value=p.docType||'Boleta';
+  document.getElementById('purchaseDocNumber').value=p.docNumber||'';
+  document.getElementById('purchaseDate').value=p.date?new Date(p.date).toISOString().slice(0,10):new Date().toISOString().slice(0,10);
+  document.getElementById('purchaseSupplier').value=p.supplier||'';
+  const wrap=document.getElementById('purchaseLineFields');wrap.innerHTML='';(p.lines||[]).forEach(l=>addPurchaseLine(l.category,l.item,l.quantity,l.cost,l.lotId));
+  updatePurchaseTotal();
+}
 function resetPurchaseForm(){
-  const d=document.getElementById('purchaseDate');
-  if(d)d.value=new Date().toISOString().slice(0,10);
-  const wrap=document.getElementById('purchaseLineFields');
-  if(wrap){wrap.innerHTML='';addPurchaseLine();}
+  editingPurchaseId=null;
+  const title=document.getElementById('purchaseFormTitle');if(title)title.textContent='Nueva compra';
+  const btn=document.getElementById('purchaseSaveBtn');if(btn)btn.textContent='✓ Registrar compra';
+  const d=document.getElementById('purchaseDate');if(d)d.value=new Date().toISOString().slice(0,10);
+  const wrap=document.getElementById('purchaseLineFields');if(wrap){wrap.innerHTML='';addPurchaseLine();}
   const n=document.getElementById('purchaseDocNumber');if(n)n.value='';
+  const t=document.getElementById('purchaseDocType');if(t)t.value='Boleta';
   const s=document.getElementById('purchaseSupplier');if(s)s.selectedIndex=0;
   updatePurchaseTotal();
 }
-function updatePurchaseTotal(){
-  const total=[...document.querySelectorAll('.purchase-line-cost')].reduce((sum,e)=>sum+parseMoney(e.value),0);
-  const el=document.getElementById('purchaseGrandTotal');if(el)el.textContent=money(total);
-}
+function updatePurchaseTotal(){const total=[...document.querySelectorAll('.purchase-line-cost')].reduce((sum,e)=>sum+parseMoney(e.value),0);const el=document.getElementById('purchaseGrandTotal');if(el)el.textContent=money(total)}
 function nextPurchaseId(){db.purchaseCounter=Number(db.purchaseCounter||0)+1;return 'COMP-'+String(db.purchaseCounter).padStart(5,'0')}
 function nextLotId(){db.lotCounter=Number(db.lotCounter||0)+1;return 'LOT-'+String(db.lotCounter).padStart(5,'0')}
 function registerPurchase(){
-  const supplier=document.getElementById('purchaseSupplier').value;
-  const docType=document.getElementById('purchaseDocType').value;
-  const docNumber=document.getElementById('purchaseDocNumber').value.trim();
-  const dateValue=document.getElementById('purchaseDate').value;
+  const supplier=document.getElementById('purchaseSupplier').value,docType=document.getElementById('purchaseDocType').value,docNumber=document.getElementById('purchaseDocNumber').value.trim(),dateValue=document.getElementById('purchaseDate').value;
   const rows=[...document.querySelectorAll('.purchase-line')];
-  const invalid=!supplier||!dateValue||!rows.length||rows.some(r=>!r.querySelector('.purchase-line-item').value||!(Number(r.querySelector('.purchase-line-qty').value)>0)||!(parseMoney(r.querySelector('.purchase-line-cost').value)>0));if(invalid){showFeedback('No se pudo guardar','Completa el proveedor, la fecha y todos los productos con su cantidad y costo total.','assets/No se pudo guardar.png','Revisar',()=>closeFeedback(),'Cerrar',()=>closeFeedback());return}
-  const purchaseId=nextPurchaseId();
+  const invalid=!supplier||!dateValue||!rows.length||rows.some(r=>!r.querySelector('.purchase-line-item').value||!(Number(r.querySelector('.purchase-line-qty').value)>0)||!(parseMoney(r.querySelector('.purchase-line-cost').value)>0));
+  if(invalid){showFeedback('No se pudo guardar','Completa el proveedor, la fecha y todos los productos con su cantidad y costo total.','assets/No se pudo guardar.png','Revisar',()=>closeFeedback(),'Cerrar',()=>closeFeedback());return}
   const purchaseDate=new Date(dateValue+'T12:00:00').toISOString();
-  const purchase={id:purchaseId,docType,docNumber,date:purchaseDate,supplier,lines:[]};
-  rows.forEach((row,i)=>{
-    const category=row.querySelector('.purchase-line-type').value;
-    const item=row.querySelector('.purchase-line-item').value;
-    const qty=Math.max(0,Number(row.querySelector('.purchase-line-qty').value)||0);
-    const cost=parseMoney(row.querySelector('.purchase-line-cost').value);
-    const lotId=nextLotId();
-    purchase.lines.push({category,item,quantity:qty,cost,lotId});
-    if(category==='ingredient')db.inventory[item]=(db.inventory[item]||0)+qty;else db.otherInventory[item]=(db.otherInventory[item]||0)+qty;
-    db.movements.push({id:Date.now()+i,type:'purchase',purchaseId,lotId,date:purchaseDate,category,item,quantity:qty,cost,supplier,docType,docNumber});
-  });
-  db.purchases=db.purchases||[];db.purchases.push(purchase);
-  persist();
-  resetPurchaseForm();renderStock();renderPurchaseHistory();
-  showFeedback('¡Compra registrada!','La compra fue registrada y el stock se actualizó correctamente. Se generó un lote por cada producto.','assets/Compra registrada.png','Ver stock',()=>{closeFeedback();show('stock')},'Registrar otra',()=>{closeFeedback();show('purchase')});
-}
-
-function renderPurchaseHistory(){
-  const el=document.getElementById('purchaseHistory');
-  if(!el)return;
-  const purchases=[...(db.purchases||[])].slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)||String(b.id||'').localeCompare(String(a.id||'')));
-  if(!purchases.length){
-    el.innerHTML='<div class="card empty-state muted">Aún no tienes compras registradas.</div>';
+  if(editingPurchaseId){
+    const purchase=(db.purchases||[]).find(p=>p.id===editingPurchaseId);if(!purchase)return;
+    const oldLines=[...(purchase.lines||[])];
+    oldLines.forEach(l=>{if(l.category==='ingredient')db.inventory[l.item]=(db.inventory[l.item]||0)-Number(l.quantity||0);else db.otherInventory[l.item]=(db.otherInventory[l.item]||0)-Number(l.quantity||0)});
+    db.movements=(db.movements||[]).filter(m=>m.purchaseId!==editingPurchaseId);
+    const usedLotIds=new Set();const lines=[];
+    rows.forEach((row,i)=>{const category=row.querySelector('.purchase-line-type').value,item=row.querySelector('.purchase-line-item').value,qty=Math.max(0,Number(row.querySelector('.purchase-line-qty').value)||0),cost=parseMoney(row.querySelector('.purchase-line-cost').value);const old=oldLines[i];const lotId=old?.lotId||nextLotId();usedLotIds.add(lotId);lines.push({category,item,quantity:qty,cost,lotId});if(category==='ingredient')db.inventory[item]=(db.inventory[item]||0)+qty;else db.otherInventory[item]=(db.otherInventory[item]||0)+qty;db.movements.push({id:Date.now()+i,type:'purchase',purchaseId:editingPurchaseId,lotId,date:purchaseDate,category,item,quantity:qty,cost,supplier,docType,docNumber})});
+    Object.assign(purchase,{docType,docNumber,date:purchaseDate,supplier,lines});
+    persist();renderStock();renderPurchaseHistory();
+    showFeedback('¡Compra actualizada!','Los datos de la compra fueron corregidos y los costos asociados se actualizaron.','assets/Todo listo.png','Ver compras',()=>{closeFeedback();show('purchases')},'Aceptar',()=>{closeFeedback();show('purchases')});
     return;
   }
+  const purchaseId=nextPurchaseId(),purchase={id:purchaseId,docType,docNumber,date:purchaseDate,supplier,lines:[]};
+  rows.forEach((row,i)=>{const category=row.querySelector('.purchase-line-type').value,item=row.querySelector('.purchase-line-item').value,qty=Math.max(0,Number(row.querySelector('.purchase-line-qty').value)||0),cost=parseMoney(row.querySelector('.purchase-line-cost').value),lotId=nextLotId();purchase.lines.push({category,item,quantity:qty,cost,lotId});if(category==='ingredient')db.inventory[item]=(db.inventory[item]||0)+qty;else db.otherInventory[item]=(db.otherInventory[item]||0)+qty;db.movements.push({id:Date.now()+i,type:'purchase',purchaseId,lotId,date:purchaseDate,category,item,quantity:qty,cost,supplier,docType,docNumber})});
+  db.purchases=db.purchases||[];db.purchases.push(purchase);persist();resetPurchaseForm();renderStock();
+  showFeedback('¡Compra registrada!','La compra fue registrada y el stock se actualizó correctamente. Se generó un lote por cada producto.','assets/Compra registrada.png','Ver compras',()=>{closeFeedback();show('purchases')},'Registrar otra',()=>{closeFeedback();show('purchase')});
+}
+function renderPurchaseHistory(){
+  const el=document.getElementById('purchaseHistory');if(!el)return;
+  const purchases=[...(db.purchases||[])].slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)||String(b.id||'').localeCompare(String(a.id||'')));
+  if(!purchases.length){el.innerHTML='<div class="card empty-state muted">Aún no tienes compras registradas.</div>';return;}
   el.innerHTML=purchases.map(p=>{
-    const supplierName=(db.suppliers||[]).find(s=>s.id===p.supplier)?.name||p.supplier||'—';
-    const total=(p.lines||[]).reduce((sum,l)=>sum+Number(l.cost||0),0);
-    const date=p.date?new Date(p.date).toLocaleDateString('es-CL'):'—';
-    const lines=(p.lines||[]).map(l=>{
-      const unit=getPurchaseUnit(l.category,l.item);
-      const unitCost=Number(l.quantity)>0?Number(l.cost)/Number(l.quantity):0;
-      return '<div class="purchase-history-line"><div><b>'+esc(l.item)+'</b><span class="muted">'+esc(l.category==='ingredient'?'Ingrediente':'Otro insumo')+' · '+esc(l.lotId||'—')+'</span></div><div><b>'+Number(l.quantity||0).toLocaleString('es-CL')+' '+esc(unit)+'</b><span class="muted">Cantidad</span></div><div><b>'+money(unitCost)+'</b><span class="muted">Costo unitario</span></div><div><b>'+money(l.cost)+'</b><span class="muted">Costo total</span></div></div>';
-    }).join('');
-    return '<div class="card purchase-history-card"><div class="purchase-history-head"><div><b>'+esc(p.docType||'Compra')+(p.docNumber?' Nº '+esc(p.docNumber):'')+'</b><div class="muted">'+date+' · '+esc(supplierName)+'</div></div><b>'+money(total)+'</b></div><div class="purchase-history-lines">'+lines+'</div></div>';
+    const supplierName=(db.suppliers||[]).find(s=>s.id===p.supplier)?.name||p.supplier||'—';const total=(p.lines||[]).reduce((sum,l)=>sum+Number(l.cost||0),0);const date=p.date?new Date(p.date).toLocaleDateString('es-CL'):'—';
+    const lines=(p.lines||[]).map(l=>{const unit=getPurchaseUnit(l.category,l.item),unitCost=Number(l.quantity)>0?Math.round(Number(l.cost)/Number(l.quantity)):0;return '<div class="purchase-history-line"><div><b>'+esc(l.item)+'</b><span class="muted">'+esc(l.category==='ingredient'?'Ingrediente':'Otro insumo')+' · '+esc(l.lotId||'—')+'</span></div><div><b>'+Number(l.quantity||0).toLocaleString('es-CL')+' '+esc(unit)+'</b><span class="muted">Cantidad</span></div><div><b>'+money(unitCost)+'</b><span class="muted">Costo unitario</span></div><div><b>'+money(l.cost)+'</b><span class="muted">Costo total</span></div></div>'}).join('');
+    return '<div class="card purchase-history-card"><div class="purchase-history-head"><div><b>'+esc(p.docType||'Compra')+(p.docNumber?' Nº '+esc(p.docNumber):'')+'</b><div class="muted">'+date+' · '+esc(supplierName)+'</div></div><div style="display:flex;align-items:center;gap:8px"><b>'+money(total)+'</b><button class="icon-btn" onclick="openPurchaseEdit(\''+esc(p.id)+'\')" title="Editar compra" aria-label="Editar compra">✎</button></div></div><div class="purchase-history-lines">'+lines+'</div></div>';
   }).join('');
 }
 
@@ -1448,7 +1464,7 @@ function renderHome(){
   alerts.innerHTML=issues.length?issues.map((x,i)=>'<div class="alert"'+(i?' style="margin-top:14px"':'')+'><span class="dot '+x.type+'"></span><div><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.text)+'</div></div></div>').join(''):'<div class="empty-state" style="padding:6px 0"><b>Todo está en orden</b><div class="muted" style="margin-top:4px">No hay alertas de stock.</div></div>';
 }
   // ARRANQUE DE LA APLICACIÓN
-function resetModals(){refreshOrderClients();refreshOrderProducts();renderPurchaseSuppliers();refreshPurchaseOptions();renderRecipes();renderClients();renderSuppliers();renderSupplies();renderIngredients();renderOrders();renderStock();renderHome()}
+function resetModals(){refreshOrderClients();refreshOrderProducts();renderPurchaseSuppliers();refreshPurchaseOptions();renderPurchaseHistory();renderRecipes();renderClients();renderSuppliers();renderSupplies();renderIngredients();renderOrders();renderStock();renderHome()}
 resetModals();
 ['orderDate'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''})
 </script>
