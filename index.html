@@ -221,7 +221,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 }
 
 
-.purchase-line{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:10px;margin:12px 0;padding:14px 52px 14px 12px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:11px 10px;font-size:14px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-unit-hint{display:block;margin:4px 2px 0;font-size:10px;color:var(--muted);min-height:12px}.purchase-line .icon-btn{position:absolute;right:10px;top:14px;width:34px;height:34px;padding:0;border-radius:10px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:1fr 1.35fr;padding-right:52px}.form-grid-2{grid-template-columns:1fr}}
+.purchase-line{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.55fr);gap:10px;margin:12px 0;padding:14px 52px 14px 12px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:11px 10px;font-size:14px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-unit-hint{display:block;margin:4px 2px 0;font-size:10px;color:var(--muted);min-height:12px}.purchase-line .icon-btn{position:absolute;right:10px;top:14px;width:34px;height:34px;padding:0;border-radius:10px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:1fr 1.35fr;padding-right:52px}.form-grid-2{grid-template-columns:1fr}}.report-download-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.purchase-history-card{margin-bottom:12px}.purchase-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.purchase-history-lines{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.purchase-history-line{display:grid;grid-template-columns:minmax(0,1.4fr) .7fr .9fr .9fr;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4e0;font-size:12px}.purchase-history-line:last-child{border-bottom:0}.purchase-history-line b{display:block}.purchase-history-line .muted{font-size:11px}@media(max-width:700px){.report-download-grid{grid-template-columns:1fr 1fr}.purchase-history-line{grid-template-columns:1.4fr .8fr .9fr .9fr;font-size:11px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -310,6 +310,10 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <div class="purchase-total-row"><span>Total compra</span><b id="purchaseGrandTotal">$0</b></div>
     <button class="btn" onclick="registerPurchase()">✓ Registrar compra</button>
   </div>
+
+  <div class="section">Historial de compras</div>
+  <div class="helper">Aquí puedes revisar las compras registradas, sus productos, cantidades, costo unitario y lote.</div>
+  <div id="purchaseHistory"></div>
 </section>
 
   <!-- MÁS / ADMINISTRACIÓN -->
@@ -554,6 +558,17 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <div class="statline"><span>Productos producidos</span><b>3</b></div>
     <div class="statline"><span>Costo promedio</span><b>$9.541</b></div>
     <div class="statline"><span>Margen promedio</span><b>61,8%</b></div>
+  </div>
+
+  <div class="section">Descargar información</div>
+  <div class="card">
+    <div class="helper" style="margin-top:0">Descarga los datos para trabajarlos en Excel. Los archivos respetan el período seleccionado.</div>
+    <div class="report-download-grid">
+      <button class="btn light" onclick="downloadReportCSV('orders')">Pedidos</button>
+      <button class="btn light" onclick="downloadReportCSV('purchases')">Compras</button>
+      <button class="btn light" onclick="downloadReportCSV('stock')">Stock</button>
+      <button class="btn light" onclick="downloadReportCSV('profitability')">Rentabilidad</button>
+    </div>
   </div>
 
   <div class="section">🧁 Rentabilidad por producto</div>
@@ -801,7 +816,7 @@ function show(id,btn){
     if(pageTitle)pageTitle.textContent=titles[id][0];
     if(pageSub)pageSub.textContent=titles[id][1];
   }
-  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();resetPurchaseForm()}if(id==='home')renderHome()
+  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();resetPurchaseForm();renderPurchaseHistory()}if(id==='reports'){renderReports()}if(id==='home')renderHome()
 }
 
 function openHelpTopic(topic){
@@ -1132,8 +1147,29 @@ function registerPurchase(){
   });
   db.purchases=db.purchases||[];db.purchases.push(purchase);
   persist();
-  resetPurchaseForm();renderStock();
+  resetPurchaseForm();renderStock();renderPurchaseHistory();
   showFeedback('¡Compra registrada!','La compra fue registrada y el stock se actualizó correctamente. Se generó un lote por cada producto.','assets/Compra registrada.png','Ver stock',()=>{closeFeedback();show('stock')},'Registrar otra',()=>{closeFeedback();show('purchase')});
+}
+
+function renderPurchaseHistory(){
+  const el=document.getElementById('purchaseHistory');
+  if(!el)return;
+  const purchases=[...(db.purchases||[])].slice().sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)||String(b.id||'').localeCompare(String(a.id||'')));
+  if(!purchases.length){
+    el.innerHTML='<div class="card empty-state muted">Aún no tienes compras registradas.</div>';
+    return;
+  }
+  el.innerHTML=purchases.map(p=>{
+    const supplierName=(db.suppliers||[]).find(s=>s.id===p.supplier)?.name||p.supplier||'—';
+    const total=(p.lines||[]).reduce((sum,l)=>sum+Number(l.cost||0),0);
+    const date=p.date?new Date(p.date).toLocaleDateString('es-CL'):'—';
+    const lines=(p.lines||[]).map(l=>{
+      const unit=getPurchaseUnit(l.category,l.item);
+      const unitCost=Number(l.quantity)>0?Number(l.cost)/Number(l.quantity):0;
+      return '<div class="purchase-history-line"><div><b>'+esc(l.item)+'</b><span class="muted">'+esc(l.category==='ingredient'?'Ingrediente':'Otro insumo')+' · '+esc(l.lotId||'—')+'</span></div><div><b>'+Number(l.quantity||0).toLocaleString('es-CL')+' '+esc(unit)+'</b><span class="muted">Cantidad</span></div><div><b>'+money(unitCost)+'</b><span class="muted">Costo unitario</span></div><div><b>'+money(l.cost)+'</b><span class="muted">Costo total</span></div></div>';
+    }).join('');
+    return '<div class="card purchase-history-card"><div class="purchase-history-head"><div><b>'+esc(p.docType||'Compra')+(p.docNumber?' Nº '+esc(p.docNumber):'')+'</b><div class="muted">'+date+' · '+esc(supplierName)+'</div></div><b>'+money(total)+'</b></div><div class="purchase-history-lines">'+lines+'</div></div>';
+  }).join('');
 }
 
 function buildPurchaseLots(category,item){
@@ -1143,6 +1179,91 @@ function buildPurchaseLots(category,item){
 function currentUnitCost(category,item){const lots=buildPurchaseLots(category,item),available=lots.find(l=>l.qty>0.0000001);if(available)return available.unitCost;const purchases=(db.movements||[]).filter(m=>m.type==='purchase'&&m.category===category&&m.item===item&&Number(m.quantity)>0&&Number(m.cost)>0).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||Number(a.id||0)-Number(b.id||0));const last=purchases[purchases.length-1];return last?Number(last.cost)/Number(last.quantity):0}
 function calculateRecipeCosts(){let recipeCost=0;const ingQtys=document.querySelectorAll('[data-recipe-ing-qty]');document.querySelectorAll('[data-recipe-ing-name]').forEach((e,i)=>{const q=Number(ingQtys[i]?.value)||0;if(e.value&&e.value!=='__new__')recipeCost+=q*currentUnitCost('ingredient',e.value)});const supQtys=document.querySelectorAll('[data-recipe-supply-qty]');document.querySelectorAll('[data-recipe-supply-name]').forEach((e,i)=>{const q=Number(supQtys[i]?.value)||0;if(e.value)recipeCost+=q*currentUnitCost('other',e.value)});return {recipeCost}}
 function updateRecipeCostSummary(){const salePrice=parseMoney(document.getElementById('recipeSalePrice')?.value),costs=calculateRecipeCosts(),costEl=document.getElementById('recipeRecipeCost'),costValueEl=document.getElementById('recipeCostValue'),marginEl=document.getElementById('recipeMargin');if(costEl)costEl.textContent=money(costs.recipeCost);if(costValueEl)costValueEl.textContent=money(costs.recipeCost);if(marginEl)marginEl.textContent=salePrice>0&&costs.recipeCost>0?((salePrice-costs.recipeCost)/salePrice*100).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—'}
+function getReportRange(){
+  const period=document.getElementById('reportPeriod')?.value||'Todo el período';
+  const now=new Date();
+  let start=null;
+  if(period==='Este mes')start=new Date(now.getFullYear(),now.getMonth(),1);
+  if(period==='Esta semana'){
+    const d=new Date(now);
+    const day=d.getDay()||7;
+    d.setDate(d.getDate()-day+1);
+    d.setHours(0,0,0,0);
+    start=d;
+  }
+  return {start,end:now};
+}
+function inReportRange(dateValue){
+  const {start,end}=getReportRange();
+  const d=new Date(dateValue||0);
+  if(Number.isNaN(d.getTime()))return true;
+  return (!start||d>=start)&&d<=end;
+}
+function csvEscape(value){
+  const v=String(value??'');
+  return '"'+v.replace(/"/g,'""')+'"';
+}
+function downloadCSV(filename,headers,rows){
+  const csv='\ufeff'+[headers,...rows].map(row=>row.map(csvEscape).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function downloadReportCSV(type){
+  const period=document.getElementById('reportPeriod')?.value||'Todo el período';
+  const stamp=new Date().toISOString().slice(0,10);
+  if(type==='orders'){
+    const rows=[];
+    (db.orders||[]).filter(o=>inReportRange(o.deliveredAt||o.createdAt||o.date)).forEach(o=>{
+      (o.items||[]).forEach(i=>rows.push([o.number||'',o.clientName||o.client||'',i.product||'',i.qty||0,i.unitPrice||0,i.subtotal||((i.qty||0)*(i.unitPrice||0)),o.status||'',o.deliveryDate||o.date||'',o.deliveryTime||'',o.note||'']));
+    });
+    downloadCSV('La_Bocaderia_Pedidos_'+stamp+'.csv',['N° pedido','Cliente','Producto','Cantidad','Precio venta unitario','Total línea','Estado','Fecha entrega','Hora','Notas'],rows);
+  }else if(type==='purchases'){
+    const rows=[];
+    (db.purchases||[]).filter(p=>inReportRange(p.date)).forEach(p=>{
+      const supplierName=(db.suppliers||[]).find(s=>s.id===p.supplier)?.name||p.supplier||'';
+      (p.lines||[]).forEach(l=>{
+        const unit=getPurchaseUnit(l.category,l.item);
+        const unitCost=Number(l.quantity)>0?Number(l.cost)/Number(l.quantity):0;
+        rows.push([p.id||'',p.docType||'',p.docNumber||'',new Date(p.date).toLocaleDateString('es-CL'),supplierName,l.category==='ingredient'?'Ingrediente':'Otro insumo',l.item||'',l.quantity||0,unit,unitCost,l.cost||0,l.lotId||'']);
+      });
+    });
+    downloadCSV('La_Bocaderia_Compras_'+stamp+'.csv',['ID compra','Tipo documento','N° documento','Fecha','Proveedor','Tipo producto','Producto','Cantidad','Unidad','Costo unitario','Costo total','Lote'],rows);
+  }else if(type==='stock'){
+    const rows=[];
+    const ingNames=[...new Set([...Object.keys(INGREDIENTS),...Object.keys(db.inventory||{})])];
+    ingNames.forEach(name=>rows.push(['Ingrediente',name,db.inventory[name]||0,(db.ingredientUnits&&db.ingredientUnits[name])||'g',currentUnitCost('ingredient',name)]));
+    (db.otherSupplies||[]).forEach(s=>rows.push(['Otro insumo',s.name,db.otherInventory[s.name]||0,s.unit||'un',currentUnitCost('other',s.name)]));
+    downloadCSV('La_Bocaderia_Stock_'+stamp+'.csv',['Tipo','Producto','Stock','Unidad','Costo unitario actual'],rows);
+  }else if(type==='profitability'){
+    const delivered=(db.orders||[]).filter(o=>o.status==='Entregado'&&inReportRange(o.deliveredAt||o.date||o.createdAt));
+    const by={};
+    delivered.forEach(o=>(o.items||[]).forEach(i=>{
+      const r=getRecipeSafe(i.product);
+      const qty=Number(i.qty)||0;
+      const revenue=Number(i.subtotal)||qty*Number(i.unitPrice||0);
+      const costPerUnit=r?calculateRecipeCostFromRecipe(r):0;
+      const key=i.product||'';
+      by[key]??={units:0,sales:0,cost:0};
+      by[key].units+=qty;by[key].sales+=revenue;by[key].cost+=qty*costPerUnit;
+    }));
+    const rows=Object.entries(by).map(([product,x])=>[product,x.units,x.sales,x.cost,x.sales-x.cost,x.sales>0?(x.sales-x.cost)/x.sales*100:0]);
+    downloadCSV('La_Bocaderia_Rentabilidad_'+stamp+'.csv',['Producto','Unidades vendidas','Ventas','Costo','Ganancia','Margen %'],rows);
+  }
+}
+function calculateRecipeCostFromRecipe(r){
+  let cost=0;
+  Object.entries(r?.ingredients||{}).forEach(([name,qty])=>cost+=Number(qty||0)*currentUnitCost('ingredient',name));
+  Object.entries(r?.supplies||{}).forEach(([name,qty])=>cost+=Number(qty||0)*currentUnitCost('other',name));
+  return cost;
+}
+function renderReports(){
+  const period=document.getElementById('reportPeriod');
+  if(period&&!period.dataset.bound){period.addEventListener('change',()=>{});period.dataset.bound='1';}
+}
+
   // RECETAS
 function renderRecipes(){const el=document.getElementById('recipeList');if(!el)return;el.innerHTML=db.recipes.map(r=>{const ingredientCost=Object.entries(r.ingredients||{}).reduce((sum,[i,g])=>sum+(Number(g)||0),0);return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')">✎ Editar</button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+g+' '+esc((db.ingredientUnits&&db.ingredientUnits[i])||'g')).join(' · ')+'</div>'+((r.supplies&&Object.keys(r.supplies).length)?'<div class="muted" style="margin-top:5px">Otros insumos: '+Object.entries(r.supplies).map(([i,g])=>esc(i)+' '+g).join(' · ')+'</div>':'')+'</div>'}).join('')}
 function openRecipeModal(id){
