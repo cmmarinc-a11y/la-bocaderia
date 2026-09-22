@@ -131,10 +131,10 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .confirm-actions{display:grid;gap:8px}
 .confirm-actions .btn{margin-top:0}
 .add-row-btn{margin:8px 0 4px;width:100%}
-.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 105px 44px 38px;gap:8px;align-items:center;margin:7px 0}
+.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 78px 34px 38px;gap:8px;align-items:center;margin:7px 0}
 .recipe-line.supply-line{grid-template-columns:minmax(0,1fr) 105px 44px 38px}
-.recipe-line .recipe-unit{display:flex;align-items:center;justify-content:flex-start;height:44px;color:var(--muted);font-weight:700;font-size:13px;padding-left:2px}.recipe-line .trash-btn{height:40px;width:36px;padding:0}.recipe-line .trash-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.recipe-unit{min-width:44px;padding:12px 8px;color:var(--muted);font-size:14px;font-weight:700;text-align:center;background:#f7eeee;border:1px solid var(--line);border-radius:14px;align-self:center;}
+.recipe-line .recipe-unit{display:flex;align-items:center;justify-content:flex-start;height:40px;color:var(--muted);font-weight:700;font-size:11px;padding:0 0 0 2px;background:transparent;border:0}.recipe-line .trash-btn{height:40px;width:38px;padding:0}.recipe-line .trash-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.recipe-unit{min-width:0;padding:0;color:var(--muted);font-size:11px;font-weight:700;text-align:left;background:transparent;border:0;border-radius:0;align-self:center;}
 
 .recipe-line select,.recipe-line input{margin:0;width:100%}
 .feedback-cat{font-size:92px;line-height:1;display:flex;align-items:center;justify-content:center;width:145px;height:120px;margin:-2px auto 0}
@@ -221,7 +221,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 }
 
 
-.purchase-line{position:relative;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.75fr);gap:10px 12px;margin:12px 0;padding:14px 12px 48px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:10px 10px;font-size:13px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-unit-hint{display:none}.purchase-line .icon-btn{position:absolute;right:10px;bottom:10px;width:34px;height:34px;padding:0;border-radius:10px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:minmax(0,.82fr) minmax(0,1.65fr);gap:9px 10px}.purchase-line input,.purchase-line select{font-size:12.5px}.form-grid-2{grid-template-columns:1fr}}.report-download-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.purchase-history-card{margin-bottom:12px}.purchase-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.purchase-history-lines{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.purchase-history-line{display:grid;grid-template-columns:minmax(0,1.4fr) .7fr .9fr .9fr;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4e0;font-size:12px}.purchase-history-line:last-child{border-bottom:0}.purchase-history-line b{display:block}.purchase-history-line .muted{font-size:11px}@media(max-width:700px){.report-download-grid{grid-template-columns:1fr 1fr}.purchase-history-line{grid-template-columns:1.4fr .8fr .9fr .9fr;font-size:11px}}
+.purchase-line{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin:12px 0;padding:14px 12px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:10px 10px;font-size:13px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-line-row{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:10px;grid-column:1 / -1;align-items:end}.purchase-line-row.cost-row{grid-template-columns:minmax(0,1fr) 40px}.purchase-line-row .purchase-field-item{min-width:0}.purchase-line .purchase-field-qty{min-width:0}.purchase-line .purchase-field-cost{min-width:0}.purchase-line .icon-btn{width:40px;height:40px;padding:0;border-radius:10px;justify-self:end}.purchase-qty-label{white-space:nowrap}.purchase-unit-inline{display:inline-block;margin-left:4px;color:var(--muted);font-weight:700;font-size:11px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:1fr;gap:10px}.purchase-line-row{grid-template-columns:minmax(0,1fr) 92px}.purchase-line-row.cost-row{grid-template-columns:minmax(0,1fr) 40px}.purchase-line input,.purchase-line select{font-size:13px}.form-grid-2{grid-template-columns:1fr}}.report-download-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.purchase-history-card{margin-bottom:12px}.purchase-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.purchase-history-lines{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.purchase-history-line{display:grid;grid-template-columns:minmax(0,1.4fr) .7fr .9fr .9fr;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4e0;font-size:12px}.purchase-history-line:last-child{border-bottom:0}.purchase-history-line b{display:block}.purchase-history-line .muted{font-size:11px}@media(max-width:700px){.report-download-grid{grid-template-columns:1fr 1fr}.purchase-history-line{grid-template-columns:1.4fr .8fr .9fr .9fr;font-size:11px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -832,7 +832,7 @@ function show(id,btn){
     if(pageTitle)pageTitle.textContent=titles[id][0];
     if(pageSub)pageSub.textContent=titles[id][1];
   }
-  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();if(!window.editingPurchaseId)resetPurchaseForm()}if(id==='purchases'){renderPurchaseHistory()}if(id==='reports'){renderReports()}if(id==='home')renderHome()
+  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();if(!editingPurchaseId)resetPurchaseForm()}if(id==='purchases'){renderPurchaseHistory()}if(id==='reports'){renderReports()}if(id==='home')renderHome()
 }
 
 function openHelpTopic(topic){
@@ -1102,20 +1102,19 @@ function updatePurchaseLineUnit(row){
   const item=row.querySelector('.purchase-line-item')?.value||'';
   const unit=getPurchaseUnit(type,item);
   const label=row.querySelector('.purchase-qty-label');
-  const hint=row.querySelector('.purchase-unit-hint');
-  if(label)label.textContent=unit?'Cantidad ('+unit+')':'Cantidad';
-  if(hint)hint.textContent=unit?'La cantidad se registra en '+unit+'.':'';
+  if(label)label.innerHTML='Cantidad'+(unit?' <span class="purchase-unit-inline">('+esc(unit)+')</span>':'');
 }
-function addPurchaseLine(type='ingredient',item='',qty='',cost='',lotId=''){
+function addPurchaseLine(type='ingredient',item='',qty='',cost='',lotId='',originalCategory='',originalItem=''){
   const wrap=document.getElementById('purchaseLineFields');
   if(!wrap)return;
   const row=document.createElement('div');
   row.className='purchase-line';
-  row.innerHTML='<div class="purchase-field purchase-field-type"><label>Tipo</label><select class="purchase-line-type" onchange="refreshPurchaseLine(this)"><option value="ingredient" '+(type==='ingredient'?'selected':'')+'>Ingrediente</option><option value="other" '+(type==='other'?'selected':'')+'>Otro insumo</option></select></div>'+
-    '<div class="purchase-field purchase-field-item"><label>Producto</label><select class="purchase-line-item" onchange="updatePurchaseLineUnit(this.closest(".purchase-line"));updatePurchaseTotal()">'+purchaseOptionsHtml(type,item)+'</select></div>'+
-    '<div class="purchase-field purchase-field-qty"><label class="purchase-qty-label">Cantidad</label><input class="purchase-line-qty" type="number" min="0" step="any" placeholder="Ej. 1000" value="'+(qty||'')+'" oninput="updatePurchaseTotal()"></div>'+
-    '<div class="purchase-field purchase-field-cost"><label>Costo total ($)</label><input class="purchase-line-cost" inputmode="numeric" placeholder="Ej. 12000" value="'+(cost||'')+'" oninput="updatePurchaseTotal()"></div>'+
-    '<button type="button" class="icon-btn trash-btn" aria-label="Eliminar producto" title="Eliminar producto" onclick="this.parentElement.remove();updatePurchaseTotal()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>';
+  row.dataset.lotId=lotId||'';
+  row.dataset.originalCategory=originalCategory||type;
+  row.dataset.originalItem=originalItem||item;
+  row.innerHTML='<div class="purchase-line-row"><div class="purchase-field purchase-field-type"><label>Tipo de producto</label><select class="purchase-line-type" onchange="refreshPurchaseLine(this)"><option value="ingredient" '+(type==='ingredient'?'selected':'')+'>Ingrediente</option><option value="other" '+(type==='other'?'selected':'')+'>Otro insumo</option></select></div></div>'+
+    '<div class="purchase-line-row"><div class="purchase-field purchase-field-item"><label>Producto</label><select class="purchase-line-item" onchange="updatePurchaseLineUnit(this.closest(\'.purchase-line\'));updatePurchaseTotal()">'+purchaseOptionsHtml(type,item)+'</select></div><div class="purchase-field purchase-field-qty"><label class="purchase-qty-label">Cantidad</label><input class="purchase-line-qty" type="number" min="0" step="any" placeholder="Ej. 1000" value="'+(qty||'')+'" oninput="updatePurchaseTotal()"></div></div>'+
+    '<div class="purchase-line-row cost-row"><div class="purchase-field purchase-field-cost"><label>Costo total ($)</label><input class="purchase-line-cost" inputmode="numeric" placeholder="Ej. 12000" value="'+(cost||'')+'" oninput="updatePurchaseTotal()"></div><button type="button" class="icon-btn trash-btn" aria-label="Eliminar producto" title="Eliminar producto" onclick="this.closest(\'.purchase-line\').remove();updatePurchaseTotal()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button></div>';
   wrap.appendChild(row);
   updatePurchaseLineUnit(row);
   updatePurchaseTotal();
@@ -1137,7 +1136,7 @@ function openPurchaseEdit(id){
   document.getElementById('purchaseDocNumber').value=p.docNumber||'';
   document.getElementById('purchaseDate').value=p.date?new Date(p.date).toISOString().slice(0,10):new Date().toISOString().slice(0,10);
   document.getElementById('purchaseSupplier').value=p.supplier||'';
-  const wrap=document.getElementById('purchaseLineFields');wrap.innerHTML='';(p.lines||[]).forEach(l=>addPurchaseLine(l.category,l.item,l.quantity,l.cost,l.lotId));
+  const wrap=document.getElementById('purchaseLineFields');wrap.innerHTML='';(p.lines||[]).forEach(l=>addPurchaseLine(l.category,l.item,l.quantity,l.cost,l.lotId,l.category,l.item));
   updatePurchaseTotal();
 }
 function resetPurchaseForm(){
@@ -1165,8 +1164,19 @@ function registerPurchase(){
     const oldLines=[...(purchase.lines||[])];
     oldLines.forEach(l=>{if(l.category==='ingredient')db.inventory[l.item]=(db.inventory[l.item]||0)-Number(l.quantity||0);else db.otherInventory[l.item]=(db.otherInventory[l.item]||0)-Number(l.quantity||0)});
     db.movements=(db.movements||[]).filter(m=>m.purchaseId!==editingPurchaseId);
-    const usedLotIds=new Set();const lines=[];
-    rows.forEach((row,i)=>{const category=row.querySelector('.purchase-line-type').value,item=row.querySelector('.purchase-line-item').value,qty=Math.max(0,Number(row.querySelector('.purchase-line-qty').value)||0),cost=parseMoney(row.querySelector('.purchase-line-cost').value);const old=oldLines[i];const lotId=old?.lotId||nextLotId();usedLotIds.add(lotId);lines.push({category,item,quantity:qty,cost,lotId});if(category==='ingredient')db.inventory[item]=(db.inventory[item]||0)+qty;else db.otherInventory[item]=(db.otherInventory[item]||0)+qty;db.movements.push({id:Date.now()+i,type:'purchase',purchaseId:editingPurchaseId,lotId,date:purchaseDate,category,item,quantity:qty,cost,supplier,docType,docNumber})});
+    const lines=[];
+    rows.forEach((row,i)=>{
+      const category=row.querySelector('.purchase-line-type').value;
+      const item=row.querySelector('.purchase-line-item').value;
+      const qty=Math.max(0,Number(row.querySelector('.purchase-line-qty').value)||0);
+      const cost=parseMoney(row.querySelector('.purchase-line-cost').value);
+      const originalCategory=row.dataset.originalCategory||category;
+      const originalItem=row.dataset.originalItem||item;
+      const lotId=(row.dataset.lotId&&originalCategory===category&&originalItem===item)?row.dataset.lotId:nextLotId();
+      lines.push({category,item,quantity:qty,cost,lotId});
+      if(category==='ingredient')db.inventory[item]=(db.inventory[item]||0)+qty;else db.otherInventory[item]=(db.otherInventory[item]||0)+qty;
+      db.movements.push({id:Date.now()+i,type:'purchase',purchaseId:editingPurchaseId,lotId,date:purchaseDate,category,item,quantity:qty,cost,supplier,docType,docNumber});
+    });
     Object.assign(purchase,{docType,docNumber,date:purchaseDate,supplier,lines});
     persist();renderStock();renderPurchaseHistory();
     showFeedback('¡Compra actualizada!','Los datos de la compra fueron corregidos y los costos asociados se actualizaron.','assets/Todo listo.png','Ver compras',()=>{closeFeedback();show('purchases')},'Aceptar',()=>{closeFeedback();show('purchases')});
@@ -1189,85 +1199,39 @@ function renderPurchaseHistory(){
 }
 
 function buildPurchaseLots(category,item){
-  const movements=(db.movements||[]).slice().sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||Number(a.id||0)-Number(b.id||0));const lots=[];
-  movements.forEach(m=>{if(m.category!==category||m.item!==item)return;if(m.type==='purchase'&&Number(m.quantity)>0&&Number(m.cost)>0){if(!m.lotId){db.lotCounter=Number(db.lotCounter||0)+1;m.lotId='LOT-'+String(db.lotCounter).padStart(5,'0')}lots.push({lotId:m.lotId,qty:Number(m.quantity),unitCost:Number(m.cost)/Number(m.quantity),supplier:m.supplier||'',date:m.date,cost:Number(m.cost)});}else if(m.type==='production'){let need=category==='ingredient'?Number(m.ingredients?.[item]||0):Number(m.supplies?.[item]||0);while(need>0&&lots.length){const lot=lots[0],take=Math.min(lot.qty,need);lot.qty-=take;need-=take;if(lot.qty<=0.0000001)lots.shift()}}});return lots;
-}
-function currentUnitCost(category,item){const lots=buildPurchaseLots(category,item),available=lots.find(l=>l.qty>0.0000001);if(available)return available.unitCost;const purchases=(db.movements||[]).filter(m=>m.type==='purchase'&&m.category===category&&m.item===item&&Number(m.quantity)>0&&Number(m.cost)>0).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||Number(a.id||0)-Number(b.id||0));const last=purchases[purchases.length-1];return last?Number(last.cost)/Number(last.quantity):0}
-function calculateRecipeCosts(){let recipeCost=0;const ingQtys=document.querySelectorAll('[data-recipe-ing-qty]');document.querySelectorAll('[data-recipe-ing-name]').forEach((e,i)=>{const q=Number(ingQtys[i]?.value)||0;if(e.value&&e.value!=='__new__')recipeCost+=q*currentUnitCost('ingredient',e.value)});const supQtys=document.querySelectorAll('[data-recipe-supply-qty]');document.querySelectorAll('[data-recipe-supply-name]').forEach((e,i)=>{const q=Number(supQtys[i]?.value)||0;if(e.value)recipeCost+=q*currentUnitCost('other',e.value)});return {recipeCost}}
-function updateRecipeCostSummary(){const salePrice=parseMoney(document.getElementById('recipeSalePrice')?.value),costs=calculateRecipeCosts(),costEl=document.getElementById('recipeRecipeCost'),costValueEl=document.getElementById('recipeCostValue'),marginEl=document.getElementById('recipeMargin');if(costEl)costEl.textContent=money(costs.recipeCost);if(costValueEl)costValueEl.textContent=money(costs.recipeCost);if(marginEl)marginEl.textContent=salePrice>0&&costs.recipeCost>0?((salePrice-costs.recipeCost)/salePrice*100).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—'}
-function getReportRange(){
-  const period=document.getElementById('reportPeriod')?.value||'Todo el período';
-  const now=new Date();
-  let start=null;
-  if(period==='Este mes')start=new Date(now.getFullYear(),now.getMonth(),1);
-  if(period==='Esta semana'){
-    const d=new Date(now);
-    const day=d.getDay()||7;
-    d.setDate(d.getDate()-day+1);
-    d.setHours(0,0,0,0);
-    start=d;
-  }
-  return {start,end:now};
-}
-function inReportRange(dateValue){
-  const {start,end}=getReportRange();
-  const d=new Date(dateValue||0);
-  if(Number.isNaN(d.getTime()))return true;
-  return (!start||d>=start)&&d<=end;
-}
-function csvEscape(value){
-  const v=String(value??'');
-  return '"'+v.replace(/"/g,'""')+'"';
-}
-function downloadCSV(filename,headers,rows){
-  const csv='\ufeff'+[headers,...rows].map(row=>row.map(csvEscape).join(';')).join('\r\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=filename;a.click();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
-function downloadReportCSV(type){
-  const period=document.getElementById('reportPeriod')?.value||'Todo el período';
-  const stamp=new Date().toISOString().slice(0,10);
-  if(type==='orders'){
-    const rows=[];
-    (db.orders||[]).filter(o=>inReportRange(o.deliveredAt||o.createdAt||o.date)).forEach(o=>{
-      (o.items||[]).forEach(i=>rows.push([o.number||'',o.clientName||o.client||'',i.product||'',i.qty||0,i.unitPrice||0,i.subtotal||((i.qty||0)*(i.unitPrice||0)),o.status||'',o.deliveryDate||o.date||'',o.deliveryTime||'',o.note||'']));
+  const events=[];
+  (db.purchases||[]).forEach(p=>{
+    (p.lines||[]).forEach(l=>{
+      if(l.category===category&&l.item===item&&Number(l.quantity)>0&&Number(l.cost)>0){
+        const qty=Number(l.quantity),cost=Number(l.cost),unitCost=cost/qty;
+        if(Number.isFinite(unitCost)&&unitCost>=0)events.push({type:'purchase',lotId:l.lotId||'',date:p.date,id:String(p.id||''),qty,cost,unitCost});
+      }
     });
-    downloadCSV('La_Bocaderia_Pedidos_'+stamp+'.csv',['N° pedido','Cliente','Producto','Cantidad','Precio venta unitario','Total línea','Estado','Fecha entrega','Hora','Notas'],rows);
-  }else if(type==='purchases'){
-    const rows=[];
-    (db.purchases||[]).filter(p=>inReportRange(p.date)).forEach(p=>{
-      const supplierName=(db.suppliers||[]).find(s=>s.id===p.supplier)?.name||p.supplier||'';
-      (p.lines||[]).forEach(l=>{
-        const unit=getPurchaseUnit(l.category,l.item);
-        const unitCost=Number(l.quantity)>0?Number(l.cost)/Number(l.quantity):0;
-        rows.push([p.id||'',p.docType||'',p.docNumber||'',new Date(p.date).toLocaleDateString('es-CL'),supplierName,l.category==='ingredient'?'Ingrediente':'Otro insumo',l.item||'',l.quantity||0,unit,unitCost,l.cost||0,l.lotId||'']);
-      });
-    });
-    downloadCSV('La_Bocaderia_Compras_'+stamp+'.csv',['ID compra','Tipo documento','N° documento','Fecha','Proveedor','Tipo producto','Producto','Cantidad','Unidad','Costo unitario','Costo total','Lote'],rows);
-  }else if(type==='stock'){
-    const rows=[];
-    const ingNames=[...new Set([...Object.keys(INGREDIENTS),...Object.keys(db.inventory||{})])];
-    ingNames.forEach(name=>rows.push(['Ingrediente',name,db.inventory[name]||0,(db.ingredientUnits&&db.ingredientUnits[name])||'g',currentUnitCost('ingredient',name)]));
-    (db.otherSupplies||[]).forEach(s=>rows.push(['Otro insumo',s.name,db.otherInventory[s.name]||0,s.unit||'un',currentUnitCost('other',s.name)]));
-    downloadCSV('La_Bocaderia_Stock_'+stamp+'.csv',['Tipo','Producto','Stock','Unidad','Costo unitario actual'],rows);
-  }else if(type==='profitability'){
-    const delivered=(db.orders||[]).filter(o=>o.status==='Entregado'&&inReportRange(o.deliveredAt||o.date||o.createdAt));
-    const by={};
-    delivered.forEach(o=>(o.items||[]).forEach(i=>{
-      const r=getRecipeSafe(i.product);
-      const qty=Number(i.qty)||0;
-      const revenue=Number(i.subtotal)||qty*Number(i.unitPrice||0);
-      const costPerUnit=r?calculateRecipeCostFromRecipe(r):0;
-      const key=i.product||'';
-      by[key]??={units:0,sales:0,cost:0};
-      by[key].units+=qty;by[key].sales+=revenue;by[key].cost+=qty*costPerUnit;
-    }));
-    const rows=Object.entries(by).map(([product,x])=>[product,x.units,x.sales,x.cost,x.sales-x.cost,x.sales>0?(x.sales-x.cost)/x.sales*100:0]);
-    downloadCSV('La_Bocaderia_Rentabilidad_'+stamp+'.csv',['Producto','Unidades vendidas','Ventas','Costo','Ganancia','Margen %'],rows);
-  }
+  });
+  (db.movements||[]).filter(m=>m.type==='production').forEach(m=>events.push({type:'production',date:m.date,id:String(m.id||''),ingredients:m.ingredients||{},supplies:m.supplies||{}}));
+  events.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||String(a.id).localeCompare(String(b.id)));
+  const lots=[];
+  events.forEach(e=>{
+    if(e.type==='purchase'){
+      lots.push({lotId:e.lotId,qty:e.qty,unitCost:e.unitCost,date:e.date});
+    }else{
+      let need=category==='ingredient'?Number(e.ingredients[item]||0):Number(e.supplies[item]||0);
+      while(need>0.0000001&&lots.length){
+        const lot=lots[0],take=Math.min(lot.qty,need);
+        lot.qty-=take;need-=take;
+        if(lot.qty<=0.0000001)lots.shift();
+      }
+    }
+  });
+  return lots;
+}
+function currentUnitCost(category,item){
+  const lots=buildPurchaseLots(category,item),available=lots.find(l=>l.qty>0.0000001);
+  if(available&&Number.isFinite(available.unitCost))return available.unitCost;
+  const purchases=[];
+  (db.purchases||[]).forEach(p=>(p.lines||[]).forEach(l=>{if(l.category===category&&l.item===item&&Number(l.quantity)>0&&Number(l.cost)>0){const unitCost=Number(l.cost)/Number(l.quantity);if(Number.isFinite(unitCost))purchases.push({date:p.date,id:p.id,unitCost})}}));
+  purchases.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||String(a.id||'').localeCompare(String(b.id||'')));
+  return purchases.length?purchases[purchases.length-1].unitCost:0;
 }
 function calculateRecipeCostFromRecipe(r){
   let cost=0;
@@ -1339,12 +1303,12 @@ function calculateRecipeCosts(){
   const ingQtys=document.querySelectorAll('[data-recipe-ing-qty]');
   document.querySelectorAll('[data-recipe-ing-name]').forEach((e,i)=>{
     const q=Number(ingQtys[i]?.value)||0;
-    if(e.value&&e.value!=='__new__')recipeCost+=q*currentUnitCost('ingredient',e.value);
+    if(e.value&&e.value!=='__new__'){const unitCost=currentUnitCost('ingredient',e.value);if(Number.isFinite(unitCost))recipeCost+=q*unitCost;}
   });
   const supQtys=document.querySelectorAll('[data-recipe-supply-qty]');
   document.querySelectorAll('[data-recipe-supply-name]').forEach((e,i)=>{
     const q=Number(supQtys[i]?.value)||0;
-    if(e.value)recipeCost+=q*currentUnitCost('other',e.value);
+    if(e.value){const unitCost=currentUnitCost('other',e.value);if(Number.isFinite(unitCost))recipeCost+=q*unitCost;}
   });
   return {recipeCost};
 }
@@ -1378,10 +1342,13 @@ function saveRecipe(){
 function renderIngredients(){
   const el=document.getElementById('ingredientList'); if(!el)return;
   const names=Object.keys(INGREDIENTS);
-  el.innerHTML=names.length?names.map(name=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(name)+'</b><button class="icon-btn" onclick="openIngredientModal(\''+esc(name)+'\')">✎</button></div><div class="muted">Stock: '+Number(db.inventory[name]||0).toLocaleString('es-CL')+' '+esc((db.ingredientUnits&&db.ingredientUnits[name])||'g')+'</div></div></div>').join(''):'<div class="empty-state muted">Aún no tienes ingredientes.</div>';
+  el.className=names.length?'card':'empty-state';
+  el.style.marginTop='12px';
+  el.innerHTML=names.length?names.map(name=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(name)+'</b><button class="icon-btn" onclick="openIngredientModal(\''+esc(name)+'\')">✎</button></div><div class="muted">Stock: '+Number(db.inventory[name]||0).toLocaleString('es-CL')+' '+esc((db.ingredientUnits&&db.ingredientUnits[name])||'g')+'</div></div></div>').join(''):'Aún no tienes ingredientes.';
 }
 function openIngredientModal(name){
   const exists=name?name:'';
+  if(!exists){document.getElementById('ingredientId').value='';document.getElementById('ingredientName').value='';document.getElementById('ingredientUnit').value='';document.getElementById('ingredientModalTitle').textContent='Nuevo ingrediente';openModal('ingredientModal');return}
   document.getElementById('ingredientId').value=exists;
   document.getElementById('ingredientName').value=exists;
   document.getElementById('ingredientUnit').value=(db.ingredientUnits&&db.ingredientUnits[exists])||'g';
