@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>La Bocadería – Prototipo V29</title>
+<title>La Bocadería – Prototipo V34</title>
 <style>
 :root{
   --bg:#fbf1f0; --card:#fffdfb; --ink:#5a1f2d; --muted:#8b6d72;
@@ -45,11 +45,25 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .supply-kind{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800}
 .supply-kind.consumable{background:#f9e9bd;color:#a56e1f}
 .supply-kind.nonconsumable{background:#e8f1ff;color:#5377a4}
-.entity-card-main{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.entity-info{flex:1;min-width:0}.entity-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:78px}.entity-actions .icon-btn{flex:0 0 auto}.entity-actions .badge,.entity-actions .supply-kind{white-space:nowrap}
-.home-order-row{padding:11px 0;border-bottom:1px solid var(--line)}
+.entity-card-main{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;width:100%;box-sizing:border-box}.entity-info{flex:1;min-width:0}.entity-actions{display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:78px}.entity-actions .icon-btn{flex:0 0 auto}.entity-actions .badge,.entity-actions .supply-kind{white-space:nowrap}
+.home-order-row{padding:9px 0;border-bottom:1px solid var(--line)}
 .home-order-row:last-child{border-bottom:0}
 .home-order-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.home-order-meta{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.home-order-meta{display:flex;justify-content:space-between;gap:8px;margin-top:3px}
+.home-head{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 8px;height:118px}
+.home-head img{height:112px;width:112px;object-fit:contain;flex:none}
+.home-head .home-logo{width:112px;height:112px}
+.home-head-copy{display:none}
+.home-kpis{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.home-kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 13px;box-shadow:var(--shadow)}
+.home-kpi .label{color:var(--muted);font-size:11px;font-weight:700}.home-kpi .value{font-size:24px;font-weight:900;line-height:1.05;margin-top:3px}.home-kpi .sub{color:var(--muted);font-size:10px;margin-top:2px}
+.home-block{margin-top:11px}.home-block-title{display:flex;justify-content:space-between;align-items:center;margin:0 4px 6px;font-weight:800;font-size:14px}.home-block-title button{border:0;background:none;color:var(--accent);font-size:10px;font-weight:800;padding:0;cursor:pointer}
+.home-alert-card{padding:9px 12px}.home-alert-card.ok{background:#f7fbf7}.home-compact .home-order-row{padding:8px 0}.home-compact .home-order-row:first-child{padding-top:0}.home-compact .home-order-row:last-child{padding-bottom:0}
+.home-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.home-quick .quick-action{padding:10px 8px;min-height:78px;font-size:13px}.home-quick .quick-action .line-icon{font-size:22px}
+.home-orders-card{padding:10px 13px}
+.home-orders-section{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.home-subtitle{font-size:10px;color:var(--muted);font-weight:700;margin:0 0 5px 4px;text-transform:uppercase;letter-spacing:.04em}
+
 
 .hidden{display:none}.orders-history-title{margin-top:34px;margin-bottom:12px}.history-row{padding:12px 0}.history-row + .history-row{border-top:1px solid var(--line)}.orders-history-card{margin-top:0}.brand-copy b{font-size:18px}.brand-copy .muted{margin-top:5px;line-height:1.4}.titleline{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi .card{padding:14px}
@@ -281,6 +295,25 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .more-item .clientes-icon,.more-item .proveedores-icon,.more-item .recetas-icon,.more-item .ingredientes-icon,.more-item .insumos-icon,.more-item .compras-icon{background:#f8dfe2;color:var(--accent)}
 .reportes-icon,.configuracion-icon,.ayuda-icon{background:#eee1f5;color:#76509b}
 @media(max-width:390px){.purchase-line-row{grid-template-columns:minmax(0,1fr) 112px}.recipe-line{grid-template-columns:minmax(0,1fr) 72px 28px 38px}.production-edit-row{grid-template-columns:minmax(0,1fr) 116px}.production-edit-qty input{width:82px}.production-consumable-row{grid-template-columns:minmax(0,1fr) 68px 20px 36px}.production-consumable-row .trash-btn{width:36px;height:40px;margin-top:22px}}
+
+/* V34 — Home vuelve al diseño base de V28 */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.brand-card{display:block;text-align:center;padding:6px 0 0;overflow:visible;background:transparent;border:0;box-shadow:none}
+.brand-logo{width:330px;max-width:100%;height:108px;display:block;object-fit:cover;object-position:center;margin:0 auto 2px}
+.brand-maida{width:300px;max-width:100%;height:220px;object-fit:contain;display:block;margin:0 auto -10px}
+.big{font-size:26px;font-weight:800}
+.home-section-gap{margin-top:28px}
+#home .card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+#home .home-attention{padding:14px}
+#home .attention-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0}
+#home .attention-item+.attention-item{border-top:1px solid var(--line)}
+#home .attention-dot{width:9px;height:9px;border-radius:50%;margin-top:5px;flex:none}
+#home .attention-dot.red{background:var(--red)}
+#home .attention-dot.yellow{background:var(--yellow)}
+#home .attention-dot.green{background:var(--green)}
+#home .attention-text{font-size:12px;line-height:1.35}
+#home .quick-actions{margin-top:0}
+@media(max-width:390px){#home .quick-action{min-height:104px;padding:15px 8px 14px;font-size:14px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -297,16 +330,15 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <img class="brand-logo" src="logo-la-bocaderia-sticker.png" alt="La Bocadería">
     <img class="brand-maida" src="maida-cupcake-sticker.png" alt="Maida con cupcake">
   </div>
+
   <div class="grid" style="margin-top:12px">
-    <div class="card"><div class="muted">Producción</div><div class="big">1</div><div class="muted">pendiente</div></div>
-    <div class="card"><div class="muted">Pedidos</div><div class="big">3</div><div class="muted">pendientes</div></div>
+    <div class="card"><div class="muted">Producción</div><div class="big" id="homeProductionValue">0</div><div class="muted" id="homeProductionLabel">pendiente</div></div>
+    <div class="card"><div class="muted">Pedidos</div><div class="big" id="homeOrdersValue">0</div><div class="muted" id="homeOrdersLabel">pendientes</div></div>
   </div>
+
   <div class="section home-section-gap">Atención hoy</div>
-  <div class="card" id="homeAlerts"></div>
-  <div class="section">Pedidos para preparar</div>
-  <div class="card" id="homeToPrepare"></div>
-  <div class="section">Próximos pedidos</div>
-  <div class="card" id="homeUpcoming"></div>
+  <div class="card home-attention" id="homeAlerts"></div>
+
   <div class="section">Acciones rápidas</div>
   <div class="quick-actions">
     <button class="quick-action" onclick="openModal('orderModal')"><span class="line-icon">🧾</span><span>Nuevo pedido</span></button>
@@ -1427,7 +1459,7 @@ function renderRecipes(){
   const el=document.getElementById('recipeList');if(!el)return;
   el.innerHTML=db.recipes.map(r=>{
     const cost=calculateRecipeCostFromRecipe(r);
-    return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')">✎ Editar</button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+Number(g||0).toLocaleString('es-CL')+' '+esc(ingredientUnit(i))).join(' · ')+'</div><div class="muted" style="margin-top:5px">Costo estimado: '+money(cost)+'</div></div>'
+    return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')"><span>✎</span></button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+Number(g||0).toLocaleString('es-CL')+' '+esc(ingredientUnit(i))).join(' · ')+'</div><div class="muted" style="margin-top:5px">Costo estimado: '+money(cost)+'</div></div>'
   }).join('')
 }
 function openRecipeModal(id){
@@ -1584,46 +1616,16 @@ function setClientFilter(f){clientFilter=f;renderClients()}
 function setSupplierFilter(f){supplierFilter=f;renderSuppliers()}
 function filterButtons(prefix,current){['all','active','blocked'].forEach(f=>{const b=document.getElementById(prefix+'Filter'+f.charAt(0).toUpperCase()+f.slice(1));if(b)b.classList.toggle('active',f===current)})}
 function renderClients(){const el=document.getElementById('clientList');if(!el)return;filterButtons('client',clientFilter);const list=db.clients.filter(c=>clientFilter==='all'||(c.status||'active')===clientFilter);el.innerHTML=list.map(c=>{const blocked=(c.status||'active')==='blocked';return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(c.name)+'</b></div><div class="muted">'+(c.location?esc(c.location):'Sin ubicación')+'</div>'+(c.phone?'<div class="muted">'+esc(c.phone)+'</div>':'')+(c.note?'<div class="muted">'+esc(c.note)+'</div>':'')+'</div><div class="entity-actions"><span class="badge '+(blocked?'blocked':'active')+'">'+(blocked?'Bloqueado':'Activo')+'</span><button class="icon-btn" onclick="openClientModal(\''+c.id+'\')">✎</button></div></div></div>'}).join('')||'<div class="empty">No hay clientes en este estado.</div>'}
-function openSupplyModal(id){
-  const s=id?db.otherSupplies.find(x=>x.id===id):null;
-  const data=s||{id:'',name:'',unit:'un',consumable:'consumable'};
-  const title=document.querySelector('#supplyModal .titleline b');
-  if(title)title.textContent=id?'Editar otro insumo':'Nuevo otro insumo';
-  document.getElementById('supplyName').value=data.name||'';
-  document.getElementById('supplyUnit').value=data.unit||'un';
-  document.getElementById('supplyConsumable').value=data.consumable===false?'nonconsumable':'consumable';
-  document.getElementById('supplyModal').dataset.editId=data.id||'';
-  openModal('supplyModal');
-}
-function saveSupply(){
-  const name=document.getElementById('supplyName').value.trim();
-  if(!name){alert('Ingresa un nombre.');return}
-  const unit=document.getElementById('supplyUnit').value.trim()||'un';
-  const consumable=document.getElementById('supplyConsumable').value==='consumable';
-  const id=document.getElementById('supplyModal').dataset.editId||'';
-  if(id){
-    const existing=db.otherSupplies.find(x=>x.id===id);
-    if(existing){const oldName=existing.name;Object.assign(existing,{name,unit,consumable});if(oldName!==name&&db.otherInventory[oldName]!=null){db.otherInventory[name]=db.otherInventory[oldName];delete db.otherInventory[oldName];}}
-  }else{
-    if(db.otherSupplies.some(x=>x.name.toLowerCase()===name.toLowerCase())){alert('Ese insumo ya existe.');return}
-    db.otherSupplies.push({id:uid('os'),name,unit,consumable});
-    if(db.otherInventory[name]==null)db.otherInventory[name]=0;
-  }
-  persist();
-  closeModal(null,'supplyModal');
-  renderSupplies();
-  refreshPurchaseOptions();
-  renderStock();
-  resetSupplyModal();
-}
-function resetSupplyModal(){
-  const m=document.getElementById('supplyModal');if(!m)return;
-  m.dataset.editId='';
-  document.getElementById('supplyName').value='';
-  document.getElementById('supplyUnit').value='un';
-  document.getElementById('supplyConsumable').value='consumable';
-  const title=document.querySelector('#supplyModal .titleline b');if(title)title.textContent='Nuevo otro insumo';
-}
+function openClientModal(id){const c=id?db.clients.find(x=>x.id===id):{id:'',name:'',phone:'',location:'',note:'',status:'active'};document.getElementById('clientId').value=c.id;document.getElementById('clientName').value=c.name;document.getElementById('clientPhone').value=c.phone||'';document.getElementById('clientLocation').value=c.location||'';document.getElementById('clientNote').value=c.note||'';document.getElementById('clientStatus').value=c.status||'active';document.getElementById('clientModalTitle').textContent=id?'Editar cliente':'Nuevo cliente';openModal('clientModal')}
+function saveClient(){const id=document.getElementById('clientId').value,n=document.getElementById('clientName').value.trim();if(!n){alert('Ingresa un nombre.');return}const data={name:n,phone:document.getElementById('clientPhone').value.trim(),location:document.getElementById('clientLocation').value.trim(),note:document.getElementById('clientNote').value.trim(),status:document.getElementById('clientStatus').value};if(id){const c=db.clients.find(x=>x.id===id);Object.assign(c,data)}else db.clients.push({id:uid('c'),...data});persist();closeModal(null,'clientModal');renderClients();refreshOrderClients();showFeedback(id?'¡Cliente actualizado!':'¡Cliente creado!','El cliente ha sido guardado correctamente.','assets/Proveedor creado.png','Ver clientes',()=>{closeFeedback();show('clients')},'Crear otro',()=>{closeFeedback();openClientModal()})}
+function renderSuppliers(){const el=document.getElementById('supplierList');if(!el)return;filterButtons('supplier',supplierFilter);const list=db.suppliers.filter(s=>supplierFilter==='all'||(s.status||'active')===supplierFilter);el.innerHTML=list.map(s=>{const blocked=(s.status||'active')==='blocked';return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b></div><div class="muted">Proveedor de: '+(s.supplies?esc(s.supplies):'Sin especificar')+'</div><div class="muted">'+(s.location?esc(s.location):'Sin ubicación')+(s.contact?' · '+esc(s.contact):'')+'</div></div><div class="entity-actions"><span class="badge '+(blocked?'blocked':'active')+'">'+(blocked?'Bloqueado':'Activo')+'</span><button class="icon-btn" onclick="openSupplierModal(\''+s.id+'\')">✎</button></div></div></div>'}).join('')||'<div class="empty">No hay proveedores en este estado.</div>'}
+function openSupplierModal(id){const s=id?db.suppliers.find(x=>x.id===id):{id:'',name:'',supplies:'',location:'',contact:'',status:'active'};document.getElementById('supplierId').value=s.id;document.getElementById('supplierName').value=s.name;document.getElementById('supplierSupplies').value=s.supplies||'';document.getElementById('supplierLocation').value=s.location||'';document.getElementById('supplierContact').value=s.contact||'';document.getElementById('supplierStatus').value=s.status||'active';document.getElementById('supplierModalTitle').textContent=id?'Editar proveedor':'Nuevo proveedor';openModal('supplierModal')}
+function saveSupplier(){const id=document.getElementById('supplierId').value,n=document.getElementById('supplierName').value.trim();if(!n){alert('Ingresa un nombre.');return}const data={name:n,supplies:document.getElementById('supplierSupplies').value.trim(),location:document.getElementById('supplierLocation').value.trim(),contact:document.getElementById('supplierContact').value.trim(),status:document.getElementById('supplierStatus').value};if(id){const s=db.suppliers.find(x=>x.id===id);Object.assign(s,data)}else db.suppliers.push({id:uid('s'),...data});persist();closeModal(null,'supplierModal');renderSuppliers();renderPurchaseSuppliers();showFeedback(id?'¡Proveedor actualizado!':'¡Proveedor creado!','El proveedor ha sido guardado correctamente.','assets/Proveedor creado.png','Ver proveedores',()=>{closeFeedback();show('suppliers')},'Crear otro',()=>{closeFeedback();openSupplierModal()})}
+// OTROS INSUMOS
+function renderSupplies(){const el=document.getElementById('supplyList');if(!el)return;const list=db.otherSupplies||[];el.innerHTML=list.length?list.map(s=>{const consumable=s.consumable!==false;const stock=Number(db.otherInventory?.[s.name]||0);return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b></div><div class="muted">Stock: '+stock.toLocaleString('es-CL')+' '+esc(s.unit||'un')+'</div></div><div class="entity-actions"><span class="supply-kind '+(consumable?'consumable':'nonconsumable')+'">'+(consumable?'Consumible':'No consumible')+'</span><button class="icon-btn" onclick="openSupplyModal(\''+esc(s.id||'')+'\')">✎</button></div></div></div>'}).join(''):'<div class="empty">Aún no tienes otros insumos creados.</div>'}
+function openSupplyModal(id){const s=id?db.otherSupplies.find(x=>x.id===id):null;const data=s||{id:'',name:'',unit:'un',consumable:'consumable'};const title=document.querySelector('#supplyModal .titleline b');if(title)title.textContent=id?'Editar otro insumo':'Nuevo otro insumo';document.getElementById('supplyName').value=data.name||'';document.getElementById('supplyUnit').value=data.unit||'un';document.getElementById('supplyConsumable').value=data.consumable===false?'nonconsumable':'consumable';document.getElementById('supplyModal').dataset.editId=data.id||'';openModal('supplyModal')}
+function saveSupply(){const name=document.getElementById('supplyName').value.trim();if(!name){alert('Ingresa un nombre.');return}const unit=document.getElementById('supplyUnit').value.trim()||'un';const consumable=document.getElementById('supplyConsumable').value==='consumable';const id=document.getElementById('supplyModal').dataset.editId||'';if(id){const existing=db.otherSupplies.find(x=>x.id===id);if(existing){const oldName=existing.name;Object.assign(existing,{name,unit,consumable});if(oldName!==name&&db.otherInventory[oldName]!=null){db.otherInventory[name]=db.otherInventory[oldName];delete db.otherInventory[oldName];}}}else{if(db.otherSupplies.some(x=>x.name.toLowerCase()===name.toLowerCase())){alert('Ese insumo ya existe.');return}db.otherSupplies.push({id:uid('os'),name,unit,consumable});if(db.otherInventory[name]==null)db.otherInventory[name]=0}persist();closeModal(null,'supplyModal');renderSupplies();refreshPurchaseOptions();renderStock();resetSupplyModal()}
+function resetSupplyModal(){const m=document.getElementById('supplyModal');if(!m)return;m.dataset.editId='';document.getElementById('supplyName').value='';document.getElementById('supplyUnit').value='un';document.getElementById('supplyConsumable').value='consumable';const title=document.querySelector('#supplyModal .titleline b');if(title)title.textContent='Nuevo otro insumo'}
 
 // SELECTORES DE PEDIDOS
 function refreshOrderClients(){const s=document.getElementById('orderClient');if(!s)return;s.innerHTML='<option value="">Selecciona cliente</option>'+db.clients.filter(c=>(c.status||'active')==='active').map(c=>'<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>').join('')}
@@ -1631,48 +1633,45 @@ function refreshOrderProducts(){const s=document.getElementById('orderProduct');
   // INICIO / RESUMEN
 function renderHome(){
   const today=new Date(); today.setHours(0,0,0,0);
-  const activeOrders=db.orders.filter(o=>!['Entregado','Cancelado'].includes(o.status));
-  const pending=activeOrders.length;
+  const activeOrders=(db.orders||[]).filter(o=>!['Entregado','Cancelado'].includes(o.status));
   const production=activeOrders.filter(o=>o.status==='Preparación').length;
-  const cards=document.querySelectorAll('#home .grid .card');
-  if(cards[0])cards[0].innerHTML='<div class="muted">Producción</div><div class="big">'+production+'</div><div class="muted">pendiente'+(production===1?'':'s')+'</div>';
-  if(cards[1])cards[1].innerHTML='<div class="muted">Pedidos</div><div class="big">'+pending+'</div><div class="muted">pendiente'+(pending===1?'':'s')+'</div>';
+  const pending=activeOrders.length;
+
+  const pv=document.getElementById('homeProductionValue'),ov=document.getElementById('homeOrdersValue');
+  const pl=document.getElementById('homeProductionLabel'),ol=document.getElementById('homeOrdersLabel');
+  if(pv)pv.textContent=production;
+  if(ov)ov.textContent=pending;
+  if(pl)pl.textContent=production===1?'pendiente':'pendientes';
+  if(ol)ol.textContent=pending===1?'pendiente':'pendientes';
 
   const alerts=document.getElementById('homeAlerts');
-  if(alerts){
-    const issues=[];
-    (db.recipes||[]).forEach(r=>{
-      const c=recipeCapacity(r);
-      if(c.capacity===0)issues.push({type:'red',name:r.name,text:c.missing.length?'Stock insuficiente · faltan '+c.missing.map(x=>x.name).join(', '):'Stock insuficiente'});
-      else if(c.capacity===1)issues.push({type:'yellow',name:r.name,text:'Stock limitado · puedes hacer 1 unidad'});
-    });
-    alerts.innerHTML=issues.length?issues.map((x,i)=>'<div class="alert"'+(i?' style="margin-top:14px"':'')+'><span class="dot '+x.type+'"></span><div><b>'+esc(x.name)+'</b><div class="muted">'+esc(x.text)+'</div></div></div>').join(''):'<div class="empty-state" style="padding:6px 0"><b>Todo está en orden</b><div class="muted" style="margin-top:4px">No hay alertas de stock.</div></div>';
-  }
+  if(!alerts)return;
 
-  function homeOrderHtml(o){
-    const date=o.date?new Date(o.date+'T12:00:00'):null;
-    const dateText=date?date.toLocaleDateString('es-CL',{day:'2-digit',month:'short'}):'Sin fecha';
-    return '<div class="home-order-row"><div class="home-order-head"><b>'+esc(o.number||'')+'</b>'+statusBadge(o.status)+'</div><div class="muted" style="margin-top:3px">'+esc(o.client||'')+' · '+orderProductsText(o)+'</div><div class="home-order-meta"><span class="muted">'+dateText+(o.time?' · '+esc(o.time):'')+'</span><button class="icon-btn" onclick="show(\'orders\')">Ver</button></div></div>';
-  }
+  const items=[];
+  const dueToday=activeOrders.filter(o=>{
+    if(o.status==='Preparación')return true;
+    if(!o.date)return false;
+    const d=new Date(o.date+'T12:00:00');
+    return d.getTime()===today.getTime();
+  });
 
-  const dueEl=document.getElementById('homeToPrepare');
-  if(dueEl){
-    const due=activeOrders.filter(o=>{
-      const d=o.date?new Date(o.date+'T12:00:00'):null;
-      return o.status==='Preparación'||(d&&d<=today);
-    }).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
-    dueEl.innerHTML=due.length?due.slice(0,6).map(homeOrderHtml).join(''):'<div class="empty-state" style="padding:6px 0"><b>No hay pedidos para preparar ahora.</b><div class="muted" style="margin-top:4px">Los próximos pedidos aparecerán abajo.</div></div>';
-  }
+  const requestedToday=activeOrders.filter(o=>o.status==='Solicitado'&&o.date&&new Date(o.date+'T12:00:00').getTime()===today.getTime());
+  if(requestedToday.length)items.push({type:'yellow',title:requestedToday.length===1?'1 pedido para hoy':' '+requestedToday.length+' pedidos para hoy',text:'Revisa los pedidos pendientes de preparación.'});
+  if(dueToday.length&&!production&&!requestedToday.length)items.push({type:'yellow',title:dueToday.length===1?'1 pedido requiere atención hoy':dueToday.length+' pedidos requieren atención hoy',text:'Revisa su estado en Pedidos.'});
 
-  const upcomingEl=document.getElementById('homeUpcoming');
-  if(upcomingEl){
-    const upcoming=activeOrders.filter(o=>{
-      const d=o.date?new Date(o.date+'T12:00:00'):null;
-      return d&&d>today;
-    }).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
-    upcomingEl.innerHTML=upcoming.length?upcoming.slice(0,6).map(homeOrderHtml).join(''):'<div class="empty-state" style="padding:6px 0"><b>No hay pedidos futuros registrados.</b></div>';
+  (db.recipes||[]).forEach(r=>{
+    const c=recipeCapacity(r);
+    if(c.capacity===0)items.push({type:'red',title:r.name,text:c.missing.length?'Stock insuficiente · faltan '+c.missing.map(x=>x.name).join(', '):'Stock insuficiente'});
+    else if(c.capacity===1)items.push({type:'yellow',title:r.name,text:'Stock limitado · puedes hacer 1 unidad'});
+  });
+
+  if(!items.length){
+    alerts.innerHTML='<div class="attention-item"><span class="attention-dot green"></span><div class="attention-text"><b>Todo en orden</b><div class="muted">No hay pendientes ni alertas que requieran atención hoy.</div></div></div>';
+  }else{
+    alerts.innerHTML=items.slice(0,5).map(x=>'<div class="attention-item"><span class="attention-dot '+x.type+'"></span><div class="attention-text"><b>'+esc(String(x.title).trim())+'</b><div class="muted">'+esc(x.text)+'</div></div></div>').join('');
   }
 }
+
   // ARRANQUE DE LA APLICACIÓN
 function resetModals(){refreshOrderClients();refreshOrderProducts();renderPurchaseSuppliers();refreshPurchaseOptions();renderPurchaseHistory();renderRecipes();renderClients();renderSuppliers();renderSupplies();renderIngredients();renderOrders();renderStock();renderHome()}
 resetModals();
