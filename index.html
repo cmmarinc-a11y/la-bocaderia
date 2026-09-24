@@ -26,6 +26,11 @@ main{padding:10px 16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px
 .btn{border:0;border-radius:14px;padding:13px 15px;background:var(--ink);color:white;font-weight:700;cursor:pointer;width:100%;margin-top:10px}
 .btn.light{background:var(--accent2);color:var(--ink)} .btn.danger{background:#fff0ef;color:var(--red);border:1px solid #e8b8b8} .btn.small{width:auto;padding:9px 12px;margin:0}
 input,select{width:100%;padding:13px;border:1px solid var(--line);border-radius:12px;background:white;font:inherit;color:var(--ink);margin:6px 0 12px}
+/* V25 — campos numéricos sin flechas/spinner en todo el prototipo */
+input[type="number"]{appearance:textfield;-moz-appearance:textfield}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{appearance:none;-webkit-appearance:none;margin:0}
+
 label{font-size:12px;color:var(--muted);font-weight:700}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:rgba(255,253,249,.96);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding:9px 8px 10px;backdrop-filter:blur(12px)}
 .nav button{background:none;border:0;color:var(--muted);font-size:11px}.nav button.active{color:var(--accent);font-weight:800}.ico{font-size:19px;display:block;margin-bottom:3px}
@@ -35,7 +40,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .recipe-table{width:100%;border-collapse:collapse;font-size:13px}.recipe-table th{text-align:left;color:var(--muted);font-weight:700}.recipe-table td,.recipe-table th{padding:9px 4px;border-bottom:1px solid var(--line)}
 .total{font-size:18px;font-weight:800}.margin{font-size:30px;font-weight:900;color:var(--green)}
 
-.order-item-head{display:grid;grid-template-columns:minmax(0,1.55fr) 54px 86px 32px;gap:6px;margin:-2px 0 3px;padding:0 3px;color:var(--muted);font-size:10px;font-weight:700}.order-item-line{display:grid;grid-template-columns:minmax(0,1.55fr) 54px 86px 32px;gap:6px;align-items:center;margin:7px 0}.order-item-line select,.order-item-line input{margin:0;height:40px;padding:7px 8px;font-size:12px}.order-item-line select{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.order-item-price{font-size:13px;color:var(--ink);text-align:right}.order-item-line .order-item-unit-price{width:100%;text-align:right}.order-item-line .icon-btn{width:32px;height:36px;padding:0}.trash-icon{display:inline-flex;align-items:center;justify-content:center}.trash-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.order-total-box{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px;padding:13px 14px;border-radius:14px;background:#f7eeee;font-weight:800}.calc-value{padding:13px;border:1px solid var(--line);border-radius:12px;background:#f7eeee;margin:6px 0 12px;font-weight:800}.recipe-cost-summary{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f7eeee}.recipe-cost-summary>div{display:flex;justify-content:space-between;padding:6px 0}.recipe-cost-summary b{font-size:15px}.recipe-cost-summary .margin-value{color:var(--green)}
+.order-item-head.hidden{display:none!important}.order-item-head{display:grid;grid-template-columns:minmax(0,1.55fr) 54px 86px 32px;gap:6px;margin:-2px 0 3px;padding:0 3px;color:var(--muted);font-size:10px;font-weight:700}.order-item-line{display:grid;grid-template-columns:minmax(0,1.55fr) 54px 86px 32px;gap:6px;align-items:center;margin:7px 0}.order-item-line select,.order-item-line input{margin:0;height:40px;padding:7px 8px;font-size:12px}.order-item-line select{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.order-item-price{font-size:13px;color:var(--ink);text-align:right}.order-item-line .order-item-unit-price{width:100%;text-align:right}.order-item-line .icon-btn{width:32px;height:36px;padding:0}.trash-icon{display:inline-flex;align-items:center;justify-content:center}.trash-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.order-total-box{display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px;padding:13px 14px;border-radius:14px;background:#f7eeee;font-weight:800}.calc-value{padding:13px;border:1px solid var(--line);border-radius:12px;background:#f7eeee;margin:6px 0 12px;font-weight:800}.recipe-cost-summary{margin-top:14px;padding:12px 14px;border-radius:14px;background:#f7eeee}.recipe-cost-summary>div{display:flex;justify-content:space-between;padding:6px 0}.recipe-cost-summary b{font-size:15px}.recipe-cost-summary .margin-value{color:var(--green)}
 .modal{position:fixed;inset:0;background:rgba(61,52,45,.28);display:flex;align-items:flex-end;z-index:20}
 .modal.hidden{display:none}.sheet{background:var(--card);width:min(430px,100%);border-radius:26px 26px 0 0;padding:20px;max-height:90vh;overflow:auto}
 .statline{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
@@ -222,6 +227,44 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 
 
 .purchase-line{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;margin:12px 0;padding:14px 12px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}.purchase-field{min-width:0}.purchase-field label{display:block;margin:0 0 4px;font-size:11px}.purchase-line input,.purchase-line select{min-width:0;width:100%;margin:0;padding:10px 10px;font-size:13px;box-sizing:border-box}.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.purchase-line-row{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:10px;grid-column:1 / -1;align-items:end}.purchase-line-row.cost-row{grid-template-columns:minmax(0,1fr) 40px}.purchase-line-row .purchase-field-item{min-width:0}.purchase-line .purchase-field-qty{min-width:0}.purchase-line .purchase-field-cost{min-width:0}.purchase-line .icon-btn{width:40px;height:40px;padding:0;border-radius:10px;justify-self:end}.purchase-qty-label{white-space:nowrap}.purchase-unit-inline{display:inline-block;margin-left:4px;color:var(--muted);font-weight:700;font-size:11px}.purchase-total-row{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eee;margin-top:14px;padding:14px 0;font-size:16px}.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:700px){.purchase-line{grid-template-columns:1fr;gap:10px}.purchase-line-row{grid-template-columns:minmax(0,1fr) 92px}.purchase-line-row.cost-row{grid-template-columns:minmax(0,1fr) 40px}.purchase-line input,.purchase-line select{font-size:13px}.form-grid-2{grid-template-columns:1fr}}.report-download-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.purchase-history-card{margin-bottom:12px}.purchase-history-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.purchase-history-lines{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}.purchase-history-line{display:grid;grid-template-columns:minmax(0,1.4fr) .7fr .9fr .9fr;gap:8px;padding:8px 0;border-bottom:1px solid #f0e4e0;font-size:12px}.purchase-history-line:last-child{border-bottom:0}.purchase-history-line b{display:block}.purchase-history-line .muted{font-size:11px}@media(max-width:700px){.report-download-grid{grid-template-columns:1fr 1fr}.purchase-history-line{grid-template-columns:1.4fr .8fr .9fr .9fr;font-size:11px}}
+
+/* V26 — últimas correcciones de flujo y formularios */
+.purchase-line{display:grid;grid-template-columns:1fr;gap:9px;margin:12px 0;padding:14px 12px;border:1px solid var(--line);border-radius:16px;background:#fffaf7}
+.purchase-line-row{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:10px;align-items:end}
+.purchase-line-row.type-row{grid-template-columns:1fr}
+.purchase-line-row.cost-row{grid-template-columns:minmax(0,1fr) 42px}
+.purchase-line input,.purchase-line select{font-size:14px;height:44px;margin:0}
+.purchase-line select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.purchase-line .purchase-field label{display:block;margin:0 0 4px}
+.purchase-line .purchase-field-qty .purchase-qty-label{white-space:nowrap}
+.purchase-unit-inline{font-size:12px;color:var(--muted);font-weight:800;margin-left:3px}
+.purchase-line .icon-btn{width:42px;height:44px;padding:0;border-radius:11px;justify-self:end}
+.recipe-line{display:grid;grid-template-columns:minmax(0,1fr) 82px 32px 40px;gap:8px;align-items:center;margin:8px 0}
+.recipe-line .recipe-unit{height:auto;display:flex;align-items:center;justify-content:flex-start;color:var(--muted);font-weight:700;font-size:13px;padding:0;background:transparent;border:0}
+.recipe-line .trash-btn{height:40px;width:40px;padding:0}
+.recipe-cost-summary .real-cost{color:var(--accent);font-weight:900}
+.production-edit-list{margin-top:8px}
+.production-edit-row{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.production-edit-row:last-child{border-bottom:0}
+.production-edit-name{font-size:14px;font-weight:700;color:var(--text);min-width:0}
+.production-edit-qty{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.production-edit-qty input{margin:0;height:40px;width:92px;text-align:right}
+.production-edit-unit{color:var(--muted);font-size:12px;font-weight:800;min-width:18px}
+.production-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.production-summary .card{padding:12px}
+.production-summary .value{font-size:17px;font-weight:900;margin-top:3px}
+.production-summary .green-value{color:var(--green)}
+.production-consumable-row{display:grid;grid-template-columns:minmax(0,1fr) 82px 28px 40px;gap:8px;align-items:start;margin:8px 0}
+.production-consumable-row input,.production-consumable-row select{margin:0;height:40px;min-width:0;width:100%;font-size:13px;line-height:1.15;padding:8px 10px;box-sizing:border-box}.production-consumable-row select{padding-right:28px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.production-consumable-row .consumable-field label{display:block;min-height:18px}
+.production-consumable-row label{display:block;margin-bottom:4px}
+.production-consumable-row .consumable-field{min-width:0}
+.production-consumable-row .consumable-qty{display:block;min-width:0}
+.production-consumable-unit{height:40px;margin-top:22px;display:flex;align-items:center;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap}
+.production-consumable-row .trash-btn{width:40px;height:40px;padding:0;margin-top:22px}
+.production-consumable-empty{padding:10px 0;color:var(--muted);font-size:12px}
+.more-item .clientes-icon,.more-item .proveedores-icon,.more-item .recetas-icon,.more-item .ingredientes-icon,.more-item .insumos-icon,.more-item .compras-icon{background:#f8dfe2;color:var(--accent)}
+.reportes-icon,.configuracion-icon,.ayuda-icon{background:#eee1f5;color:#76509b}
+@media(max-width:390px){.purchase-line-row{grid-template-columns:minmax(0,1fr) 112px}.recipe-line{grid-template-columns:minmax(0,1fr) 72px 28px 38px}.production-edit-row{grid-template-columns:minmax(0,1fr) 116px}.production-edit-qty input{width:82px}.production-consumable-row{grid-template-columns:minmax(0,1fr) 68px 20px 36px}.production-consumable-row .trash-btn{width:36px;height:40px;margin-top:22px}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#7d2639">
@@ -278,7 +321,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <!-- STOCK -->
 <section id="stock" class="hidden">
   <div class="titleline"><b>Stock actual</b><span class="pill" id="stockPossible">Calculando…</span></div>
-  <div class="helper">El stock se actualiza automáticamente cuando registras una compra y cuando un pedido pasa a <b>Preparado</b>. La  descuenta los ingredientes de la receta.</div>
+  <div class="helper">El stock se actualiza automáticamente con las compras y con los consumos registrados durante la producción. Los ingredientes y consumibles se descuentan; los no consumibles permanecen en stock.</div>
   <div class="card" style="margin-top:12px" id="stockList"></div>
   <button class="btn light" onclick="show('purchase')">+ Registrar compra</button>
 </section>
@@ -287,7 +330,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <section id="recipes" class="hidden">
   <button class="back-btn" onclick="show('more')">← Volver</button>
   <div class="titleline"><b>Recetas</b><button class="btn small" onclick="openRecipeModal()">+ Nueva</button></div>
-  <div class="helper">Aquí puedes crear y editar las recetas de tus productos. Cada receta define los ingredientes y otros insumos que se descuentan al preparar.</div>
+  <div class="helper">Aquí puedes crear y editar las recetas de tus productos. La receta define los ingredientes base; los otros insumos consumibles se registran directamente durante la producción.</div>
   <div id="recipeList"></div>
 </section>
 
@@ -505,6 +548,14 @@ label{font-size:12px;color:var(--muted);font-weight:700}
         <span class="help-copy"><b>Stock y compras</b><span>Cómo funcionan las entradas, salidas y capacidad de producción.</span></span>
         <span class="help-chevron">›</span>
       </button>
+
+      <button class="help-card" onclick="openHelpTopic('costs')">
+        <span class="help-card-icon">
+          <svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 16v-5M12 16V7M17 16v-8"/></svg>
+        </span>
+        <span class="help-copy"><b>Costos y producción real</b><span>Cómo ajustar consumos y obtener el costo y margen real de cada venta.</span></span>
+        <span class="help-chevron">›</span>
+      </button>
     </div>
   </div>
 
@@ -518,6 +569,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <section id="clients" class="hidden">
   <button class="back-btn" onclick="show('more')">← Volver</button>
   <div class="titleline"><b>Clientes</b><button class="btn small" onclick="openClientModal()">+ Nuevo</button></div>
+  <div class="segmented" style="margin:12px 0"><button class="seg active" id="clientFilterAll" onclick="setClientFilter('all')">Todos</button><button class="seg" id="clientFilterActive" onclick="setClientFilter('active')">Activos</button><button class="seg" id="clientFilterBlocked" onclick="setClientFilter('blocked')">Bloqueados</button></div>
   <div id="clientList" class="card"></div>
 </section>
 
@@ -525,6 +577,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <section id="suppliers" class="hidden">
   <button class="back-btn" onclick="show('more')">← Volver</button>
   <div class="titleline"><b>Proveedores</b><button class="btn small" onclick="openSupplierModal()">+ Nuevo</button></div>
+  <div class="segmented" style="margin:12px 0"><button class="seg active" id="supplierFilterAll" onclick="setSupplierFilter('all')">Todos</button><button class="seg" id="supplierFilterActive" onclick="setSupplierFilter('active')">Activos</button><button class="seg" id="supplierFilterBlocked" onclick="setSupplierFilter('blocked')">Bloqueados</button></div>
   <div id="supplierList" class="card"></div>
 </section>
 
@@ -541,7 +594,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <section id="otherSupplies" class="hidden">
   <button class="back-btn" onclick="show('more')">← Volver</button>
   <div class="titleline"><b>Otros insumos</b><button class="btn small" onclick="openSupplyModal()">+ Nuevo</button></div>
-  <div class="helper">Materiales que usas para producir, pero que no son ingredientes: papel mantequilla, cajas, separadores, etc. Las compras aumentan su stock y las recetas pueden consumirlos al preparar.</div>
+  <div class="helper">Materiales que usas para producir, pero que no son ingredientes. Clasifícalos como consumibles o no consumibles. Todos ingresan por compras y tienen un costo; los consumibles se descuentan cuando los registras en Producción.</div>
   <div id="supplyList" class="card" style="margin-top:12px"></div>
 </section>
 
@@ -623,7 +676,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <div class="titleline"><b>Nuevo pedido</b><button class="btn small light" onclick="closeModal(null,'orderModal')">Cerrar</button></div>
   <label>Cliente *</label><select id="orderClient"></select>
   <label>Productos *</label>
-  <div class="order-item-head"><span>Producto</span><span>Cant. (un.)</span><span>Precio venta</span><span></span></div>
+  <div id="orderItemHead" class="order-item-head hidden"><span>Producto</span><span>Cant. (un.)</span><span>Precio venta</span><span></span></div>
   <div id="orderItemFields"></div>
   <button type="button" class="btn light add-row-btn" onclick="addOrderItemRow()">+ Agregar producto</button>
   <div class="order-total-box"><span>Total del pedido</span><b id="orderTotalDisplay">$0</b></div>
@@ -665,10 +718,21 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <div id="productionModal" class="modal hidden" onclick="closeModal(event,'productionModal')">
  <div class="sheet" onclick="event.stopPropagation()">
   <div class="titleline"><b>Registrar </b><button class="btn small light" onclick="closeModal(null,'productionModal')">Cerrar</button></div>
-  <div class="helper">Al marcar el pedido como preparado, se descontarán automáticamente los ingredientes y otros insumos definidos en la receta.</div>
+  <div class="helper">Antes de marcar el pedido como preparado puedes ajustar las cantidades reales utilizadas. Los cambios se reflejarán en el costo real de esta producción.</div>
   <div id="productionOrderInfo" class="card" style="margin:12px 0"></div>
-  <div id="productionNeeds"></div>
-  <div class="helper" id="productionStockCheck"></div>
+  <div class="section" style="margin-top:8px">Ingredientes utilizados</div>
+  <div id="productionNeeds" class="production-edit-list"></div>
+  <div class="section">Insumos consumibles utilizados</div>
+  <div class="small-note">Estos insumos no forman parte de la receta. Registra aquí solo lo que efectivamente utilizaste en esta producción.</div>
+  <div id="productionConsumables"></div>
+  <button type="button" class="btn light add-row-btn" onclick="addProductionConsumableRow()">+ Agregar insumo consumible</button>
+  <div class="helper" id="productionStockCheck" style="margin-top:12px"></div>
+  <div class="production-summary">
+    <div class="card"><div class="muted">Precio de venta</div><div id="productionSaleValue" class="value">$0</div></div>
+    <div class="card"><div class="muted">Costo real</div><div id="productionCostValue" class="value">$0</div></div>
+    <div class="card"><div class="muted">Ganancia</div><div id="productionGainValue" class="value green-value">$0</div></div>
+    <div class="card"><div class="muted">Margen</div><div id="productionMarginValue" class="value green-value">—</div></div>
+  </div>
   <button id="saveProductionBtn" class="btn" onclick="saveProduction()">✓ Preparar pedido</button>
   <input id="productionOrder" type="hidden">
   <input id="productionQty" type="hidden" value="1">
@@ -684,6 +748,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <label>Teléfono</label><input id="clientPhone" placeholder="+56 9...">
   <label>Ubicación</label><input id="clientLocation" placeholder="Comuna, Región">
   <label>Notas</label><input id="clientNote" placeholder="Preferencias, dirección, etc.">
+  <label>Estado</label><select id="clientStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select>
   <button class="btn" onclick="saveClient()">✓ Guardar cliente</button>
  </div>
 </div>
@@ -697,6 +762,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <label>Proveedor de qué insumo</label><input id="supplierSupplies" placeholder="Ej. lácteos, frutas, envases">
   <label>Ubicación</label><input id="supplierLocation" placeholder="Comuna, Región">
   <label>Contacto</label><input id="supplierContact" placeholder="Nombre, teléfono o correo">
+  <label>Estado</label><select id="supplierStatus"><option value="active">Activo</option><option value="blocked">Bloqueado</option></select>
   <button class="btn" onclick="saveSupplier()">✓ Guardar proveedor</button>
  </div>
 </div>
@@ -714,14 +780,11 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <label>Ingredientes</label>
   <div id="recipeIngredientFields"></div>
   <button type="button" class="btn light add-row-btn" onclick="addRecipeIngredientRow()">+ Agregar ingrediente</button>
-  <label style="margin-top:12px">Otros insumos</label>
-  <div id="recipeSupplyFields"></div>
-  <button type="button" class="btn light add-row-btn" onclick="addRecipeSupplyRow()">+ Agregar otro</button>
   <div id="recipeCostSummary" class="recipe-cost-summary">
    <div><span>Ganancia</span><b id="recipeGain">$0</b></div>
    <div><span>Margen estimado</span><b id="recipeMargin" class="margin-value">—</b></div>
   </div>
-  <div class="small-note">El costo se calcula según el costo de los insumos que actualmente quedan en stock. Si se agota una compra anterior, se utiliza el costo de la siguiente compra disponible.</div>
+  <div class="small-note">El costo de la receta se calcula con el costo unitario disponible de cada ingrediente.</div>
   <button class="btn" onclick="saveRecipe()">✓ Guardar receta</button>
  </div>
 </div>
@@ -743,7 +806,8 @@ label{font-size:12px;color:var(--muted);font-weight:700}
  <div class="sheet" onclick="event.stopPropagation()">
   <div class="titleline"><b>Nuevo otro insumo</b><button class="btn small light" onclick="closeModal(null,'supplyModal')">Cerrar</button></div>
   <label>Nombre *</label><input id="supplyName" placeholder="Ej. Papel mantequilla">
-  <label>Unidad</label><input id="supplyUnit" value="g" placeholder="g, un, ml...">
+  <label>Unidad</label><input id="supplyUnit" value="un" placeholder="g, m, un, ml...">
+  <label>Tipo de insumo</label><select id="supplyConsumable"><option value="consumable">Consumible</option><option value="nonconsumable">No consumible</option></select>
   <button class="btn" onclick="saveSupply()">✓ Guardar insumo</button>
  </div>
 </div>
@@ -775,16 +839,34 @@ const INGREDIENT_UNITS={'Kuky':'g','Mantequilla':'g','Queso crema':'g','Frambues
 const INITIAL_STOCK={'Kuky':2070,'Mantequilla':430,'Queso crema':0,'Frambuesa congelada':1000,'Leche condensada':399,'Yogur sin endulzar':450};
 const DEFAULT_RECIPE={id:'r1',name:'Cheesecake Frambuesa',salePrice:25000,ingredients:{...INGREDIENTS},supplies:{}};
 function getRecipeSafe(product){return (db.recipes||[]).find(r=>r.name===product)||null}
+function ingredientCatalog(){
+  return Array.isArray(db.ingredients)?db.ingredients:[];
+}
+function ingredientNames(){return ingredientCatalog().map(i=>i.name);}
+function ingredientUnit(name){return (ingredientCatalog().find(i=>i.name===name)?.unit)||(db.ingredientUnits&&db.ingredientUnits[name])||'g';}
+function consumableSupplies(){return (db.otherSupplies||[]).filter(s=>s.consumable!==false);}
   // INICIALIZACIÓN Y MIGRACIÓN DE DATOS
 function initDb(){
   if(!Array.isArray(db.clients))db.clients=[];
   if(!Array.isArray(db.suppliers))db.suppliers=[];
+  db.clients.forEach(c=>{if(!c.status)c.status='active'});db.suppliers.forEach(x=>{if(!x.status)x.status='active'});
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.recipes)||!db.recipes.length)db.recipes=[DEFAULT_RECIPE];
   if(!Array.isArray(db.otherSupplies))db.otherSupplies=[];
   if(!db.inventory)db.inventory={...INITIAL_STOCK};
   db.ingredientUnits=db.ingredientUnits||{...INGREDIENT_UNITS};
+  if(!Array.isArray(db.ingredients) || db.ingredients.length===0){
+    const names=new Set([...Object.keys(INGREDIENTS),...Object.keys(db.inventory||{}),...Object.keys(db.ingredientUnits||{})]);
+    db.ingredients=[...names].map(name=>({name,unit:(db.ingredientUnits&&db.ingredientUnits[name])||INGREDIENT_UNITS[name]||'g'}));
+  } else {
+    db.ingredients=db.ingredients.map(x=>typeof x==='string'?{name:x,unit:(db.ingredientUnits&&db.ingredientUnits[x])||'g'}:x).filter(x=>x&&x.name);
+  }
+  db.ingredients.forEach(i=>{db.ingredientUnits[i.name]=i.unit||'g';if(db.inventory[i.name]==null)db.inventory[i.name]=0});
+  if(!db.inventory)db.inventory={};
   if(!db.otherInventory)db.otherInventory={};
+  db.otherSupplies=db.otherSupplies.map(s=>({...s,unit:s.unit||'un',consumable:s.consumable!==false}));
+  // Los otros insumos ya no pertenecen a la receta: se registran manualmente en Producción.
+  db.recipes.forEach(r=>{r.ingredients=r.ingredients||{};r.supplies={}});
   if(!Array.isArray(db.movements))db.movements=[];
   db.orderCounter=Number(db.orderCounter||0); db.lotCounter=Number(db.lotCounter||0);db.purchaseCounter=Number(db.purchaseCounter||0);db.purchases=Array.isArray(db.purchases)?db.purchases:[];
   db.orders.forEach(o=>{if(!Array.isArray(o.items)&&o.product)o.items=[{product:o.product,qty:Number(o.qty)||1,unitPrice:Number(getRecipeSafe(o.product)?.salePrice)||0,subtotal:(Number(getRecipeSafe(o.product)?.salePrice)||0)*(Number(o.qty)||1)}]});
@@ -879,13 +961,13 @@ function openHelpTopic(topic){
             <li>En <b>Más → Recetas</b>, selecciona <b>+ Nueva</b>.</li>
             <li>Ingresa el nombre del producto y sus datos de venta.</li>
             <li>Agrega los ingredientes y sus cantidades.</li>
-            <li>Agrega otros insumos cuando sean necesarios.</li>
+            <li>Los otros insumos consumibles se registran directamente durante la <b>Producción</b>, no dentro de la receta.</li>
             <li>Guarda la receta.</li>
           </ol>
         </div>
         <div class="help-topic-card">
           <b>¿Qué pasa al preparar?</b>
-          <p>Cuando un pedido pasa a <b>Preparado</b>, se descuentan automáticamente del stock los ingredientes y otros insumos definidos en su receta.</p>
+          <p>Al preparar, puedes ajustar las cantidades reales de los ingredientes y registrar los insumos consumibles utilizados. Con eso se calcula el costo real, la ganancia y el margen de esa producción.</p>
         </div>
       `
     },
@@ -942,6 +1024,15 @@ function openHelpTopic(topic){
           </ol>
         </div>
       `
+    },
+    costs:{
+      title:'Costos y producción real',
+      intro:'La receta entrega una referencia, pero el costo real se determina con lo que efectivamente utilizaste al producir.',
+      body:`
+        <div class="help-topic-card"><b>Durante Producción</b><p>Puedes modificar las cantidades reales de los ingredientes. También puedes agregar los insumos consumibles que utilizaste, aunque no formen parte de la receta.</p></div>
+        <div class="help-topic-card"><b>Costo y margen</b><p>La aplicación toma el precio de venta del pedido y calcula el costo real de la producción, la ganancia y el margen.</p></div>
+        <div class="help-topic-card"><b>Otros insumos</b><p>Los consumibles se descuentan del stock cuando los registras en Producción. Los no consumibles solo se mantienen controlados en stock y no se descuentan automáticamente.</p></div>
+      `
     }
   };
 
@@ -961,13 +1052,19 @@ function closeHelpTopic(){
 
 function monthKey(d){const m=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];return m[d.getMonth()]}
   // PEDIDOS
+function updateOrderItemHeader(){
+  const head=document.getElementById('orderItemHead');
+  const wrap=document.getElementById('orderItemFields');
+  if(head)head.classList.toggle('hidden',!(wrap&&wrap.querySelector('.order-item-line')));
+}
 function addOrderItemRow(selected='',qty=1,unitPrice=null){
   const wrap=document.getElementById('orderItemFields'); if(!wrap)return;
+  const head=document.getElementById('orderItemHead'); if(head)head.classList.remove('hidden');
   if(!db.recipes.length){showFeedback('Sin productos','Primero crea una receta para poder agregar productos al pedido.','assets/Receta Creada.png','Ver recetas',()=>{closeFeedback();show('recipes')},'Cerrar',()=>closeFeedback());return}
   const row=document.createElement('div');row.className='order-item-line';
   const options=db.recipes.map(r=>'<option value="'+esc(r.name)+'" '+(r.name===selected?'selected':'')+'>'+esc(r.name)+'</option>').join('');
   const selectedRecipe=getRecipe(selected||db.recipes[0]?.name);const initialPrice=unitPrice!==null&&unitPrice!==undefined?Number(unitPrice):Number(selectedRecipe?.salePrice||0);
-  row.innerHTML='<select data-order-product onchange="updateOrderItemRow(this)">'+options+'</select><input data-order-qty type="number" min="1" step="1" value="'+Math.max(1,Number(qty)||1)+'" oninput="updateOrderTotal()"><input class="order-item-unit-price" data-order-unit-price inputmode="numeric" type="text" value="'+(initialPrice||0).toLocaleString('es-CL')+'" oninput="updateOrderTotal()"><button type="button" class="icon-btn trash-btn" aria-label="Eliminar producto" title="Eliminar producto" onclick="this.parentElement.remove();updateOrderTotal()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>';
+  row.innerHTML='<select data-order-product onchange="updateOrderItemRow(this)">'+options+'</select><input data-order-qty type="number" min="1" step="1" value="'+Math.max(1,Number(qty)||1)+'" oninput="updateOrderTotal()"><input class="order-item-unit-price" data-order-unit-price inputmode="numeric" type="text" value="'+(initialPrice||0).toLocaleString('es-CL')+'" oninput="updateOrderTotal()"><button type="button" class="icon-btn trash-btn" aria-label="Eliminar producto" title="Eliminar producto" onclick="this.parentElement.remove();updateOrderItemHeader();updateOrderTotal()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>';
   wrap.appendChild(row);updateOrderItemRow(row.querySelector('[data-order-product]'), initialPrice);
 }
 function updateOrderItemRow(select,forcedPrice=null){
@@ -992,7 +1089,8 @@ function saveOrder(){
 function viewCreatedOrder(){closeModal(null,'orderCreatedModal');show('orders');setTimeout(()=>{const el=document.getElementById('pendingOrders');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},80)}
 function createAnotherOrder(){closeModal(null,'orderCreatedModal');resetOrderForm();openModal('orderModal')}
 function resetOrderForm(){
-  const wrap=document.getElementById('orderItemFields');if(wrap)wrap.innerHTML='';addOrderItemRow();
+  const wrap=document.getElementById('orderItemFields');if(wrap)wrap.innerHTML='';
+  updateOrderItemHeader();
   ['orderDate','orderTime','orderDeposit','orderNote'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});
   const c=document.getElementById('orderClient');if(c)c.selectedIndex=0;updateOrderTotal();
 }
@@ -1015,7 +1113,7 @@ function orderHtml(o,history){
     return '<div class="row"><div style="flex:1"><div class="titleline" style="margin-bottom:5px"><div><b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+'</div></div>'+statusBadge(o.status)+'</div>'+orderProductsHtml(o)+'<div class="muted">'+date+(o.time?' · '+esc(o.time):'')+' · '+money(o.price)+'</div>'+(o.balance?' <div class="muted">Saldo: <b>'+money(o.balance)+'</b></div>':'')+(o.note?'<div class="muted">📝 '+esc(o.note)+'</div>':'')+action+'</div></div>';
   }
   const finalStatus=o.status==='Cancelado'?'Cancelado':'Entregado';
-  return '<div class="row history-row"><div style="flex:1"><div class="titleline" style="margin-bottom:5px"><div><b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+'</div></div>'+statusBadge(finalStatus)+'</div>'+orderProductsHtml(o)+'<div class="muted">'+date+(o.time?' · '+esc(o.time):'')+' · '+money(o.price)+'</div></div></div>';
+  return '<div class="row history-row"><div style="flex:1"><div class="titleline" style="margin-bottom:5px"><div><b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+'</div></div>'+statusBadge(finalStatus)+'</div>'+orderProductsHtml(o)+'<div class="muted">'+date+(o.time?' · '+esc(o.time):'')+' · '+money(o.price)+'</div>'+(o.productionCost!=null?'<div class="muted">Costo real: <b>'+money(o.productionCost)+'</b> · Ganancia: <b>'+money(o.productionGain||0)+'</b> · Margen: <b>'+((Number(o.productionMargin||0)*100).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1}))+'%</b></div>':'')+'</div></div>';
 }
   // PRODUCCIÓN
 function renderOrders(){
@@ -1033,29 +1131,62 @@ function renderProduction(){
 function setProductionTab(tab){localStorage.setItem('maidas-production-tab',tab);applyProductionTab()}
 function applyProductionTab(){const tab=localStorage.getItem('maidas-production-tab')||'toMake',a=document.getElementById('productionPending'),b=document.getElementById('productionReady');if(!a||!b)return;a.classList.toggle('hidden',tab!=='toMake');b.classList.toggle('hidden',tab!=='ready');document.getElementById('tabToMake').classList.toggle('active',tab==='toMake');document.getElementById('tabReady').classList.toggle('active',tab==='ready')}
 function getRecipe(product){return db.recipes.find(r=>r.name===product)||null}
+function productionItems(o){return Array.isArray(o.items)&&o.items.length?o.items:[{product:o.product,qty:o.qty||1}]}
+function productionRecipeNeeds(o){
+  const needs={};
+  productionItems(o).forEach(item=>{const r=getRecipe(item.product);if(!r)return;Object.entries(r.ingredients||{}).forEach(([n,q])=>needs[n]=(needs[n]||0)+Number(q||0)*Number(item.qty||1));});
+  return needs;
+}
+function productionSaleTotal(o){return productionItems(o).reduce((sum,i)=>sum+Number(i.unitPrice||getRecipe(i.product)?.salePrice||0)*Number(i.qty||1),0)}
+function productionIngredientRows(){return [...document.querySelectorAll('#productionNeeds .production-edit-row')].map(row=>({name:row.dataset.name,qty:Number(row.querySelector('[data-production-qty]')?.value)||0,unit:row.dataset.unit||'g'})).filter(x=>x.name);}
+function productionConsumableRows(){return [...document.querySelectorAll('#productionConsumables .production-consumable-row')].map(row=>({name:row.querySelector('[data-production-supply]')?.value||'',qty:Number(row.querySelector('[data-production-supply-qty]')?.value)||0,unit:row.dataset.unit||'un'})).filter(x=>x.name&&x.qty>0);}
+function addProductionConsumableRow(selected='',qty=''){
+  const wrap=document.getElementById('productionConsumables');if(!wrap)return;
+  const options='<option value="">Selecciona insumo</option>'+consumableSupplies().map(s=>'<option value="'+esc(s.name)+'" '+(s.name===selected?'selected':'')+'>'+esc(s.name)+'</option>').join('');
+  if(!consumableSupplies().length){wrap.innerHTML='<div class="production-consumable-empty">No tienes insumos consumibles creados. Puedes crearlos en Más → Otros insumos.</div>';return}
+  const row=document.createElement('div');row.className='production-consumable-row';
+  row.innerHTML='<div class="consumable-field"><label>Insumo</label><select data-production-supply onchange="updateProductionSupplyUnit(this);updateProductionSummary()">'+options+'</select></div><div class="consumable-field consumable-qty"><label>Cantidad</label><input data-production-supply-qty type="number" min="0" step="any" placeholder="Ej. 1" value="'+(qty||'')+'" oninput="updateProductionSummary()"></div><span class="production-consumable-unit" data-production-supply-unit>'+esc((db.otherSupplies.find(s=>s.name===selected)||{}).unit||'')+'</span><button type="button" class="icon-btn trash-btn" aria-label="Eliminar insumo" title="Eliminar insumo" onclick="this.closest(\'.production-consumable-row\').remove();updateProductionSummary()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>'
+  wrap.appendChild(row);updateProductionSupplyUnit(row.querySelector('[data-production-supply]'));updateProductionSummary();
+}
+function updateProductionSupplyUnit(select){const row=select?.closest('.production-consumable-row');if(!row)return;const s=db.otherSupplies.find(x=>x.name===select.value);row.dataset.unit=s?.unit||'un';const u=row.querySelector('[data-production-supply-unit]');if(u)u.textContent=s?.unit||'';}
+function updateProductionSummary(){
+  const id=document.getElementById('productionOrder')?.value,o=db.orders.find(x=>x.id===id);if(!o)return;
+  const sale=productionSaleTotal(o);
+  let cost=0;productionIngredientRows().forEach(x=>cost+=x.qty*currentUnitCost('ingredient',x.name));productionConsumableRows().forEach(x=>cost+=x.qty*currentUnitCost('other',x.name));cost=Math.round(Number.isFinite(cost)?cost:0);
+  const gain=sale-cost;const margin=sale>0?(gain/sale)*100:0;
+  const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
+  set('productionSaleValue',money(sale));set('productionCostValue',money(cost));set('productionGainValue',money(gain));set('productionMarginValue',sale>0?margin.toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—');
+  updateProductionCheck();
+}
 function openProduction(id){
-  const o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparación'){return}
-  const items=Array.isArray(o.items)&&o.items.length?o.items:[{product:o.product,qty:o.qty}];
-  document.getElementById('productionOrder').value=id;
-  document.getElementById('productionQty').value=1;
+  const o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparación')return;
+  document.getElementById('productionOrder').value=id;document.getElementById('productionQty').value=1;
   document.getElementById('productionOrderInfo').innerHTML='<b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+'</div>'+orderProductsHtml(o);
-  const needs={};const needRows=[];
-  items.forEach(item=>{const r=getRecipe(item.product);if(!r)return;Object.entries(r.ingredients||{}).forEach(([n,q])=>{needs['i|'+n]=(needs['i|'+n]||0)+Number(q)*Number(item.qty)});Object.entries(r.supplies||{}).forEach(([n,q])=>{needs['s|'+n]=(needs['s|'+n]||0)+Number(q)*Number(item.qty)});});
-  Object.entries(needs).forEach(([key,qty])=>{const [type,name]=key.split('|');const unit=type==='i'?((db.ingredientUnits&&db.ingredientUnits[name])||'g'):((db.otherSupplies.find(s=>s.name===name)||{}).unit||'un');needRows.push({name,qty,unit,type})});
-  document.getElementById('productionNeeds').innerHTML='<div class="section" style="margin-top:0">Necesitas</div>'+needRows.map(i=>'<div class="row"><span>'+esc(i.name)+'</span><b>'+i.qty+' '+esc(i.unit)+'</b></div>').join('');updateProductionCheck();openModal('productionModal');
+  const needs=productionRecipeNeeds(o),wrap=document.getElementById('productionNeeds');
+  wrap.innerHTML=Object.entries(needs).map(([name,qty])=>'<div class="production-edit-row" data-name="'+esc(name)+'" data-unit="'+esc(ingredientUnit(name))+'"><div class="production-edit-name">'+esc(name)+'</div><div class="production-edit-qty"><input data-production-qty type="number" min="0" step="any" value="'+Number(qty||0)+'" oninput="updateProductionSummary()"><span class="production-edit-unit">'+esc(ingredientUnit(name))+'</span></div></div>').join('')||'<div class="production-consumable-empty">Esta receta no tiene ingredientes.</div>';
+  document.getElementById('productionConsumables').innerHTML='';
+  updateProductionSummary();
+  updateProductionCheck();
+  openModal('productionModal');
 }
 function updateProductionCheck(){
-  const id=document.getElementById('productionOrder').value,o=db.orders.find(x=>x.id===id);if(!o)return;const items=Array.isArray(o.items)&&o.items.length?o.items:[{product:o.product,qty:o.qty}],lacking=[];const needs={};
-  items.forEach(item=>{const r=getRecipe(item.product);if(!r)return;Object.entries(r.ingredients||{}).forEach(([n,q])=>needs['i|'+n]=(needs['i|'+n]||0)+Number(q)*Number(item.qty));Object.entries(r.supplies||{}).forEach(([n,q])=>needs['s|'+n]=(needs['s|'+n]||0)+Number(q)*Number(item.qty));});
-  Object.entries(needs).forEach(([key,need])=>{const [type,name]=key.split('|');const avail=type==='i'?Number(db.inventory[name]||0):Number(db.otherInventory[name]||0);const unit=type==='i'?((db.ingredientUnits&&db.ingredientUnits[name])||'g'):((db.otherSupplies.find(s=>s.name===name)||{}).unit||'un');if(avail<need)lacking.push(name+' (faltan '+(need-avail).toLocaleString('es-CL')+' '+unit+')')});
-  const el=document.getElementById('productionStockCheck'),btn=document.getElementById('saveProductionBtn');if(lacking.length){el.innerHTML='⚠️ <b>Stock insuficiente:</b> '+lacking.map(esc).join(', ');el.style.color='var(--red)';btn.disabled=true;btn.style.opacity='.55';btn.style.cursor='not-allowed'}else{el.innerHTML='✓ Hay stock suficiente para registrar esta producción.';el.style.color='var(--green)';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'}
+  const id=document.getElementById('productionOrder')?.value,o=db.orders.find(x=>x.id===id);if(!o)return;
+  const lacking=[];
+  productionIngredientRows().forEach(x=>{const avail=Number(db.inventory[x.name]||0);if(avail<x.qty)lacking.push(x.name+' (faltan '+(x.qty-avail).toLocaleString('es-CL')+' '+x.unit+')')});
+  productionConsumableRows().forEach(x=>{const avail=Number(db.otherInventory[x.name]||0);if(avail<x.qty)lacking.push(x.name+' (faltan '+(x.qty-avail).toLocaleString('es-CL')+' '+x.unit+')')});
+  const el=document.getElementById('productionStockCheck'),btn=document.getElementById('saveProductionBtn');
+  if(lacking.length){el.innerHTML='⚠️ <b>Stock insuficiente:</b> '+lacking.map(esc).join(', ');el.style.color='var(--red)';btn.disabled=true;btn.style.opacity='.55';btn.style.cursor='not-allowed'}else{el.innerHTML='✓ Hay stock suficiente para registrar esta producción.';el.style.color='var(--green)';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer'}
 }
 function saveProduction(){
-  const id=document.getElementById('productionOrder').value,o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparación')return;const items=Array.isArray(o.items)&&o.items.length?o.items:[{product:o.product,qty:o.qty}],needs={};
-  items.forEach(item=>{const r=getRecipe(item.product);if(!r)return;Object.entries(r.ingredients||{}).forEach(([n,q])=>needs['i|'+n]=(needs['i|'+n]||0)+Number(q)*Number(item.qty));Object.entries(r.supplies||{}).forEach(([n,q])=>needs['s|'+n]=(needs['s|'+n]||0)+Number(q)*Number(item.qty));});
-  const lacking=[];Object.entries(needs).forEach(([key,need])=>{const [type,name]=key.split('|');const avail=type==='i'?Number(db.inventory[name]||0):Number(db.otherInventory[name]||0);if(avail<need)lacking.push(name)});if(lacking.length){alert('No hay stock suficiente para preparar este pedido.');return}
-  Object.entries(needs).forEach(([key,need])=>{const [type,name]=key.split('|');if(type==='i')db.inventory[name]=(db.inventory[name]||0)-need;else db.otherInventory[name]=(db.otherInventory[name]||0)-need;});
-  o.status='Preparado';o.preparedAt=new Date().toISOString();o.stockApplied=true;db.movements.push({id:Date.now(),type:'production',orderId:o.id,date:new Date().toISOString(),items:items.map(i=>({product:i.product,qty:i.qty})),product:items[0]?.product,qty:items[0]?.qty,ingredients:Object.fromEntries(Object.entries(needs).filter(([k])=>k.startsWith('i|')).map(([k,v])=>[k.slice(2),v])),supplies:Object.fromEntries(Object.entries(needs).filter(([k])=>k.startsWith('s|')).map(([k,v])=>[k.slice(2),v]))});persist();closeModal(null,'productionModal');renderOrders();
+  const id=document.getElementById('productionOrder').value,o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparación')return;
+  const ingredients=productionIngredientRows(),consumables=productionConsumableRows();
+  const lacking=[];ingredients.forEach(x=>{if(Number(db.inventory[x.name]||0)<x.qty)lacking.push(x.name)});consumables.forEach(x=>{if(Number(db.otherInventory[x.name]||0)<x.qty)lacking.push(x.name)});if(lacking.length){alert('No hay stock suficiente para preparar este pedido.');return}
+  ingredients.forEach(x=>db.inventory[x.name]=(db.inventory[x.name]||0)-x.qty);consumables.forEach(x=>db.otherInventory[x.name]=(db.otherInventory[x.name]||0)-x.qty);
+  let cost=0;ingredients.forEach(x=>cost+=x.qty*currentUnitCost('ingredient',x.name));consumables.forEach(x=>cost+=x.qty*currentUnitCost('other',x.name));cost=Math.round(Number.isFinite(cost)?cost:0);
+  const sale=productionSaleTotal(o),gain=sale-cost,margin=sale>0?gain/sale:0;
+  o.status='Preparado';o.preparedAt=new Date().toISOString();o.stockApplied=true;o.productionCost=cost;o.productionSale=sale;o.productionGain=gain;o.productionMargin=margin;
+  db.movements.push({id:Date.now(),type:'production',orderId:o.id,date:new Date().toISOString(),items:productionItems(o).map(i=>({product:i.product,qty:i.qty})),product:productionItems(o)[0]?.product,qty:productionItems(o)[0]?.qty,ingredients:Object.fromEntries(ingredients.map(x=>[x.name,x.qty])),supplies:Object.fromEntries(consumables.map(x=>[x.name,x.qty])),cost,sale,gain,margin});
+  persist();closeModal(null,'productionModal');renderOrders();
 }
 function markDelivered(id){const o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparado')return;o.status='Entregado';o.deliveredAt=new Date().toISOString();persist();renderOrders()}
 function cancelOrder(id){const o=db.orders.find(x=>x.id===id);if(!o||o.status!=='Preparación')return;if(!confirm('¿Cancelar este pedido? Quedará registrado en el historial como cancelado.'))return;o.status='Cancelado';o.cancelledAt=new Date().toISOString();persist();renderOrders()}
@@ -1063,10 +1194,8 @@ function deleteOrder(id){const o=db.orders.find(x=>x.id===id);if(!o||o.status!==
   // STOCK Y COMPRAS
 function recipeCapacity(r){
   const entries=Object.entries(r.ingredients||{}).filter(([,qty])=>Number(qty)>0);
-  const supplyEntries=Object.entries(r.supplies||{}).filter(([,qty])=>Number(qty)>0);
   const limits=[];
   entries.forEach(([name,qty])=>limits.push({name,need:Number(qty),have:Number(db.inventory[name]||0),capacity:Math.floor(Number(db.inventory[name]||0)/Number(qty))}));
-  supplyEntries.forEach(([name,qty])=>limits.push({name,need:Number(qty),have:Number(db.otherInventory[name]||0),capacity:Math.floor(Number(db.otherInventory[name]||0)/Number(qty))}));
   const capacity=limits.length?Math.max(0,Math.min(...limits.map(x=>x.capacity))):0;
   const missing=limits.filter(x=>x.capacity<1).map(x=>({name:x.name,missing:Math.max(0,x.need-x.have),need:x.need}));
   return {capacity,limits,missing};
@@ -1076,8 +1205,8 @@ function renderStock(){
   if(!el||!badge)return;
   const recipes=db.recipes||[];
   badge.textContent=recipes.length+' '+(recipes.length===1?'producto':'productos');
-  const ingNames=[...new Set([...Object.keys(INGREDIENTS),...Object.keys(db.inventory||{})])];
-  const ingredientHtml=ingNames.length?ingNames.map(ing=>'<div class="row"><div><b>'+esc(ing)+'</b><div class="muted">'+Math.max(0,Math.round(db.inventory[ing]||0)).toLocaleString('es-CL')+' '+esc((db.ingredientUnits&&db.ingredientUnits[ing])||'g')+'</div></div><span class="dot '+((db.inventory[ing]||0)<=0?'red':(db.inventory[ing]||0)<100?'yellow':'green')+'"></span></div>').join(''):'<div class="empty-state muted">Aún no tienes ingredientes.</div>';
+  const ingNames=[...new Set([...ingredientNames(),...Object.keys(db.inventory||{})])];
+  const ingredientHtml=ingNames.length?ingNames.map(ing=>'<div class="row"><div><b>'+esc(ing)+'</b><div class="muted">'+Math.max(0,Math.round(db.inventory[ing]||0)).toLocaleString('es-CL')+' '+esc(ingredientUnit(ing))+(currentUnitCost('ingredient',ing)>0?' · Costo unitario: '+money(Math.round(currentUnitCost('ingredient',ing))):'')+'</div></div><span class="dot '+((db.inventory[ing]||0)<=0?'red':(db.inventory[ing]||0)<100?'yellow':'green')+'"></span></div>').join(''):'<div class="empty-state muted">Aún no tienes ingredientes.</div>';
   const suppliesHtml=db.otherSupplies.length?db.otherSupplies.map(s=>'<div class="row"><div><b>'+esc(s.name)+'</b><div class="muted">'+Number(db.otherInventory[s.name]||0).toLocaleString('es-CL')+' '+esc(s.unit||'un')+'</div></div><span class="dot '+((db.otherInventory[s.name]||0)<=0?'red':'green')+'"></span></div>').join(''):'<div class="muted">Aún no tienes otros insumos.</div>';
   const capacityHtml=recipes.length?recipes.map(r=>{const c=recipeCapacity(r);let status=c.capacity===0?'red':c.capacity<=1?'yellow':'green';let detail=c.capacity===0?(c.missing.length?'Faltan: '+c.missing.map(x=>esc(x.name)+' · '+x.missing+' '+esc((db.ingredientUnits&&db.ingredientUnits[x.name])||'g')).join(' · '):'Faltan ingredientes o insumos'):('Puedes hacer '+c.capacity+' '+(c.capacity===1?'unidad':'unidades'));return '<div class="production-capacity-row"><div style="display:flex;justify-content:space-between;gap:10px"><b>'+esc(r.name)+'</b><span class="dot '+status+'" style="margin-top:6px"></span></div><div class="capacity-missing">'+detail+'</div></div>'}).join(''):'<div class="empty-state muted">Aún no tienes recetas.</div>';
   el.innerHTML='<div class="section" style="margin-top:0">Ingredientes</div>'+ingredientHtml+'<div class="section">Otros insumos</div>'+suppliesHtml+'<div class="section stock-production">Capacidad de producción</div>'+capacityHtml;
@@ -1085,15 +1214,16 @@ function renderStock(){
 function renderPurchaseSuppliers(){
   const s=document.getElementById('purchaseSupplier');
   if(!s)return;
-  s.innerHTML='<option value="">Selecciona proveedor</option>'+db.suppliers.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
+  s.innerHTML='<option value="">Selecciona proveedor</option>'+db.suppliers.filter(x=>(x.status||'active')==='active').map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
 }
 function purchaseOptionsHtml(type,selected=''){
-  if(type==='ingredient')return '<option value="">Selecciona ingrediente</option>'+Object.keys(INGREDIENTS).map(x=>'<option value="'+esc(x)+'" '+(x===selected?'selected':'')+'>'+esc(x)+'</option>').join('');
+  if(type==='ingredient')return '<option value="">Selecciona ingrediente</option>'+ingredientNames().map(x=>'<option value="'+esc(x)+'" '+(x===selected?'selected':'')+'>'+esc(x)+'</option>').join('');
   return '<option value="">Selecciona otro insumo</option>'+db.otherSupplies.map(x=>'<option value="'+esc(x.name)+'" '+(x.name===selected?'selected':'')+'>'+esc(x.name)+'</option>').join('');
 }
+function refreshPurchaseOptions(){document.querySelectorAll('.purchase-line').forEach(row=>{const type=row.querySelector('.purchase-line-type')?.value||'ingredient',sel=row.querySelector('.purchase-line-item');if(sel){const current=sel.value;sel.innerHTML=purchaseOptionsHtml(type,current);if(current)sel.value=current}updatePurchaseLineUnit(row)});}
 function getPurchaseUnit(type,item){
   if(!item)return '';
-  if(type==='ingredient')return (db.ingredientUnits&&db.ingredientUnits[item])||INGREDIENT_UNITS[item]||'g';
+  if(type==='ingredient')return ingredientUnit(item);
   return (db.otherSupplies||[]).find(x=>x.name===item)?.unit||'un';
 }
 function updatePurchaseLineUnit(row){
@@ -1112,7 +1242,7 @@ function addPurchaseLine(type='ingredient',item='',qty='',cost='',lotId='',origi
   row.dataset.lotId=lotId||'';
   row.dataset.originalCategory=originalCategory||type;
   row.dataset.originalItem=originalItem||item;
-  row.innerHTML='<div class="purchase-line-row"><div class="purchase-field purchase-field-type"><label>Tipo de producto</label><select class="purchase-line-type" onchange="refreshPurchaseLine(this)"><option value="ingredient" '+(type==='ingredient'?'selected':'')+'>Ingrediente</option><option value="other" '+(type==='other'?'selected':'')+'>Otro insumo</option></select></div></div>'+
+  row.innerHTML='<div class="purchase-line-row type-row"><div class="purchase-field purchase-field-type"><label>Tipo de producto</label><select class="purchase-line-type" onchange="refreshPurchaseLine(this)"><option value="ingredient" '+(type==='ingredient'?'selected':'')+'>Ingrediente</option><option value="other" '+(type==='other'?'selected':'')+'>Otro insumo</option></select></div></div>'+
     '<div class="purchase-line-row"><div class="purchase-field purchase-field-item"><label>Producto</label><select class="purchase-line-item" onchange="updatePurchaseLineUnit(this.closest(\'.purchase-line\'));updatePurchaseTotal()">'+purchaseOptionsHtml(type,item)+'</select></div><div class="purchase-field purchase-field-qty"><label class="purchase-qty-label">Cantidad</label><input class="purchase-line-qty" type="number" min="0" step="any" placeholder="Ej. 1000" value="'+(qty||'')+'" oninput="updatePurchaseTotal()"></div></div>'+
     '<div class="purchase-line-row cost-row"><div class="purchase-field purchase-field-cost"><label>Costo total ($)</label><input class="purchase-line-cost" inputmode="numeric" placeholder="Ej. 12000" value="'+(cost||'')+'" oninput="updatePurchaseTotal()"></div><button type="button" class="icon-btn trash-btn" aria-label="Eliminar producto" title="Eliminar producto" onclick="this.closest(\'.purchase-line\').remove();updatePurchaseTotal()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button></div>';
   wrap.appendChild(row);
@@ -1236,16 +1366,50 @@ function currentUnitCost(category,item){
 function calculateRecipeCostFromRecipe(r){
   let cost=0;
   Object.entries(r?.ingredients||{}).forEach(([name,qty])=>cost+=Number(qty||0)*currentUnitCost('ingredient',name));
-  Object.entries(r?.supplies||{}).forEach(([name,qty])=>cost+=Number(qty||0)*currentUnitCost('other',name));
-  return cost;
+  return Math.round(Number.isFinite(cost)?cost:0);
+}
+function periodFilter(){
+  const value=document.getElementById('reportPeriod')?.value||'Todo el período';
+  const now=new Date();const start=new Date(0);
+  if(value==='Este mes')start.setFullYear(now.getFullYear(),now.getMonth(),1);
+  else if(value==='Esta semana'){start.setTime(now.getTime());start.setHours(0,0,0,0);start.setDate(start.getDate()-((start.getDay()+6)%7));}
+  return x=>!x||!x.date||new Date(x.date)>=start;
 }
 function renderReports(){
-  const period=document.getElementById('reportPeriod');
-  if(period&&!period.dataset.bound){period.addEventListener('change',()=>{});period.dataset.bound='1';}
+  const period=document.getElementById('reportPeriod');if(period&&!period.dataset.bound){period.addEventListener('change',renderReports);period.dataset.bound='1';}
+  const filter=periodFilter();
+  const delivered=(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date));
+  const sales=delivered.reduce((s,o)=>s+Number(o.price||0),0);
+  const cost=delivered.reduce((s,o)=>s+Number(o.productionCost||calculateRecipeCostFromRecipe(getRecipe(productionItems(o)[0]?.product))*(productionItems(o)[0]?.qty||1)),0);
+  const gain=sales-cost;
+  const k=document.querySelectorAll('#reports .kpi .card');if(k[0])k[0].querySelector('.big').textContent=money(sales);if(k[1])k[1].querySelector('.big').textContent=money(gain);
+  const summary=document.querySelector('#reports .card:nth-of-type(2)');
+  const stats=document.querySelectorAll('#reports .kpi + .section + .card .statline b');
+  if(stats[0])stats[0].textContent=delivered.length;
+  const produced=delivered.reduce((s,o)=>s+productionItems(o).reduce((a,i)=>a+Number(i.qty||0),0),0);
+  if(stats[1])stats[1].textContent=produced;
+  if(stats[2])stats[2].textContent=money(produced?Math.round(cost/produced):0);
+  if(stats[3])stats[3].textContent=sales?((gain/sales)*100).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—';
+}
+function csvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
+function downloadCSV(filename,headers,rows){const csv=[headers, ...rows].map(r=>r.map(csvCell).join(';')).join('\
+');const blob=new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function downloadReportCSV(type){
+  const filter=periodFilter();
+  if(type==='orders'){const rows=(db.orders||[]).filter(o=>filter(o.date)).map(o=>[o.number,o.date,o.client,orderProductsText(o),o.status,o.price,o.productionCost??'',o.productionGain??'',o.productionMargin!=null?(o.productionMargin*100).toFixed(1)+'%':'']);downloadCSV('reporte_pedidos.csv',['Pedido','Fecha','Cliente','Productos','Estado','Venta','Costo real','Ganancia','Margen'],rows);return}
+  if(type==='purchases'){const rows=[];(db.purchases||[]).filter(p=>filter(p.date)).forEach(p=>(p.lines||[]).forEach(l=>rows.push([p.id,p.date,p.docType,p.docNumber,p.supplier,l.category,l.item,l.quantity,getPurchaseUnit(l.category,l.item),l.cost,l.quantity?Math.round(l.cost/l.quantity):0,l.lotId])));downloadCSV('reporte_compras.csv',['Compra','Fecha','Documento','N° documento','Proveedor','Tipo','Producto','Cantidad','Unidad','Costo total','Costo unitario','Lote'],rows);return}
+  if(type==='stock'){const rows=[];ingredientNames().forEach(n=>rows.push(['Ingrediente',n,db.inventory[n]||0,ingredientUnit(n),Math.round(currentUnitCost('ingredient',n))]));(db.otherSupplies||[]).forEach(s=>rows.push(['Otro insumo',s.name,db.otherInventory[s.name]||0,s.unit||'un',Math.round(currentUnitCost('other',s.name))]));downloadCSV('reporte_stock.csv',['Tipo','Producto','Stock','Unidad','Costo unitario'],rows);return}
+  if(type==='profitability'){const rows=(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date)).map(o=>[o.number,o.date,orderProductsText(o),o.price,o.productionCost??'',o.productionGain??'',o.productionMargin!=null?(o.productionMargin*100).toFixed(1)+'%':'']);downloadCSV('reporte_rentabilidad.csv',['Pedido','Fecha','Productos','Venta','Costo real','Ganancia','Margen'],rows)}
 }
 
   // RECETAS
-function renderRecipes(){const el=document.getElementById('recipeList');if(!el)return;el.innerHTML=db.recipes.map(r=>{const ingredientCost=Object.entries(r.ingredients||{}).reduce((sum,[i,g])=>sum+(Number(g)||0),0);return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')">✎ Editar</button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+g+' '+esc((db.ingredientUnits&&db.ingredientUnits[i])||'g')).join(' · ')+'</div>'+((r.supplies&&Object.keys(r.supplies).length)?'<div class="muted" style="margin-top:5px">Otros insumos: '+Object.entries(r.supplies).map(([i,g])=>esc(i)+' '+g).join(' · ')+'</div>':'')+'</div>'}).join('')}
+function renderRecipes(){
+  const el=document.getElementById('recipeList');if(!el)return;
+  el.innerHTML=db.recipes.map(r=>{
+    const cost=calculateRecipeCostFromRecipe(r);
+    return '<div class="card recipe-card"><div class="titleline"><div><b>'+esc(r.name)+'</b><div class="muted">Precio venta: '+money(r.salePrice)+'</div></div><button class="icon-btn" onclick="openRecipeModal(\''+r.id+'\')">✎ Editar</button></div><div class="muted">Ingredientes: '+Object.entries(r.ingredients||{}).map(([i,g])=>esc(i)+' '+Number(g||0).toLocaleString('es-CL')+' '+esc(ingredientUnit(i))).join(' · ')+'</div><div class="muted" style="margin-top:5px">Costo estimado: '+money(cost)+'</div></div>'
+  }).join('')
+}
 function openRecipeModal(id){
   const r=id?db.recipes.find(x=>x.id===id):{id:'',name:'',salePrice:'',ingredients:{},supplies:{}};
   document.getElementById('recipeId').value=r.id;
@@ -1254,16 +1418,14 @@ function openRecipeModal(id){
   document.getElementById('recipeModalTitle').textContent=id?'Editar receta':'Nueva receta';
   const ingWrap=document.getElementById('recipeIngredientFields'); ingWrap.innerHTML='';
   Object.entries(r.ingredients||{}).forEach(([name,qty])=>addRecipeIngredientRow(name,qty));
-  const supWrap=document.getElementById('recipeSupplyFields'); supWrap.innerHTML='';
-  Object.entries(r.supplies||{}).forEach(([name,qty])=>addRecipeSupplyRow(name,qty));
   updateRecipeCostSummary();
   openModal('recipeModal');
 }
 function addRecipeIngredientRow(selected='',qty=''){
   const wrap=document.getElementById('recipeIngredientFields');
-  if(!Object.keys(INGREDIENTS).length){showFeedback('Sin ingredientes','Primero crea un ingrediente en Más → Ingredientes.','assets/Ingrediente Creado.png','Ver ingredientes',()=>{closeFeedback();show('ingredients')},'Cerrar',()=>closeFeedback());return}
+  if(!ingredientNames().length){showFeedback('Sin ingredientes','Primero crea un ingrediente en Más → Ingredientes.','assets/Ingrediente Creado.png','Ver ingredientes',()=>{closeFeedback();show('ingredients')},'Cerrar',()=>closeFeedback());return}
   const row=document.createElement('div'); row.className='recipe-line';
-  const options=Object.keys(INGREDIENTS).map(i=>'<option value="'+esc(i)+'" '+(i===selected?'selected':'')+'>'+esc(i)+'</option>').join('')+'<option value="__new__">＋ Crear nuevo ingrediente…</option>';
+  const options=ingredientNames().map(i=>'<option value="'+esc(i)+'" '+(i===selected?'selected':'')+'>'+esc(i)+'</option>').join('')+'<option value="__new__">＋ Crear nuevo ingrediente…</option>';
   row.innerHTML='<select data-recipe-ing-name onchange="handleRecipeIngredientChange(this)">'+options+'</select><input data-recipe-ing-qty type="number" min="0" placeholder="Cantidad" value="'+(qty||'')+'" oninput="updateRecipeCostSummary()"><span class="recipe-unit" data-recipe-ing-unit>'+esc((db.ingredientUnits&&db.ingredientUnits[selected])||'')+'</span><button type="button" class="icon-btn trash-btn" aria-label="Eliminar ingrediente" title="Eliminar ingrediente" onclick="this.parentElement.remove();updateRecipeCostSummary()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>';
   wrap.appendChild(row);
   updateRecipeIngredientUnit(row.querySelector('[data-recipe-ing-name]'));
@@ -1274,7 +1436,7 @@ function handleRecipeIngredientChange(select){
     window._ingredientFromRecipe=true;
     window._recipeIngredientSelect=select;
     select.dataset.previousValue=select.dataset.previousValue||'';
-    select.value=select.dataset.previousValue||Object.keys(INGREDIENTS)[0]||'';
+    select.value=select.dataset.previousValue||ingredientNames()[0]||'';
     updateRecipeIngredientUnit(select);
     openIngredientModal();
     return;
@@ -1289,28 +1451,13 @@ function updateRecipeIngredientUnit(select){
   unitEl.textContent=(db.ingredientUnits&&db.ingredientUnits[select.value])||'';
   if(select.value && select.value!=='__new__')select.dataset.previousValue=select.value;
 }
-function addRecipeSupplyRow(selected='',qty=''){
-  const wrap=document.getElementById('recipeSupplyFields');
-  if(!db.otherSupplies.length){showFeedback('Sin otros insumos','Primero crea un otro insumo en Más → Otros insumos.','assets/Todo listo.png','Ver otros insumos',()=>{closeFeedback();show('otherSupplies')},'Cerrar',()=>closeFeedback());return}
-  const row=document.createElement('div'); row.className='recipe-line supply-line';
-  const options=db.otherSupplies.map(s=>'<option value="'+esc(s.name)+'" '+(s.name===selected?'selected':'')+'>'+esc(s.name)+'</option>').join('');
-  row.innerHTML='<select data-recipe-supply-name onchange="updateRecipeCostSummary()">'+options+'</select><input data-recipe-supply-qty type="number" min="0" placeholder="Cantidad" value="'+(qty||'')+'" oninput="updateRecipeCostSummary()"><span class="recipe-unit">'+esc((db.otherSupplies||[]).find(x=>x.name===selected)?.unit||'un')+'</span><button type="button" class="icon-btn trash-btn" aria-label="Eliminar otro insumo" title="Eliminar otro insumo" onclick="this.parentElement.remove();updateRecipeCostSummary()"><span class="trash-icon"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v5M14 11v5"/></svg></span></button>';
-  wrap.appendChild(row);
-  updateRecipeCostSummary();
-}
 function calculateRecipeCosts(){
   let recipeCost=0;
-  const ingQtys=document.querySelectorAll('[data-recipe-ing-qty]');
   document.querySelectorAll('[data-recipe-ing-name]').forEach((e,i)=>{
-    const q=Number(ingQtys[i]?.value)||0;
-    if(e.value&&e.value!=='__new__'){const unitCost=currentUnitCost('ingredient',e.value);if(Number.isFinite(unitCost))recipeCost+=q*unitCost;}
+    const q=Number(document.querySelectorAll('[data-recipe-ing-qty]')[i]?.value)||0;
+    if(e.value&&e.value!=='__new__')recipeCost+=q*currentUnitCost('ingredient',e.value);
   });
-  const supQtys=document.querySelectorAll('[data-recipe-supply-qty]');
-  document.querySelectorAll('[data-recipe-supply-name]').forEach((e,i)=>{
-    const q=Number(supQtys[i]?.value)||0;
-    if(e.value){const unitCost=currentUnitCost('other',e.value);if(Number.isFinite(unitCost))recipeCost+=q*unitCost;}
-  });
-  return {recipeCost};
+  return {recipeCost:Math.round(Number.isFinite(recipeCost)?recipeCost:0)};
 }
 function updateRecipeCostSummary(){
   const salePrice=parseMoney(document.getElementById('recipeSalePrice')?.value);
@@ -1318,7 +1465,7 @@ function updateRecipeCostSummary(){
   const costValueEl=document.getElementById('recipeCostValue');
   const gainEl=document.getElementById('recipeGain');
   const marginEl=document.getElementById('recipeMargin');
-  const gain=Math.max(0,salePrice-costs.recipeCost);
+  const gain=salePrice-costs.recipeCost;
   if(costValueEl)costValueEl.textContent=money(costs.recipeCost);
   if(gainEl)gainEl.textContent=money(gain);
   if(marginEl)marginEl.textContent=salePrice>0&&costs.recipeCost>0?((gain/salePrice)*100).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—';
@@ -1331,20 +1478,18 @@ function saveRecipe(){
   document.querySelectorAll('[data-recipe-ing-name]').forEach((e,i)=>{const q=Number(document.querySelectorAll('[data-recipe-ing-qty]')[i]?.value)||0;if(q>0&&e.value!=='__new__')ingredients[e.value]=q});
   const supplies={};
   document.querySelectorAll('[data-recipe-supply-name]').forEach((e,i)=>{const q=Number(document.querySelectorAll('[data-recipe-supply-qty]')[i]?.value)||0;if(q>0)supplies[e.value]=q});
-  if(!Object.keys(ingredients).length&&!Object.keys(supplies).length){alert('Agrega al menos un ingrediente u otro insumo.');return}
-  if(id){const r=db.recipes.find(x=>x.id===id);Object.assign(r,{name,salePrice:price,ingredients,supplies})}
-  else db.recipes.push({id:uid('r'),name,salePrice:price,ingredients,supplies});
+  if(!Object.keys(ingredients).length){alert('Agrega al menos un ingrediente.');return}
+  if(id){const r=db.recipes.find(x=>x.id===id);Object.assign(r,{name,salePrice:price,ingredients,supplies:{}})}
+  else db.recipes.push({id:uid('r'),name,salePrice:price,ingredients,supplies:{}});
   persist();closeModal(null,'recipeModal');renderRecipes();refreshOrderProducts();renderStock();
   showFeedback(id?'¡Receta actualizada!':'¡Receta creada!','Tu receta ha sido guardada correctamente.','assets/Receta Creada.png','Ver receta',()=>{closeFeedback();show('recipes')},id?'Aceptar':'Crear otra',()=>{closeFeedback();if(!id)openRecipeModal()});
 }
 
   // INGREDIENTES
 function renderIngredients(){
-  const el=document.getElementById('ingredientList'); if(!el)return;
-  const names=Object.keys(INGREDIENTS);
-  el.className=names.length?'card':'empty-state';
-  el.style.marginTop='12px';
-  el.innerHTML=names.length?names.map(name=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(name)+'</b><button class="icon-btn" onclick="openIngredientModal(\''+esc(name)+'\')">✎</button></div><div class="muted">Stock: '+Number(db.inventory[name]||0).toLocaleString('es-CL')+' '+esc((db.ingredientUnits&&db.ingredientUnits[name])||'g')+'</div></div></div>').join(''):'Aún no tienes ingredientes.';
+  const el=document.getElementById('ingredientList');if(!el)return;
+  const names=ingredientNames();el.className=names.length?'card':'empty-state';el.style.marginTop='12px';
+  el.innerHTML=names.length?names.map(name=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><div><b>'+esc(name)+'</b><div class="muted">Unidad: '+esc(ingredientUnit(name))+'</div></div><button class="icon-btn" onclick="openIngredientModal(\''+esc(name)+'\')">✎</button></div><div class="muted">Stock: '+Number(db.inventory[name]||0).toLocaleString('es-CL')+' '+esc(ingredientUnit(name))+(currentUnitCost('ingredient',name)>0?' · Costo unitario: '+money(Math.round(currentUnitCost('ingredient',name))):'')+'</div></div></div>').join(''):'Aún no tienes ingredientes.';
 }
 function openIngredientModal(name){
   const exists=name?name:'';
@@ -1359,25 +1504,36 @@ function saveIngredient(){
   const old=document.getElementById('ingredientId').value,name=document.getElementById('ingredientName').value.trim(),unit=document.getElementById('ingredientUnit').value.trim()||'g';
   if(!name){alert('Ingresa un nombre.');return}
   db.ingredientUnits=db.ingredientUnits||{};
+  db.ingredients=Array.isArray(db.ingredients)?db.ingredients:[];
   if(old){
+    const entry=db.ingredients.find(x=>x.name===old);
     if(old!==name){
-      const current=INGREDIENTS[old]||0; INGREDIENTS[name]=current; delete INGREDIENTS[old];
-      db.inventory[name]=db.inventory[old]||0; delete db.inventory[old];
-      db.ingredientUnits[name]=unit; delete db.ingredientUnits[old];
-      db.recipes.forEach(r=>{if(r.ingredients&&r.ingredients[old]!=null){r.ingredients[name]=r.ingredients[old];delete r.ingredients[old]}})
-    } else db.ingredientUnits[name]=unit;
-  } else {
-    INGREDIENTS[name]=0; db.inventory[name]=db.inventory[name]||0; db.ingredientUnits[name]=unit;
+      const current=db.inventory[old]||0;
+      db.inventory[name]=db.inventory[name]!=null?db.inventory[name]:current;
+      delete db.inventory[old];
+      db.ingredientUnits[name]=unit;delete db.ingredientUnits[old];
+      db.ingredients=db.ingredients.map(x=>x.name===old?{name,unit}:x);
+      db.recipes.forEach(r=>{if(r.ingredients&&r.ingredients[old]!=null){r.ingredients[name]=r.ingredients[old];delete r.ingredients[old]}});
+    }else{
+      db.ingredientUnits[name]=unit;
+      if(entry)entry.unit=unit;else db.ingredients.push({name,unit});
+    }
+  }else{
+    if(!db.ingredients.some(x=>x.name===name))db.ingredients.push({name,unit});
+    db.inventory[name]=db.inventory[name]||0;
+    db.ingredientUnits[name]=unit;
   }
   persist();closeModal(null,'ingredientModal');renderIngredients();renderStock();refreshPurchaseOptions();
   if(window._ingredientFromRecipe){
     const select=window._recipeIngredientSelect;
     window._ingredientFromRecipe=false;window._recipeIngredientSelect=null;
     if(select){
-      const options=Object.keys(INGREDIENTS).map(i=>'<option value="'+esc(i)+'">'+esc(i)+'</option>').join('')+'<option value="__new__">＋ Crear nuevo ingrediente…</option>';
-      select.innerHTML=options;select.value=name;updateRecipeIngredientUnit(select);
+      const options=ingredientNames().map(i=>'<option value="'+esc(i)+'">'+esc(i)+'</option>').join('')+'<option value="__new__">＋ Crear nuevo ingrediente…</option>';
+      document.querySelectorAll('[data-recipe-ing-name]').forEach(sel=>{const current=sel===select?name:sel.value;sel.innerHTML=options;if(current && ingredientNames().includes(current))sel.value=current;updateRecipeIngredientUnit(sel)});
+      select.value=name;select.dataset.previousValue=name;updateRecipeIngredientUnit(select);
       updateRecipeCostSummary();
     }
+    closeFeedback();
     return;
   }
   showFeedback(old?'¡Ingrediente actualizado!':'¡Ingrediente agregado!','El ingrediente ha sido guardado en tu catálogo.','assets/Ingrediente Creado.png','Ver ingredientes',()=>{closeFeedback();show('ingredients')},old?'Aceptar':'Agregar otro',()=>{closeFeedback();if(!old)openIngredientModal()});
@@ -1403,20 +1559,18 @@ function openOrderCreatedFeedback(){
 }
 
   // CLIENTES
-function renderClients(){const el=document.getElementById('clientList');if(!el)return;el.innerHTML=db.clients.map(c=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(c.name)+'</b><button class="icon-btn" onclick="openClientModal(\''+c.id+'\')">✎</button></div><div class="muted">'+(c.location?esc(c.location):'Sin ubicación')+'</div>'+(c.phone?'<div class="muted">'+esc(c.phone)+'</div>':'')+(c.note?'<div class="muted">'+esc(c.note)+'</div>':'')+'</div></div>').join('')}
-function openClientModal(id){const c=id?db.clients.find(x=>x.id===id):{id:'',name:'',phone:'',location:'',note:''};document.getElementById('clientId').value=c.id;document.getElementById('clientName').value=c.name;document.getElementById('clientPhone').value=c.phone||'';document.getElementById('clientLocation').value=c.location||'';document.getElementById('clientNote').value=c.note||'';document.getElementById('clientModalTitle').textContent=id?'Editar cliente':'Nuevo cliente';openModal('clientModal')}
-function saveClient(){const id=document.getElementById('clientId').value,n=document.getElementById('clientName').value.trim();if(!n){alert('Ingresa un nombre.');return}const data={name:n,phone:document.getElementById('clientPhone').value.trim(),location:document.getElementById('clientLocation').value.trim(),note:document.getElementById('clientNote').value.trim()};if(id){const c=db.clients.find(x=>x.id===id);Object.assign(c,data)}else db.clients.push({id:uid('c'),...data});persist();closeModal(null,'clientModal');renderClients();refreshOrderClients();showFeedback('¡Cliente creado!','El cliente ha sido guardado correctamente.','assets/Proveedor creado.png','Ver clientes',()=>{closeFeedback();show('clients')},'Crear otro',()=>{closeFeedback();openClientModal()})}
-  // PROVEEDORES
-function renderSuppliers(){const el=document.getElementById('supplierList');if(!el)return;el.innerHTML=db.suppliers.map(s=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b><button class="icon-btn" onclick="openSupplierModal(\''+s.id+'\')">✎</button></div><div class="muted">Proveedor de: '+(s.supplies?esc(s.supplies):'Sin especificar')+'</div><div class="muted">'+(s.location?esc(s.location):'Sin ubicación')+(s.contact?' · '+esc(s.contact):'')+'</div></div></div>').join('')}
-function openSupplierModal(id){const s=id?db.suppliers.find(x=>x.id===id):{id:'',name:'',supplies:'',location:'',contact:''};document.getElementById('supplierId').value=s.id;document.getElementById('supplierName').value=s.name;document.getElementById('supplierSupplies').value=s.supplies||'';document.getElementById('supplierLocation').value=s.location||'';document.getElementById('supplierContact').value=s.contact||'';document.getElementById('supplierModalTitle').textContent=id?'Editar proveedor':'Nuevo proveedor';openModal('supplierModal')}
-function saveSupplier(){const id=document.getElementById('supplierId').value,n=document.getElementById('supplierName').value.trim();if(!n){alert('Ingresa un nombre.');return}const data={name:n,supplies:document.getElementById('supplierSupplies').value.trim(),location:document.getElementById('supplierLocation').value.trim(),contact:document.getElementById('supplierContact').value.trim()};if(id){const s=db.suppliers.find(x=>x.id===id);Object.assign(s,data)}else db.suppliers.push({id:uid('s'),...data});persist();closeModal(null,'supplierModal');renderSuppliers();renderPurchaseSuppliers();showFeedback('¡Proveedor creado!','El proveedor ha sido guardado correctamente.','assets/Proveedor creado.png','Ver proveedor',()=>{closeFeedback();show('suppliers')},'Crear otro',()=>{closeFeedback();openSupplierModal()})}
-  // OTROS INSUMOS
-function renderSupplies(){const el=document.getElementById('supplyList');if(!el)return;el.innerHTML=db.otherSupplies.length?db.otherSupplies.map(s=>'<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b><button class="icon-btn" onclick="editSupply(\''+s.id+'\')">✎</button></div><div class="muted">Stock: '+Number(db.otherInventory[s.name]||0).toLocaleString('es-CL')+' '+esc(s.unit||'un')+'</div></div></div>').join(''):'<div class="empty-state muted">Aún no tienes otros insumos.</div>'}
-function openSupplyModal(id){const s=id?db.otherSupplies.find(x=>x.id===id):{name:'',unit:'g'};document.getElementById('supplyName').value=s.name;document.getElementById('supplyUnit').value=s.unit||'g';document.getElementById('supplyModal').dataset.editId=id||'';document.getElementById('supplyModal').querySelector('b').textContent=id?'Editar otro insumo':'Nuevo otro insumo';openModal('supplyModal')}
-function editSupply(id){openSupplyModal(id)}
-function saveSupply(){const modal=document.getElementById('supplyModal'),id=modal.dataset.editId,n=document.getElementById('supplyName').value.trim(),unit=document.getElementById('supplyUnit').value.trim()||'g';if(!n){alert('Ingresa un nombre.');return}if(id){const s=db.otherSupplies.find(x=>x.id===id),old=s.name;Object.assign(s,{name:n,unit});if(old!==n){db.otherInventory[n]=db.otherInventory[old]||0;delete db.otherInventory[old];db.recipes.forEach(r=>{if(r.supplies&&r.supplies[old]!=null){r.supplies[n]=r.supplies[old];delete r.supplies[old]}})}}else{db.otherSupplies.push({id:uid('sup'),name:n,unit});db.otherInventory[n]=db.otherInventory[n]||0}persist();closeModal(null,'supplyModal');renderSupplies();renderStock();showFeedback('¡Insumo creado!','El otro insumo ha sido guardado correctamente.','assets/Todo listo.png','Ver otros insumos',()=>{closeFeedback();show('otherSupplies')},'Agregar otro',()=>{closeFeedback();openSupplyModal()})}
-  // SELECTORES DE PEDIDOS
-function refreshOrderClients(){const s=document.getElementById('orderClient');if(!s)return;s.innerHTML='<option value="">Selecciona cliente</option>'+db.clients.map(c=>'<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>').join('')}
+let clientFilter='all', supplierFilter='all';
+function setClientFilter(f){clientFilter=f;renderClients()}
+function setSupplierFilter(f){supplierFilter=f;renderSuppliers()}
+function filterButtons(prefix,current){['all','active','blocked'].forEach(f=>{const b=document.getElementById(prefix+'Filter'+f.charAt(0).toUpperCase()+f.slice(1));if(b)b.classList.toggle('active',f===current)})}
+function renderClients(){const el=document.getElementById('clientList');if(!el)return;filterButtons('client',clientFilter);const list=db.clients.filter(c=>clientFilter==='all'||(c.status||'active')===clientFilter);el.innerHTML=list.map(c=>{const blocked=(c.status||'active')==='blocked';return '<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(c.name)+'</b><span class="badge '+(blocked?'danger':'success')+'">'+(blocked?'Bloqueado':'Activo')+'</span><button class="icon-btn" onclick="openClientModal(\''+c.id+'\')">✎</button></div><div class="muted">'+(c.location?esc(c.location):'Sin ubicación')+'</div>'+(c.phone?'<div class="muted">'+esc(c.phone)+'</div>':'')+(c.note?'<div class="muted">'+esc(c.note)+'</div>':'')+'</div></div>'}).join('')||'<div class="empty">No hay clientes en este estado.</div>'}
+function openClientModal(id){const c=id?db.clients.find(x=>x.id===id):{id:'',name:'',phone:'',location:'',note:'',status:'active'};document.getElementById('clientId').value=c.id;document.getElementById('clientName').value=c.name;document.getElementById('clientPhone').value=c.phone||'';document.getElementById('clientLocation').value=c.location||'';document.getElementById('clientNote').value=c.note||'';document.getElementById('clientStatus').value=c.status||'active';document.getElementById('clientModalTitle').textContent=id?'Editar cliente':'Nuevo cliente';openModal('clientModal')}
+function saveClient(){const id=document.getElementById('clientId').value,n=document.getElementById('clientName').value.trim();if(!n){alert('Ingresa un nombre.');return}const data={name:n,phone:document.getElementById('clientPhone').value.trim(),location:document.getElementById('clientLocation').value.trim(),note:document.getElementById('clientNote').value.trim(),status:document.getElementById('clientStatus').value};if(id){const c=db.clients.find(x=>x.id===id);Object.assign(c,data)}else db.clients.push({id:uid('c'),...data});persist();closeModal(null,'clientModal');renderClients();refreshOrderClients();showFeedback(id?'¡Cliente actualizado!':'¡Cliente creado!','El cliente ha sido guardado correctamente.','assets/Proveedor creado.png','Ver clientes',()=>{closeFeedback();show('clients')},'Crear otro',()=>{closeFeedback();openClientModal()})}
+function renderSuppliers(){const el=document.getElementById('supplierList');if(!el)return;filterButtons('supplier',supplierFilter);const list=db.suppliers.filter(s=>supplierFilter==='all'||(s.status||'active')===supplierFilter);el.innerHTML=list.map(s=>{const blocked=(s.status||'active')==='blocked';return '<div class="row"><div style="flex:1"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b><span class="badge '+(blocked?'danger':'success')+'">'+(blocked?'Bloqueado':'Activo')+'</span><button class="icon-btn" onclick="openSupplierModal(\''+s.id+'\')">✎</button></div><div class="muted">Proveedor de: '+(s.supplies?esc(s.supplies):'Sin especificar')+'</div><div class="muted">'+(s.location?esc(s.location):'Sin ubicación')+(s.contact?' · '+esc(s.contact):'')+'</div></div></div>'}).join('')||'<div class="empty">No hay proveedores en este estado.</div>'}
+function openSupplierModal(id){const s=id?db.suppliers.find(x=>x.id===id):{id:'',name:'',supplies:'',location:'',contact:'',status:'active'};document.getElementById('supplierId').value=s.id;document.getElementById('supplierName').value=s.name;document.getElementById('supplierSupplies').value=s.supplies||'';document.getElementById('supplierLocation').value=s.location||'';document.getElementById('supplierContact').value=s.contact||'';document.getElementById('supplierStatus').value=s.status||'active';document.getElementById('supplierModalTitle').textContent=id?'Editar proveedor':'Nuevo proveedor';openModal('supplierModal')}
+function saveSupplier(){const id=document.getElementById('supplierId').value,n=document.getElementById('supplierName').value.trim();if(!n){alert('Ingresa un nombre.');return}const data={name:n,supplies:document.getElementById('supplierSupplies').value.trim(),location:document.getElementById('supplierLocation').value.trim(),contact:document.getElementById('supplierContact').value.trim(),status:document.getElementById('supplierStatus').value};if(id){const s=db.suppliers.find(x=>x.id===id);Object.assign(s,data)}else db.suppliers.push({id:uid('s'),...data});persist();closeModal(null,'supplierModal');renderSuppliers();renderPurchaseSuppliers();showFeedback(id?'¡Proveedor actualizado!':'¡Proveedor creado!','El proveedor ha sido guardado correctamente.','assets/Proveedor creado.png','Ver proveedores',()=>{closeFeedback();show('suppliers')},'Crear otro',()=>{closeFeedback();openSupplierModal()})}
+// SELECTORES DE PEDIDOS
+function refreshOrderClients(){const s=document.getElementById('orderClient');if(!s)return;s.innerHTML='<option value="">Selecciona cliente</option>'+db.clients.filter(c=>(c.status||'active')==='active').map(c=>'<option value="'+esc(c.name)+'">'+esc(c.name)+'</option>').join('')}
 function refreshOrderProducts(){const s=document.getElementById('orderProduct');if(!s)return;s.innerHTML='<option value="">Selecciona producto</option>'+db.recipes.map(r=>'<option value="'+esc(r.name)+'">'+esc(r.name)+'</option>').join('')}
   // INICIO / RESUMEN
 function renderHome(){
