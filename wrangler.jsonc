@@ -3,8 +3,16 @@
   "name": "maidas-bakery-app",
   "main": "./_worker.js",
   "compatibility_date": "2026-09-29",
+
   "assets": {
     "directory": ".",
     "binding": "ASSETS"
-  }
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "af48df17-c8b6-4f3b-87fe-b9ca75db6e17"
+    }
+  ]
 }
