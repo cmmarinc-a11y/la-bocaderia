@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "maidas-bakery-app",
+  "main": "./_worker.js",
+  "compatibility_date": "2026-09-29",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS"
+  }
+}
