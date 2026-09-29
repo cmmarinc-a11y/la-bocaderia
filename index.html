@@ -960,7 +960,8 @@ persist();
 function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));}
 function openModal(id){const m=document.getElementById(id);if(m)m.classList.remove('hidden')}
 function closeModal(e,id){if(!e||e.target===e.currentTarget){const m=document.getElementById(id);if(m)m.classList.add('hidden')}}
-function money(v){return '$'+Number(String(v??'').replace(/[^\d]/g,'')||0).toLocaleString('es-CL')}
+function roundMoneyValue(v){const n=Number(v);return Number.isFinite(n)?Math.round(n):0}
+function money(v){const n=typeof v==='number'?v:parseMoney(v);return '$'+roundMoneyValue(n).toLocaleString('es-CL')}
 function parseMoney(v){return Number(String(v??'').replace(/[^\d]/g,'')||0)}
 function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function uid(prefix){return prefix+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)}
@@ -1533,7 +1534,7 @@ function buildPurchaseLots(category,item,excludeWithdrawalId=''){
   (db.purchases||[]).forEach(p=>{
     (p.lines||[]).forEach(l=>{
       if(l.category===category&&l.item===item&&Number(l.quantity)>0&&Number(l.cost)>0){
-        const qty=Number(l.quantity),cost=Number(l.cost),unitCost=cost/qty;
+        const qty=Number(l.quantity),cost=Number(l.cost),unitCost=roundMoneyValue(cost/qty);
         if(Number.isFinite(unitCost)&&unitCost>=0)events.push({type:'purchase',lotId:l.lotId||'',date:p.date,id:String(p.id||''),qty,cost,unitCost});
       }
     });
@@ -1560,7 +1561,7 @@ function currentUnitCost(category,item){
   const lots=buildPurchaseLots(category,item),available=lots.find(l=>l.qty>0.0000001);
   if(available&&Number.isFinite(available.unitCost))return available.unitCost;
   const purchases=[];
-  (db.purchases||[]).forEach(p=>(p.lines||[]).forEach(l=>{if(l.category===category&&l.item===item&&Number(l.quantity)>0&&Number(l.cost)>0){const unitCost=Number(l.cost)/Number(l.quantity);if(Number.isFinite(unitCost))purchases.push({date:p.date,id:p.id,unitCost})}}));
+  (db.purchases||[]).forEach(p=>(p.lines||[]).forEach(l=>{if(l.category===category&&l.item===item&&Number(l.quantity)>0&&Number(l.cost)>0){const unitCost=roundMoneyValue(Number(l.cost)/Number(l.quantity));if(Number.isFinite(unitCost))purchases.push({date:p.date,id:p.id,unitCost})}}));
   purchases.sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||String(a.id||'').localeCompare(String(b.id||'')));
   return purchases.length?purchases[purchases.length-1].unitCost:0;
 }
