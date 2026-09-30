@@ -919,7 +919,7 @@ function initDb(){
   if(!Array.isArray(db.suppliers))db.suppliers=[];
   db.clients.forEach(c=>{if(!c.status)c.status='active'});db.suppliers.forEach(x=>{if(!x.status)x.status='active'});
   if(!Array.isArray(db.orders))db.orders=[];
-  if(!Array.isArray(db.recipes)||!db.recipes.length)db.recipes=[DEFAULT_RECIPE];
+  if(!Array.isArray(db.recipes))db.recipes=[];
   if(!Array.isArray(db.otherSupplies))db.otherSupplies=[];
   if(!db.inventory)db.inventory={};
   db.ingredientUnits=db.ingredientUnits||{...INGREDIENT_UNITS};
