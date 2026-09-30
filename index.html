@@ -892,7 +892,10 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <script>
 const DBKEY='maidas-bakery-v19';
 const LEGACY_KEYS=['maidas-bakery-v12','maidas-bakery-v11','maidas-bakery-v10','maidas-bakery-v9','maidas-bakery-v7','maidas-bakery-v5'];
-let db=JSON.parse(localStorage.getItem(DBKEY)||localStorage.getItem(LEGACY_KEYS[0])||localStorage.getItem(LEGACY_KEYS[1])||'{}');
+
+[DBKEY,...LEGACY_KEYS].forEach(k=>localStorage.removeItem(k));
+
+let db={};
   // CATÁLOGO DE INGREDIENTES
   // Ingredientes compartidos: una misma existencia puede ser utilizada por varias recetas.
 const INGREDIENTS={
