@@ -2130,10 +2130,98 @@ function renderHome(){
   }
 }
 
+  // AUTENTICACIÓN
+async function login(){
+  const username=document.getElementById('loginUser')?.value.trim()||'';
+  const password=document.getElementById('loginPassword')?.value||'';
+  const button=document.querySelector('.login-button');
+
+  if(!username||!password){
+    alert('Ingresa tu usuario y contraseña.');
+    return;
+  }
+
+  if(button){
+    button.disabled=true;
+    button.textContent='INGRESANDO...';
+  }
+
+  try{
+    const response=await fetch('/api/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({username,password})
+    });
+
+    let data={};
+    try{
+      data=await response.json();
+    }catch{}
+
+    if(!response.ok){
+      alert(data.error||'No se pudo iniciar sesión.');
+      return;
+    }
+
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('app')?.classList.remove('hidden');
+
+    show('home');
+    resetModals();
+
+    const passwordInput=document.getElementById('loginPassword');
+    if(passwordInput)passwordInput.value='';
+  }catch(error){
+    console.error('Error de login:',error);
+    alert('No se pudo conectar con el servidor. Inténtalo nuevamente.');
+  }finally{
+    if(button){
+      button.disabled=false;
+      button.textContent='INGRESAR';
+    }
+  }
+}
+
+async function checkSession(){
+  try{
+    const response=await fetch('/api/me',{
+      method:'GET',
+      credentials:'include'
+    });
+
+    if(!response.ok){
+      document.getElementById('loginScreen')?.classList.remove('hidden');
+      document.getElementById('app')?.classList.add('hidden');
+      return;
+    }
+
+    const data=await response.json();
+
+    if(data.authenticated){
+      document.getElementById('loginScreen')?.classList.add('hidden');
+      document.getElementById('app')?.classList.remove('hidden');
+      show('home');
+    }else{
+      document.getElementById('loginScreen')?.classList.remove('hidden');
+      document.getElementById('app')?.classList.add('hidden');
+    }
+  }catch(error){
+    console.error('Error verificando sesión:',error);
+    document.getElementById('loginScreen')?.classList.remove('hidden');
+    document.getElementById('app')?.classList.add('hidden');
+  }
+}
+
+function forgotPassword(){
+  alert('Para recuperar o cambiar la contraseña, contacta al administrador de La Bocadería.');
+}
+
   // ARRANQUE DE LA APLICACIÓN
 function resetModals(){refreshOrderClients();refreshOrderProducts();renderPurchaseSuppliers();refreshPurchaseOptions();renderPurchaseHistory();renderWithdrawalHistory();renderRecipes();renderClients();renderSuppliers();renderSupplies();renderIngredients();renderOrders();renderStock();renderHome()}
 resetModals();
 ['orderDate'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''})
+checkSession();
 </script>
 
 <script>
