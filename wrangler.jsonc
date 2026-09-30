@@ -10,9 +10,10 @@
   },
 
   "d1_databases": [
-    {
-      "binding": "DB",
-      "database_id": "af48df17-c8b6-4f3b-87fe-b9ca75db6e17"
-    }
-  ]
+  {
+    "binding": "DB",
+    "database_name": "la-bocaderia-db",
+    "database_id": "af48df17-c8b6-4f3b-87fe-b9ca75db6e17"
+  }
+]
 }
