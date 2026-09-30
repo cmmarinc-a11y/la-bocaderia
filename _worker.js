@@ -136,7 +136,7 @@ async function createSession(env, userId) {
     new Uint8Array(tokenHashBuffer)
   );
 
-  const sessionId = crypto.randomUUID();
+  const sessionId = tokenHash;
 
   const expiresAt = new Date(
     Date.now() + 1000 * 60 * 60 * 24 * 30
