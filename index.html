@@ -898,10 +898,6 @@ const LEGACY_KEYS=['maidas-bakery-v12','maidas-bakery-v11','maidas-bakery-v10','
 let db={};
   // CATÁLOGO DE INGREDIENTES
   // Ingredientes compartidos: una misma existencia puede ser utilizada por varias recetas.
-const INGREDIENTS={
-  'Kuky':328,'Mantequilla':82,'Queso crema':226,'Frambuesa congelada':300,'Leche condensada':395,'Yogur sin endulzar':150
-};
-const INGREDIENT_UNITS={'Kuky':'g','Mantequilla':'g','Queso crema':'g','Frambuesa congelada':'g','Leche condensada':'g','Yogur sin endulzar':'g'};
 function getRecipeSafe(product){return (db.recipes||[]).find(r=>r.name===product)||null}
 function ingredientCatalog(){
   return Array.isArray(db.ingredients)?db.ingredients:[];
