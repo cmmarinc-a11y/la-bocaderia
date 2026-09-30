@@ -870,7 +870,6 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 const DBKEY='maidas-bakery-v19';
 const LEGACY_KEYS=['maidas-bakery-v12','maidas-bakery-v11','maidas-bakery-v10','maidas-bakery-v9','maidas-bakery-v7','maidas-bakery-v5'];
 
-[DBKEY,...LEGACY_KEYS].forEach(k=>localStorage.removeItem(k));
 
 let db={};
   // CATÁLOGO DE INGREDIENTES
@@ -1159,9 +1158,26 @@ function renderProduction(){
   pendingEl.innerHTML=toMake.length?toMake.map(o=>card(o)+'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn danger small" style="flex:1" onclick="cancelOrder(\''+o.id+'\')">Cancelar pedido</button><button class="btn small" style="flex:1" onclick="openProduction(\''+o.id+'\')">✓ Marcar como preparado</button></div></div>').join(''):'<div class="card empty-state muted">No hay pedidos por preparar.</div>';
   readyEl.innerHTML=ready.length?ready.map(o=>card(o)+'<div class="helper" style="margin-top:10px">✓ Preparado. Ahora vuelve a <b>Pedidos</b> para marcarlo como entregado.</div></div>').join(''):'<div class="card empty-state muted">Todavía no hay pedidos preparados.</div>';applyProductionTab();
 }
-function setProductionTab(tab){localStorage.setItem('maidas-production-tab',tab);applyProductionTab()}
-function applyProductionTab(){const tab=localStorage.getItem('maidas-production-tab')||'toMake',a=document.getElementById('productionPending'),b=document.getElementById('productionReady');if(!a||!b)return;a.classList.toggle('hidden',tab!=='toMake');b.classList.toggle('hidden',tab!=='ready');document.getElementById('tabToMake').classList.toggle('active',tab==='toMake');document.getElementById('tabReady').classList.toggle('active',tab==='ready')}
-function getRecipe(product){return db.recipes.find(r=>r.name===product)||null}
+let productionTab='toMake';
+
+function setProductionTab(tab){
+  productionTab=tab;
+  applyProductionTab();
+}
+
+function applyProductionTab(){
+  const tab=productionTab;
+  const a=document.getElementById('productionPending');
+  const b=document.getElementById('productionReady');
+
+  if(!a||!b)return;
+
+  a.classList.toggle('hidden',tab!=='toMake');
+  b.classList.toggle('hidden',tab!=='ready');
+
+  document.getElementById('tabToMake').classList.toggle('active',tab==='toMake');
+  document.getElementById('tabReady').classList.toggle('active',tab==='ready');
+}function getRecipe(product){return db.recipes.find(r=>r.name===product)||null}
 function productionItems(o){return Array.isArray(o.items)&&o.items.length?o.items:[{product:o.product,qty:o.qty||1}]}
 function productionRecipeNeeds(o){
   const needs={};
@@ -1857,7 +1873,7 @@ function deleteIngredient(name){
   db.ingredients=(db.ingredients||[]).filter(x=>x&&x.name!==name);
   if(db.inventory)delete db.inventory[name];
   if(db.ingredientUnits)delete db.ingredientUnits[name];
-  localStorage.setItem(DBKEY,JSON.stringify(db));
+  
   const modal=document.getElementById('ingredientModal');if(modal)modal.classList.add('hidden');
   renderIngredients();
   if(typeof renderStock==='function')renderStock();
