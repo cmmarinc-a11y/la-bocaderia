@@ -922,7 +922,7 @@ function initDb(){
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.recipes)||!db.recipes.length)db.recipes=[DEFAULT_RECIPE];
   if(!Array.isArray(db.otherSupplies))db.otherSupplies=[];
-  if(!db.inventory)db.inventory={...INITIAL_STOCK};
+  if(!db.inventory)db.inventory={};
   db.ingredientUnits=db.ingredientUnits||{...INGREDIENT_UNITS};
   if(!Array.isArray(db.ingredients) || db.ingredients.length===0){
     const names=new Set([...Object.keys(INGREDIENTS),...Object.keys(db.inventory||{}),...Object.keys(db.ingredientUnits||{})]);
