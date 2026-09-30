@@ -921,13 +921,8 @@ function initDb(){
   if(!Array.isArray(db.recipes))db.recipes=[];
   if(!Array.isArray(db.otherSupplies))db.otherSupplies=[];
   if(!db.inventory)db.inventory={};
-  db.ingredientUnits=db.ingredientUnits||{...INGREDIENT_UNITS};
-  if(!Array.isArray(db.ingredients) || db.ingredients.length===0){
-    const names=new Set([...Object.keys(INGREDIENTS),...Object.keys(db.inventory||{}),...Object.keys(db.ingredientUnits||{})]);
-    db.ingredients=[...names].map(name=>({name,unit:(db.ingredientUnits&&db.ingredientUnits[name])||INGREDIENT_UNITS[name]||'g'}));
-  } else {
-    db.ingredients=db.ingredients.map(x=>typeof x==='string'?{name:x,unit:(db.ingredientUnits&&db.ingredientUnits[x])||'g'}:x).filter(x=>x&&x.name);
-  }
+  db.ingredientUnits=db.ingredientUnits||{};
+  if(!Array.isArray(db.ingredients))db.ingredients=[];
   db.ingredients.forEach(i=>{db.ingredientUnits[i.name]=i.unit||'g';if(db.inventory[i.name]==null)db.inventory[i.name]=0});
   if(!db.inventory)db.inventory={};
   if(!db.otherInventory)db.otherInventory={};
