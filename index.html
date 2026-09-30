@@ -1557,6 +1557,136 @@ function renderReports(){
   if(stats[1])stats[1].textContent=produced;
   if(stats[2])stats[2].textContent=money(produced?Math.round(cost/produced):0);
   if(stats[3])stats[3].textContent=sales?((gain/sales)*100).toLocaleString('es-CL',{minimumFractionDigits:1,maximumFractionDigits:1})+'%':'—';
+  /* RENTABILIDAD POR PRODUCTO */
+
+  const productContainer=document.getElementById('reportProductProfitability');
+
+  if(productContainer){
+
+    const products={};
+
+    delivered.forEach(o=>{
+
+      productionItems(o).forEach(item=>{
+
+        const product=item.product;
+        if(!product)return;
+
+        const qty=Number(item.qty||1);
+        const recipe=getRecipe(product);
+
+        const unitPrice=Number(
+          item.unitPrice||
+          recipe?.salePrice||
+          0
+        );
+
+        const unitCost=recipe
+          ? Number(calculateRecipeCostFromRecipe(recipe)||0)
+          : 0;
+
+        if(!products[product]){
+          products[product]={
+            qty:0,
+            sales:0,
+            cost:0
+          };
+        }
+
+        products[product].qty+=qty;
+        products[product].sales+=unitPrice*qty;
+        products[product].cost+=unitCost*qty;
+
+      });
+
+    });
+
+    const productList=Object.entries(products)
+      .map(([name,data])=>{
+
+        const margin=data.sales-data.cost;
+        const marginPct=data.sales
+          ? (margin/data.sales)*100
+          : 0;
+
+        return{
+          name,
+          qty:data.qty,
+          sales:data.sales,
+          cost:data.cost,
+          margin,
+          marginPct
+        };
+
+      })
+      .sort((a,b)=>b.sales-a.sales);
+
+
+    if(!productList.length){
+
+      productContainer.innerHTML=
+        '<div class="card empty">'+
+        'No hay productos vendidos en este período.'+
+        '</div>';
+
+    }else{
+
+      productContainer.innerHTML=productList.map(p=>{
+
+        const marginText=p.marginPct.toLocaleString(
+          'es-CL',
+          {
+            minimumFractionDigits:1,
+            maximumFractionDigits:1
+          }
+        )+'%';
+
+        return `
+          <div class="card report-product-card">
+
+            <div class="titleline" style="margin-bottom:8px">
+
+              <div>
+                <b>${esc(p.name)}</b>
+
+                <div class="muted">
+                  ${p.qty} ${p.qty===1?'vendido':'vendidos'}
+                </div>
+              </div>
+
+              <b style="color:var(--accent)">
+                ${marginText}
+              </b>
+
+            </div>
+
+            <div class="report-product-grid">
+
+              <div class="report-product-stat">
+                <b>Ventas</b>
+                <span>${money(p.sales)}</span>
+              </div>
+
+              <div class="report-product-stat">
+                <b>Costo</b>
+                <span>${money(p.cost)}</span>
+              </div>
+
+              <div class="report-product-stat">
+                <b>Margen</b>
+                <span>${money(p.margin)}</span>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+      }).join('');
+
+    }
+
+  }
 }
 function csvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
 function downloadCSV(filename,headers,rows){const csv=[headers, ...rows].map(r=>r.map(csvCell).join(';')).join('\
