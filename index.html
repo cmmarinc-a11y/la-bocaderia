@@ -902,7 +902,6 @@ const INGREDIENTS={
   'Kuky':328,'Mantequilla':82,'Queso crema':226,'Frambuesa congelada':300,'Leche condensada':395,'Yogur sin endulzar':150
 };
 const INGREDIENT_UNITS={'Kuky':'g','Mantequilla':'g','Queso crema':'g','Frambuesa congelada':'g','Leche condensada':'g','Yogur sin endulzar':'g'};
-const INITIAL_STOCK={'Kuky':2070,'Mantequilla':430,'Queso crema':0,'Frambuesa congelada':1000,'Leche condensada':399,'Yogur sin endulzar':450};
 const DEFAULT_RECIPE={id:'r1',name:'Cheesecake Frambuesa',salePrice:25000,ingredients:{...INGREDIENTS},supplies:{}};
 function getRecipeSafe(product){return (db.recipes||[]).find(r=>r.name===product)||null}
 function ingredientCatalog(){
