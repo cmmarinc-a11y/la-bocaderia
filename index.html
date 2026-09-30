@@ -930,11 +930,7 @@ function initDb(){
   db.orders.forEach(o=>{if(!Array.isArray(o.items)&&o.product)o.items=[{product:o.product,qty:Number(o.qty)||1,unitPrice:Number(getRecipeSafe(o.product)?.salePrice)||0,subtotal:(Number(getRecipeSafe(o.product)?.salePrice)||0)*(Number(o.qty)||1)}]});
   db.movements.forEach(m=>{if(m.type==='purchase'&&!m.lotId){db.lotCounter++;m.lotId='LOT-'+String(db.lotCounter).padStart(5,'0')}});
   // Migrate old hard-coded entities into editable records once.
-  if(!db.clients.some(c=>c.name==='RiST'))db.clients.unshift({id:'c-rst',name:'RiST',phone:'',location:'',note:'Cliente habitual'});
-  if(!db.clients.some(c=>c.name==='Al Grano'))db.clients.push({id:'c-algrano',name:'Al Grano',phone:'',location:'',note:'Cliente habitual'});
-  if(!db.suppliers.some(s=>s.name==='Mayorista Líder'))db.suppliers.unshift({id:'s-lider',name:'Mayorista Líder',supplies:'Varios insumos',location:'',contact:''});
-  if(!db.suppliers.some(s=>s.name==='Mayorista 10'))db.suppliers.push({id:'s-10',name:'Mayorista 10',supplies:'Varios insumos',location:'',contact:''});
-  if(!db.suppliers.some(s=>s.name==='Líder'))db.suppliers.push({id:'s-lider2',name:'Líder',supplies:'Varios insumos',location:'',contact:''});
+
   // Give legacy orders a permanent global LB number and keep the sequence ahead of them.
   db.orderCounter=Number(db.orderCounter||0);
   db.orders.forEach(o=>{
