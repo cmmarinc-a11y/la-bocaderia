@@ -349,6 +349,26 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <meta name="theme-color" content="#7d2639">
 </head>
 <body>
+  <!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+
+    <img src="logo-la-bocaderia-sticker.png" alt="La Bocadería" class="login-logo">
+
+    <label>Usuario</label>
+    <input type="text" id="loginUser" placeholder="Ingresa tu usuario">
+
+    <label>Contraseña</label>
+    <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña">
+
+    <button class="login-button" onclick="login()">INGRESAR</button>
+
+    <button class="forgot-password" onclick="forgotPassword()">
+      ¿Olvidaste tu contraseña?
+    </button>
+
+  </div>
+</div>
 <!-- =====================================================
      3. APLICACIÓN — ESTRUCTURA HTML
      ===================================================== -->
