@@ -332,6 +332,81 @@ async function handleLogout(request, env) {
   return response;
 }
 
+async function handleSetup(request, env) {
+  if (request.method !== "POST") {
+    return json({ error: "Método no permitido" }, 405);
+  }
+
+  if (!env.SETUP_KEY) {
+    return json({ error: "SETUP_KEY no configurado" }, 500);
+  }
+
+  let body;
+
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Solicitud inválida" }, 400);
+  }
+
+  const setupKey = String(body.setupKey || "");
+  const username = String(body.username || "").trim();
+  const password = String(body.password || "");
+  const name = String(body.name || "").trim();
+
+  if (setupKey !== env.SETUP_KEY) {
+    return json({ error: "No autorizado" }, 401);
+  }
+
+  if (!username || !password) {
+    return json(
+      { error: "Usuario y contraseña son obligatorios" },
+      400
+    );
+  }
+
+  const existingUser = await env.DB.prepare(`
+    SELECT id
+    FROM users
+    WHERE username = ?
+  `)
+    .bind(username)
+    .first();
+
+  if (existingUser) {
+    return json(
+      { error: "El usuario ya existe" },
+      409
+    );
+  }
+
+  const passwordHash = await createPasswordHash(password);
+  const userId = crypto.randomUUID();
+
+  await env.DB.prepare(`
+    INSERT INTO users (
+      id,
+      username,
+      password_hash,
+      name,
+      active
+    )
+    VALUES (?, ?, ?, ?, 1)
+  `)
+    .bind(
+      userId,
+      username,
+      passwordHash,
+      name || username
+    )
+    .run();
+
+  return json({
+    ok: true,
+    message: "Usuario creado correctamente",
+    username
+  });
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
