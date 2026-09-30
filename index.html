@@ -920,9 +920,8 @@ function initDb(){
   });
 }
 initDb();
-persist();
+  
   // UTILIDADES GENERALES
-function persist(){localStorage.setItem(DBKEY,JSON.stringify(db));}
 function openModal(id){const m=document.getElementById(id);if(m)m.classList.remove('hidden')}
 function closeModal(e,id){if(!e||e.target===e.currentTarget){const m=document.getElementById(id);if(m)m.classList.add('hidden')}}
 function roundMoneyValue(v){const n=Number(v);return Number.isFinite(n)?Math.round(n):0}
