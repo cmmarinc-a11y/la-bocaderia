@@ -1610,6 +1610,465 @@ async function generateOrderNumber(env) {
 
   return "LB-" + String(nextNumber).padStart(5, "0");
 }
+// =====================================================
+// D1 — COMPRAS
+// =====================================================
+
+async function handlePurchases(request, env) {
+  try {
+    const user = await getSessionUser(request, env);
+
+    if (!user) {
+      return json({ error: "No autorizado" }, 401);
+    }
+
+    // =================================================
+    // GET — cargar compras
+    // =================================================
+
+    if (request.method === "GET") {
+
+      const [
+        purchasesResult,
+        itemsResult,
+        lotsResult
+      ] = await env.DB.batch([
+
+        env.DB.prepare(`
+          SELECT
+            p.id,
+            p.doc_type,
+            p.doc_number,
+            p.date,
+            p.supplier_id,
+            s.name AS supplier_name,
+            p.created_at,
+            p.updated_at
+          FROM purchases p
+          LEFT JOIN suppliers s
+            ON s.id = p.supplier_id
+          ORDER BY p.date DESC, p.created_at DESC
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            pi.id,
+            pi.purchase_id,
+            pi.ingredient_id,
+            i.name AS ingredient_name,
+            pi.supply_id,
+            os.name AS supply_name,
+            pi.quantity,
+            pi.unit_cost,
+            pi.lot_id,
+            pi.created_at,
+            pi.updated_at
+          FROM purchase_items pi
+          LEFT JOIN ingredients i
+            ON i.id = pi.ingredient_id
+          LEFT JOIN other_supplies os
+            ON os.id = pi.supply_id
+          ORDER BY pi.purchase_id, pi.id
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            pl.id,
+            pl.purchase_item_id,
+            pl.quantity_initial,
+            pl.quantity_available,
+            pl.unit_cost,
+            pl.created_at,
+            pl.updated_at
+          FROM purchase_lots pl
+          ORDER BY pl.created_at
+        `)
+
+      ]);
+
+      const purchasesRows = purchasesResult.results || [];
+      const itemsRows = itemsResult.results || [];
+      const lotsRows = lotsResult.results || [];
+
+      const purchases = purchasesRows.map(purchase => {
+
+        const items = itemsRows
+          .filter(item => item.purchase_id === purchase.id)
+          .map(item => {
+
+            const lot = lotsRows.find(
+              l => l.id === item.lot_id
+            );
+
+            return {
+              id: item.id,
+
+              ingredientId: item.ingredient_id || null,
+              ingredientName: item.ingredient_name || "",
+
+              supplyId: item.supply_id || null,
+              supplyName: item.supply_name || "",
+
+              qty: Number(item.quantity) || 0,
+              unitCost: Number(item.unit_cost) || 0,
+
+              lotId: item.lot_id || null,
+
+              lot: lot ? {
+                id: lot.id,
+                quantityInitial:
+                  Number(lot.quantity_initial) || 0,
+                quantityAvailable:
+                  Number(lot.quantity_available) || 0,
+                unitCost:
+                  Number(lot.unit_cost) || 0
+              } : null
+            };
+          });
+
+        return {
+          id: purchase.id,
+          docType: purchase.doc_type || "",
+          docNumber: purchase.doc_number || "",
+          date: purchase.date || "",
+          supplierId: purchase.supplier_id || null,
+          supplierName: purchase.supplier_name || "",
+          items
+        };
+      });
+
+      return json({
+        ok: true,
+        purchases
+      });
+    }
+
+    // =================================================
+    // POST — guardar cambios
+    // =================================================
+
+    if (request.method === "POST") {
+
+      const body = await request.json();
+      const { action, data } = body;
+
+      // =================================================
+      // CREAR COMPRA
+      // =================================================
+
+      if (action === "create") {
+
+        const purchaseId =
+          data.id || uidServer("p");
+
+        const items = Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        const statements = [];
+
+        // Cabecera
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO purchases
+              (
+                id,
+                doc_type,
+                doc_number,
+                date,
+                supplier_id
+              )
+            VALUES (?, ?, ?, ?, ?)
+          `).bind(
+            purchaseId,
+            data.docType || "",
+            data.docNumber || "",
+            data.date || null,
+            data.supplierId || null
+          )
+        );
+
+        // Detalle + lotes
+        for (const item of items) {
+
+          const itemId =
+            item.id || uidServer("pi");
+
+          const quantity =
+            Number(item.qty) || 0;
+
+          const unitCost =
+            Number(item.unitCost) || 0;
+
+          const lotId =
+            item.lotId || uidServer("lot");
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO purchase_items
+                (
+                  id,
+                  purchase_id,
+                  ingredient_id,
+                  supply_id,
+                  quantity,
+                  unit_cost,
+                  lot_id
+                )
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).bind(
+              itemId,
+              purchaseId,
+              item.ingredientId || null,
+              item.supplyId || null,
+              quantity,
+              unitCost,
+              lotId
+            )
+          );
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO purchase_lots
+                (
+                  id,
+                  purchase_item_id,
+                  quantity_initial,
+                  quantity_available,
+                  unit_cost
+                )
+              VALUES (?, ?, ?, ?, ?)
+            `).bind(
+              lotId,
+              itemId,
+              quantity,
+              quantity,
+              unitCost
+            )
+          );
+        }
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true,
+          id: purchaseId
+        });
+      }
+
+      // =================================================
+      // ACTUALIZAR COMPRA
+      // =================================================
+
+      if (action === "update") {
+
+        const purchaseId = data.id;
+
+        const items = Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        // Primero eliminamos detalle y lotes anteriores.
+        // La compra se vuelve a construir con los datos actuales.
+
+        const oldItems =
+          await env.DB.prepare(`
+            SELECT id
+            FROM purchase_items
+            WHERE purchase_id = ?
+          `).bind(purchaseId).all();
+
+        const statements = [];
+
+        for (const oldItem of oldItems.results || []) {
+
+          statements.push(
+            env.DB.prepare(`
+              DELETE FROM purchase_lots
+              WHERE purchase_item_id = ?
+            `).bind(oldItem.id)
+          );
+        }
+
+        statements.push(
+          env.DB.prepare(`
+            DELETE FROM purchase_items
+            WHERE purchase_id = ?
+          `).bind(purchaseId)
+        );
+
+        statements.push(
+          env.DB.prepare(`
+            UPDATE purchases
+            SET
+              doc_type = ?,
+              doc_number = ?,
+              date = ?,
+              supplier_id = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.docType || "",
+            data.docNumber || "",
+            data.date || null,
+            data.supplierId || null,
+            purchaseId
+          )
+        );
+
+        for (const item of items) {
+
+          const itemId =
+            item.id || uidServer("pi");
+
+          const quantity =
+            Number(item.qty) || 0;
+
+          const unitCost =
+            Number(item.unitCost) || 0;
+
+          const lotId =
+            item.lotId || uidServer("lot");
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO purchase_items
+                (
+                  id,
+                  purchase_id,
+                  ingredient_id,
+                  supply_id,
+                  quantity,
+                  unit_cost,
+                  lot_id
+                )
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).bind(
+              itemId,
+              purchaseId,
+              item.ingredientId || null,
+              item.supplyId || null,
+              quantity,
+              unitCost,
+              lotId
+            )
+          );
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO purchase_lots
+                (
+                  id,
+                  purchase_item_id,
+                  quantity_initial,
+                  quantity_available,
+                  unit_cost
+                )
+              VALUES (?, ?, ?, ?, ?)
+            `).bind(
+              lotId,
+              itemId,
+              quantity,
+              quantity,
+              unitCost
+            )
+          );
+        }
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true
+        });
+      }
+
+      // =================================================
+      // ELIMINAR COMPRA
+      // =================================================
+
+      if (action === "delete") {
+
+        // Antes de eliminar verificamos si los lotes
+        // ya fueron utilizados en retiros.
+
+        const usedLots = await env.DB.prepare(`
+          SELECT COUNT(*) AS count
+          FROM withdrawal_allocations wa
+          INNER JOIN purchase_lots pl
+            ON pl.id = wa.lot_id
+          INNER JOIN purchase_items pi
+            ON pi.id = pl.purchase_item_id
+          WHERE pi.purchase_id = ?
+        `).bind(data.id).first();
+
+        if (Number(usedLots?.count || 0) > 0) {
+          return json({
+            ok: false,
+            error:
+              "No se puede eliminar esta compra porque sus lotes ya fueron utilizados en movimientos de stock."
+          }, 400);
+        }
+
+        const oldItems =
+          await env.DB.prepare(`
+            SELECT id
+            FROM purchase_items
+            WHERE purchase_id = ?
+          `).bind(data.id).all();
+
+        const statements = [];
+
+        for (const item of oldItems.results || []) {
+
+          statements.push(
+            env.DB.prepare(`
+              DELETE FROM purchase_lots
+              WHERE purchase_item_id = ?
+            `).bind(item.id)
+          );
+        }
+
+        statements.push(
+          env.DB.prepare(`
+            DELETE FROM purchase_items
+            WHERE purchase_id = ?
+          `).bind(data.id)
+        );
+
+        statements.push(
+          env.DB.prepare(`
+            DELETE FROM purchases
+            WHERE id = ?
+          `).bind(data.id)
+        );
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true
+        });
+      }
+
+      return json({
+        ok: false,
+        error: "Acción no reconocida"
+      }, 400);
+    }
+
+    return json({
+      error: "Método no permitido"
+    }, 405);
+
+  } catch (error) {
+
+    console.error("Error en compras D1:", error);
+
+    return json({
+      ok: false,
+      error: error.message
+    }, 500);
+  }
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
@@ -1630,6 +2089,9 @@ export default {
 }
     if (url.pathname === "/api/orders") {
   return handleOrders(request, env);
+}
+    if (url.pathname === "/api/purchases") {
+  return handlePurchases(request, env);
 }
 
     if (url.pathname === "/api/login") {
