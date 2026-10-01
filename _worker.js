@@ -2120,8 +2120,8 @@ async function handleProduction(request, env) {
             pi.recipe_id,
             r.name AS recipe_name,
             pi.quantity,
-            pi.unit_price,
-            pi.subtotal
+            r.sale_price AS unit_price,
+            (pi.quantity * r.sale_price) AS subtotal
           FROM production_items pi
           LEFT JOIN recipes r
             ON r.id = pi.recipe_id
@@ -2299,17 +2299,13 @@ async function handleProduction(request, env) {
                   production_id,
                   recipe_id,
                   quantity,
-                  unit_price,
-                  subtotal
                 )
-              VALUES (?, ?, ?, ?, ?, ?)
+              VALUES (?, ?, ?, ?)
             `).bind(
               item.id || uidServer("prod-item"),
               productionId,
               item.recipeId || null,
               quantity,
-              unitPrice,
-              subtotal
             )
           );
         }
