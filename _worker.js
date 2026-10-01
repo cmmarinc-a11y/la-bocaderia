@@ -519,6 +519,25 @@ async function handleSetup(request, env) {
   });
 }
 
+async function handleDbTest(request, env) {
+  try {
+    const result = await env.DB
+      .prepare("SELECT COUNT(*) AS total FROM ingredients")
+      .first();
+
+    return json({
+      ok: true,
+      message: "D1 conectado correctamente",
+      ingredients: result?.total ?? 0
+    });
+  } catch (error) {
+    return json({
+      ok: false,
+      message: "Error conectando con D1",
+      error: error.message
+    }, 500);
+  }
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
@@ -534,6 +553,9 @@ export default {
         env
       );
     }
+    if (url.pathname === "/api/db-test") {
+  return handleDbTest(request, env);
+}
 
     if (
       url.pathname ===
