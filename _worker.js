@@ -2617,6 +2617,818 @@ async function handleProduction(request, env) {
     }, 500);
   }
 }
+// ============================================================
+// BLOQUE 6 — STOCK Y MOVIMIENTOS
+// ============================================================
+
+function uidServer(prefix = "id") {
+  return `${prefix}-${crypto.randomUUID()}`;
+}
+
+function num(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+
+// ------------------------------------------------------------
+// GET STOCK
+// ------------------------------------------------------------
+
+async function handleStock(request, env) {
+  try {
+    const ingredients = await env.DB.prepare(`
+      SELECT
+        i.id,
+        i.name,
+        i.unit,
+        i.status,
+        COALESCE(SUM(pl.quantity_available), 0) AS stock,
+        COALESCE(
+          (
+            SELECT pl2.unit_cost
+            FROM purchase_lots pl2
+            JOIN purchase_items pi2
+              ON pi2.id = pl2.purchase_item_id
+            WHERE pi2.ingredient_id = i.id
+              AND pl2.quantity_available > 0
+            ORDER BY pl2.created_at ASC
+            LIMIT 1
+          ),
+          0
+        ) AS unit_cost
+      FROM ingredients i
+      LEFT JOIN purchase_items pi
+        ON pi.ingredient_id = i.id
+      LEFT JOIN purchase_lots pl
+        ON pl.purchase_item_id = pi.id
+      GROUP BY i.id, i.name, i.unit, i.status
+      ORDER BY i.name ASC
+    `).all();
+
+    const otherSupplies = await env.DB.prepare(`
+      SELECT
+        os.id,
+        os.name,
+        os.unit,
+        os.consumable,
+        os.status,
+        COALESCE(SUM(pl.quantity_available), 0) AS stock,
+        COALESCE(
+          (
+            SELECT pl2.unit_cost
+            FROM purchase_lots pl2
+            JOIN purchase_items pi2
+              ON pi2.id = pl2.purchase_item_id
+            WHERE pi2.supply_id = os.id
+              AND pl2.quantity_available > 0
+            ORDER BY pl2.created_at ASC
+            LIMIT 1
+          ),
+          0
+        ) AS unit_cost
+      FROM other_supplies os
+      LEFT JOIN purchase_items pi
+        ON pi.supply_id = os.id
+      LEFT JOIN purchase_lots pl
+        ON pl.purchase_item_id = pi.id
+      GROUP BY os.id, os.name, os.unit, os.consumable, os.status
+      ORDER BY os.name ASC
+    `).all();
+
+    return json({
+      ok: true,
+      ingredients: ingredients.results || [],
+      otherSupplies: otherSupplies.results || []
+    });
+
+  } catch (error) {
+    return json({
+      ok: false,
+      error: String(error)
+    }, 500);
+  }
+}
+
+
+// ------------------------------------------------------------
+// GET MOVEMENTS
+// ------------------------------------------------------------
+
+async function handleMovements(request, env) {
+  try {
+    const result = await env.DB.prepare(`
+      SELECT
+        m.id,
+        m.date,
+        m.type,
+        m.ingredient_id,
+        i.name AS ingredient_name,
+        m.supply_id,
+        os.name AS supply_name,
+        m.quantity,
+        m.unit_cost,
+        m.total_cost,
+        m.reference_id,
+        m.created_at
+      FROM movements m
+      LEFT JOIN ingredients i
+        ON i.id = m.ingredient_id
+      LEFT JOIN other_supplies os
+        ON os.id = m.supply_id
+      ORDER BY m.date DESC, m.created_at DESC
+    `).all();
+
+    return json({
+      ok: true,
+      movements: result.results || []
+    });
+
+  } catch (error) {
+    return json({
+      ok: false,
+      error: String(error)
+    }, 500);
+  }
+}
+
+
+// ------------------------------------------------------------
+// GET WITHDRAWALS
+// ------------------------------------------------------------
+
+async function handleWithdrawals(request, env) {
+  try {
+    const withdrawals = await env.DB.prepare(`
+      SELECT
+        w.id,
+        w.date,
+        w.ingredient_id,
+        i.name AS ingredient_name,
+        w.supply_id,
+        os.name AS supply_name,
+        w.quantity,
+        w.reason,
+        w.note,
+        w.created_at,
+        w.updated_at
+      FROM withdrawals w
+      LEFT JOIN ingredients i
+        ON i.id = w.ingredient_id
+      LEFT JOIN other_supplies os
+        ON os.id = w.supply_id
+      ORDER BY w.date DESC, w.created_at DESC
+    `).all();
+
+    const allocations = await env.DB.prepare(`
+      SELECT
+        wa.id,
+        wa.withdrawal_id,
+        wa.lot_id,
+        wa.quantity,
+        wa.unit_cost,
+        wa.total_cost,
+        wa.created_at
+      FROM withdrawal_allocations wa
+      ORDER BY wa.withdrawal_id, wa.created_at
+    `).all();
+
+    return json({
+      ok: true,
+      withdrawals: withdrawals.results || [],
+      allocations: allocations.results || []
+    });
+
+  } catch (error) {
+    return json({
+      ok: false,
+      error: String(error)
+    }, 500);
+  }
+}
+
+
+// ------------------------------------------------------------
+// GET AVAILABLE LOTS
+// ------------------------------------------------------------
+
+async function getAvailableLots(env, category, itemId) {
+  let query;
+  let params;
+
+  if (category === "ingredient") {
+    query = `
+      SELECT
+        pl.id AS lot_id,
+        pl.purchase_item_id,
+        pl.quantity_initial,
+        pl.quantity_available,
+        pl.unit_cost,
+        p.date AS purchase_date
+      FROM purchase_lots pl
+      JOIN purchase_items pi
+        ON pi.id = pl.purchase_item_id
+      JOIN purchases p
+        ON p.id = pi.purchase_id
+      WHERE pi.ingredient_id = ?
+        AND pl.quantity_available > 0
+      ORDER BY p.date ASC, pl.created_at ASC
+    `;
+    params = [itemId];
+
+  } else if (category === "other") {
+    query = `
+      SELECT
+        pl.id AS lot_id,
+        pl.purchase_item_id,
+        pl.quantity_initial,
+        pl.quantity_available,
+        pl.unit_cost,
+        p.date AS purchase_date
+      FROM purchase_lots pl
+      JOIN purchase_items pi
+        ON pi.id = pl.purchase_item_id
+      JOIN purchases p
+        ON p.id = pi.purchase_id
+      WHERE pi.supply_id = ?
+        AND pl.quantity_available > 0
+      ORDER BY p.date ASC, pl.created_at ASC
+    `;
+    params = [itemId];
+
+  } else {
+    throw new Error("Categoría inválida");
+  }
+
+  const result = await env.DB
+    .prepare(query)
+    .bind(...params)
+    .all();
+
+  return result.results || [];
+}
+
+
+// ------------------------------------------------------------
+// CREATE WITHDRAWAL
+// ------------------------------------------------------------
+
+async function createWithdrawal(request, env) {
+  const body = await request.json();
+
+  const {
+    id,
+    date,
+    category,
+    itemId,
+    quantity,
+    reason,
+    note,
+    allocations
+  } = body;
+
+  if (!category || !itemId) {
+    return json({
+      ok: false,
+      error: "Falta categoría o producto"
+    }, 400);
+  }
+
+  const totalQuantity = num(quantity);
+
+  if (totalQuantity <= 0) {
+    return json({
+      ok: false,
+      error: "La cantidad debe ser mayor que cero"
+    }, 400);
+  }
+
+  if (!Array.isArray(allocations) || allocations.length === 0) {
+    return json({
+      ok: false,
+      error: "Debes asignar el retiro a uno o más lotes"
+    }, 400);
+  }
+
+  const withdrawalId = id || uidServer("withdrawal");
+
+  const ingredientId =
+    category === "ingredient" ? itemId : null;
+
+  const supplyId =
+    category === "other" ? itemId : null;
+
+  // ----------------------------------------------------------
+  // Validar que las asignaciones sumen exactamente el retiro
+  // ----------------------------------------------------------
+
+  const allocationQuantity = allocations.reduce(
+    (sum, a) => sum + num(a.quantity),
+    0
+  );
+
+  if (Math.abs(allocationQuantity - totalQuantity) > 0.000001) {
+    return json({
+      ok: false,
+      error: "La cantidad asignada a los lotes no coincide con la cantidad retirada"
+    }, 400);
+  }
+
+  // ----------------------------------------------------------
+  // Obtener lotes actuales
+  // ----------------------------------------------------------
+
+  const lots = await getAvailableLots(env, category, itemId);
+
+  const lotMap = new Map(
+    lots.map(lot => [String(lot.lot_id), lot])
+  );
+
+  let totalCost = 0;
+
+  const normalizedAllocations = [];
+
+  for (const allocation of allocations) {
+    const lotId = String(allocation.lotId || "");
+    const qty = num(allocation.quantity);
+
+    if (!lotId || qty <= 0) {
+      return json({
+        ok: false,
+        error: "Existe una asignación de lote inválida"
+      }, 400);
+    }
+
+    const lot = lotMap.get(lotId);
+
+    if (!lot) {
+      return json({
+        ok: false,
+        error: `El lote ${lotId} no existe o ya no tiene stock disponible`
+      }, 400);
+    }
+
+    if (qty > num(lot.quantity_available) + 0.000001) {
+      return json({
+        ok: false,
+        error: `Stock insuficiente en el lote ${lotId}`
+      }, 400);
+    }
+
+    const unitCost = num(lot.unit_cost);
+    const allocationCost = qty * unitCost;
+
+    totalCost += allocationCost;
+
+    normalizedAllocations.push({
+      lotId,
+      quantity: qty,
+      unitCost,
+      totalCost: allocationCost
+    });
+  }
+
+  // ----------------------------------------------------------
+  // Guardar todo en una sola operación
+  // ----------------------------------------------------------
+
+  const statements = [];
+
+  statements.push(
+    env.DB.prepare(`
+      INSERT INTO withdrawals
+      (
+        id,
+        date,
+        ingredient_id,
+        supply_id,
+        quantity,
+        reason,
+        note
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      withdrawalId,
+      date || new Date().toISOString(),
+      ingredientId,
+      supplyId,
+      totalQuantity,
+      reason || "",
+      note || null
+    )
+  );
+
+  for (const allocation of normalizedAllocations) {
+
+    statements.push(
+      env.DB.prepare(`
+        UPDATE purchase_lots
+        SET
+          quantity_available = quantity_available - ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+          AND quantity_available >= ?
+      `).bind(
+        allocation.quantity,
+        allocation.lotId,
+        allocation.quantity
+      )
+    );
+
+    statements.push(
+      env.DB.prepare(`
+        INSERT INTO withdrawal_allocations
+        (
+          id,
+          withdrawal_id,
+          lot_id,
+          quantity,
+          unit_cost,
+          total_cost
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(
+        uidServer("withdrawal-allocation"),
+        withdrawalId,
+        allocation.lotId,
+        allocation.quantity,
+        allocation.unitCost,
+        allocation.totalCost
+      )
+    );
+  }
+
+  statements.push(
+    env.DB.prepare(`
+      INSERT INTO movements
+      (
+        id,
+        date,
+        type,
+        ingredient_id,
+        supply_id,
+        quantity,
+        unit_cost,
+        total_cost,
+        reference_id
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      uidServer("movement"),
+      date || new Date().toISOString(),
+      "withdrawal",
+      ingredientId,
+      supplyId,
+      totalQuantity,
+      totalQuantity > 0 ? totalCost / totalQuantity : 0,
+      totalCost,
+      withdrawalId
+    )
+  );
+
+  await env.DB.batch(statements);
+
+  return json({
+    ok: true,
+    withdrawal: {
+      id: withdrawalId,
+      date: date || new Date().toISOString(),
+      category,
+      itemId,
+      quantity: totalQuantity,
+      reason: reason || "",
+      note: note || null,
+      totalCost,
+      allocations: normalizedAllocations
+    }
+  });
+}
+
+
+// ------------------------------------------------------------
+// UPDATE WITHDRAWAL
+// ------------------------------------------------------------
+
+async function updateWithdrawal(request, env) {
+  const body = await request.json();
+
+  const {
+    id,
+    date,
+    category,
+    itemId,
+    quantity,
+    reason,
+    note,
+    allocations
+  } = body;
+
+  if (!id) {
+    return json({
+      ok: false,
+      error: "Falta el ID del retiro"
+    }, 400);
+  }
+
+  // Buscar retiro actual
+  const current = await env.DB.prepare(`
+    SELECT *
+    FROM withdrawals
+    WHERE id = ?
+  `).bind(id).first();
+
+  if (!current) {
+    return json({
+      ok: false,
+      error: "Retiro no encontrado"
+    }, 404);
+  }
+
+  // Buscar asignaciones anteriores
+  const oldAllocations = await env.DB.prepare(`
+    SELECT *
+    FROM withdrawal_allocations
+    WHERE withdrawal_id = ?
+  `).bind(id).all();
+
+  const statements = [];
+
+  // ----------------------------------------------------------
+  // 1. Devolver al stock las cantidades anteriores
+  // ----------------------------------------------------------
+
+  for (const old of oldAllocations.results || []) {
+    statements.push(
+      env.DB.prepare(`
+        UPDATE purchase_lots
+        SET
+          quantity_available = quantity_available + ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(
+        num(old.quantity),
+        old.lot_id
+      )
+    );
+  }
+
+  // ----------------------------------------------------------
+  // 2. Eliminar asignaciones y movimiento anterior
+  // ----------------------------------------------------------
+
+  statements.push(
+    env.DB.prepare(`
+      DELETE FROM withdrawal_allocations
+      WHERE withdrawal_id = ?
+    `).bind(id)
+  );
+
+  statements.push(
+    env.DB.prepare(`
+      DELETE FROM movements
+      WHERE type = 'withdrawal'
+        AND reference_id = ?
+    `).bind(id)
+  );
+
+  // ----------------------------------------------------------
+  // 3. Validar nuevas asignaciones
+  // ----------------------------------------------------------
+
+  const totalQuantity = num(quantity);
+
+  if (totalQuantity <= 0) {
+    return json({
+      ok: false,
+      error: "La cantidad debe ser mayor que cero"
+    }, 400);
+  }
+
+  if (!Array.isArray(allocations) || allocations.length === 0) {
+    return json({
+      ok: false,
+      error: "Debes asignar el retiro a uno o más lotes"
+    }, 400);
+  }
+
+  const allocationQuantity = allocations.reduce(
+    (sum, a) => sum + num(a.quantity),
+    0
+  );
+
+  if (Math.abs(allocationQuantity - totalQuantity) > 0.000001) {
+    return json({
+      ok: false,
+      error: "La cantidad asignada a los lotes no coincide con la cantidad retirada"
+    }, 400);
+  }
+
+  // ----------------------------------------------------------
+  // 4. Obtener lotes después de devolver el retiro anterior
+  // ----------------------------------------------------------
+
+  const lots = await getAvailableLots(env, category, itemId);
+
+  const lotMap = new Map(
+    lots.map(lot => [String(lot.lot_id), lot])
+  );
+
+  let totalCost = 0;
+  const normalizedAllocations = [];
+
+  for (const allocation of allocations) {
+
+    const lotId = String(allocation.lotId || "");
+    const qty = num(allocation.quantity);
+
+    const lot = lotMap.get(lotId);
+
+    if (!lot) {
+      return json({
+        ok: false,
+        error: `El lote ${lotId} no existe`
+      }, 400);
+    }
+
+    if (qty <= 0) {
+      return json({
+        ok: false,
+        error: "La cantidad asignada debe ser mayor que cero"
+      }, 400);
+    }
+
+    if (qty > num(lot.quantity_available) + 0.000001) {
+      return json({
+        ok: false,
+        error: `Stock insuficiente en el lote ${lotId}`
+      }, 400);
+    }
+
+    const unitCost = num(lot.unit_cost);
+    const allocationCost = qty * unitCost;
+
+    totalCost += allocationCost;
+
+    normalizedAllocations.push({
+      lotId,
+      quantity: qty,
+      unitCost,
+      totalCost: allocationCost
+    });
+  }
+
+  // ----------------------------------------------------------
+  // 5. Actualizar retiro
+  // ----------------------------------------------------------
+
+  statements.push(
+    env.DB.prepare(`
+      UPDATE withdrawals
+      SET
+        date = ?,
+        ingredient_id = ?,
+        supply_id = ?,
+        quantity = ?,
+        reason = ?,
+        note = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      date || current.date,
+      category === "ingredient" ? itemId : null,
+      category === "other" ? itemId : null,
+      totalQuantity,
+      reason || "",
+      note || null,
+      id
+    )
+  );
+
+  // ----------------------------------------------------------
+  // 6. Aplicar nuevas asignaciones
+  // ----------------------------------------------------------
+
+  for (const allocation of normalizedAllocations) {
+
+    statements.push(
+      env.DB.prepare(`
+        UPDATE purchase_lots
+        SET
+          quantity_available = quantity_available - ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+          AND quantity_available >= ?
+      `).bind(
+        allocation.quantity,
+        allocation.lotId,
+        allocation.quantity
+      )
+    );
+
+    statements.push(
+      env.DB.prepare(`
+        INSERT INTO withdrawal_allocations
+        (
+          id,
+          withdrawal_id,
+          lot_id,
+          quantity,
+          unit_cost,
+          total_cost
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(
+        uidServer("withdrawal-allocation"),
+        id,
+        allocation.lotId,
+        allocation.quantity,
+        allocation.unitCost,
+        allocation.totalCost
+      )
+    );
+  }
+
+  // ----------------------------------------------------------
+  // 7. Crear nuevo movimiento
+  // ----------------------------------------------------------
+
+  statements.push(
+    env.DB.prepare(`
+      INSERT INTO movements
+      (
+        id,
+        date,
+        type,
+        ingredient_id,
+        supply_id,
+        quantity,
+        unit_cost,
+        total_cost,
+        reference_id
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      uidServer("movement"),
+      date || current.date,
+      "withdrawal",
+      category === "ingredient" ? itemId : null,
+      category === "other" ? itemId : null,
+      totalQuantity,
+      totalQuantity > 0 ? totalCost / totalQuantity : 0,
+      totalCost,
+      id
+    )
+  );
+
+  await env.DB.batch(statements);
+
+  return json({
+    ok: true,
+    id
+  });
+}
+
+
+// ------------------------------------------------------------
+// ROUTER DEL BLOQUE 6
+// ------------------------------------------------------------
+
+async function handleStockApi(request, env) {
+
+  const url = new URL(request.url);
+
+  if (request.method === "GET") {
+    return handleStock(request, env);
+  }
+
+  return json({
+    ok: false,
+    error: "Método no permitido"
+  }, 405);
+}
+
+
+async function handleWithdrawalsApi(request, env) {
+
+  if (request.method === "GET") {
+    return handleWithdrawals(request, env);
+  }
+
+  if (request.method !== "POST") {
+    return json({
+      ok: false,
+      error: "Método no permitido"
+    }, 405);
+  }
+
+  const body = await request.clone().json();
+
+  if (body.action === "update") {
+    return updateWithdrawal(request, env);
+  }
+
+  return createWithdrawal(request, env);
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
@@ -2644,6 +3456,9 @@ export default {
     if (url.pathname === "/api/production") {
   return handleProduction(request, env);
 }
+    if (url.pathname === "/api/stock") return handleStockApi(request, env);
+if (url.pathname === "/api/movements") return handleMovements(request, env);
+if (url.pathname === "/api/withdrawals") return handleWithdrawalsApi(request, env);
 
     if (url.pathname === "/api/login") {
       return handleLogin(request, env);
