@@ -1225,6 +1225,9 @@ export default {
     if (url.pathname === "/api/catalog") {
   return handleCatalog(request, env);
 }
+    if (url.pathname === "/api/contacts") {
+  return handleContacts(request, env);
+}
 
     if (url.pathname === "/api/login") {
       return handleLogin(request, env);
