@@ -1425,13 +1425,143 @@ function saveWithdrawal(){
   persist();closeModal(null,'withdrawalModal');renderStock();renderWithdrawalHistory();
   showFeedback(editId?'¡Retiro actualizado!':'¡Stock retirado!',editId?'Los cambios fueron guardados y el stock se actualizó correctamente.':'El retiro quedó registrado por lote y el stock se actualizó correctamente.','assets/Todo listo.png','Aceptar',()=>closeFeedback());
 }
-function renderWithdrawalHistory(){
-  const el=document.getElementById('withdrawalHistory');if(!el)return;
-  const rows=[...(db.movements||[])].filter(m=>m.type==='withdrawal').sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
-  if(!rows.length){el.innerHTML='<div class="card empty-state muted">Aún no tienes retiros registrados.</div>';return;}
-  el.innerHTML=rows.map(m=>{const date=formatLotDate(m.date),unit=m.category==='ingredient'?ingredientUnit(m.item):((db.otherSupplies||[]).find(s=>s.name===m.item)?.unit||'un');const alloc=(m.allocations||[]).map(a=>esc(a.lotId)+' · '+Number(a.quantity||0).toLocaleString('es-CL')+' '+esc(unit)).join(' · ');return '<div class="card purchase-history-card"><div class="purchase-history-head"><div><b>'+esc(m.item)+'</b><div class="muted">'+date+' · '+esc(m.reason||'Retiro')+'</div></div><div style="display:flex;align-items:center;gap:8px"><b>−'+money(m.cost||0)+'</b><button class="icon-btn" onclick="openWithdrawalModal(\''+esc(m.id)+'\')" title="Editar retiro" aria-label="Editar retiro">✎</button></div></div><div class="purchase-history-lines"><div class="purchase-history-line"><div><b>−'+Number(m.quantity||0).toLocaleString('es-CL')+' '+esc(unit)+'</b><span class="muted">Cantidad retirada</span></div><div><b>'+money(m.cost||0)+'</b><span class="muted">Costo del retiro</span></div><div style="grid-column:1/-1"><b>'+alloc+'</b><span class="muted">Lotes afectados</span></div></div>'+(m.note?'<div class="small-note" style="margin-top:8px">'+esc(m.note)+'</div>':'')+'</div></div>';}).join('');
-}
+async function renderWithdrawalHistory(){
+  const el=document.getElementById('withdrawalHistory');
+  if(!el)return;
 
+  try{
+    const response=await fetch('/api/withdrawals',{
+      method:'GET',
+      credentials:'include'
+    });
+
+    const data=await response.json();
+
+    if(!response.ok||!data.ok){
+      throw new Error(data.error||'No se pudo cargar el historial de retiros');
+    }
+
+    const withdrawals=data.withdrawals||[];
+    const allocations=data.allocations||[];
+
+    if(!withdrawals.length){
+      el.innerHTML='<div class="card empty-state muted">Aún no tienes retiros registrados.</div>';
+      return;
+    }
+
+    const rows=withdrawals
+      .slice()
+      .sort((a,b)=>
+        new Date(b.date||b.created_at||0)-
+        new Date(a.date||a.created_at||0)
+      );
+
+    el.innerHTML=rows.map(w=>{
+      const category=w.ingredient_id?'ingredient':'other';
+
+      const item=
+        category==='ingredient'
+          ?((db.ingredients||[]).find(x=>x.id===w.ingredient_id)?.name||w.ingredient_id||'')
+          :((db.otherSupplies||[]).find(x=>x.id===w.supply_id)?.name||w.supply_id||'');
+
+      const unit=
+        category==='ingredient'
+          ?ingredientUnit(item)
+          :((db.otherSupplies||[]).find(s=>s.id===w.supply_id)?.unit||'un');
+
+      const allocs=allocations.filter(
+        a=>String(a.withdrawal_id)===String(w.id)
+      );
+
+      const alloc=allocs.map(a=>
+        esc(a.lot_id)+
+        ' · '+
+        Number(a.quantity||0).toLocaleString('es-CL')+
+        ' '+
+        esc(unit)
+      ).join(' · ');
+
+      const cost=allocs.reduce(
+        (sum,a)=>sum+Number(a.total_cost||0),
+        0
+      );
+
+      return `
+        <div class="card purchase-history-card">
+          <div class="purchase-history-head">
+            <div>
+              <b>${esc(item)}</b>
+              <div class="muted">
+                ${formatLotDate(w.date||w.created_at)}
+                ·
+                ${esc(w.reason||'Retiro')}
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px">
+              <b>−${money(Math.round(cost))}</b>
+
+              <button
+                class="icon-btn"
+                onclick="openWithdrawalModal('${esc(w.id)}')"
+                title="Editar retiro"
+                aria-label="Editar retiro">
+                ✎
+              </button>
+            </div>
+          </div>
+
+          <div class="purchase-history-lines">
+            <div class="purchase-history-line">
+
+              <div>
+                <b>
+                  −${Number(w.quantity||0).toLocaleString('es-CL')}
+                  ${esc(unit)}
+                </b>
+                <span class="muted">Cantidad retirada</span>
+              </div>
+
+              <div>
+                <b>${money(Math.round(cost))}</b>
+                <span class="muted">Costo del retiro</span>
+              </div>
+
+              <div style="grid-column:1/-1">
+                <b>${alloc||'—'}</b>
+                <span class="muted">Lotes afectados</span>
+              </div>
+
+            </div>
+
+            ${
+              w.note
+                ?'<div class="small-note" style="margin-top:8px">'+
+                  esc(w.note)+
+                  '</div>'
+                :''
+            }
+
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  }catch(error){
+    console.error('Error cargando retiros desde D1:',error);
+
+    el.innerHTML=`
+      <div class="card empty-state">
+        <div style="font-weight:600;margin-bottom:6px">
+          No se pudo cargar el historial de retiros
+        </div>
+        <div class="muted">
+          ${esc(error.message||'Error desconocido')}
+        </div>
+      </div>
+    `;
+  }
+}
 function openStockDetail(category,item){
   const modal=document.getElementById('stockDetailModal');if(!modal)return;
   const unit=category==='ingredient'?ingredientUnit(item):((db.otherSupplies||[]).find(s=>s.name===item)?.unit||'un');
