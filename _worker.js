@@ -2070,6 +2070,557 @@ async function handlePurchases(request, env) {
     }, 500);
   }
 }
+// =====================================================
+// D1 — PRODUCCIÓN
+// =====================================================
+
+async function handleProduction(request, env) {
+  try {
+    const user = await getSessionUser(request, env);
+
+    if (!user) {
+      return json({ error: "No autorizado" }, 401);
+    }
+
+    // =================================================
+    // GET — cargar producción
+    // =================================================
+
+    if (request.method === "GET") {
+
+      const [
+        productionResult,
+        itemsResult,
+        ingredientsResult,
+        suppliesResult
+      ] = await env.DB.batch([
+
+        env.DB.prepare(`
+          SELECT
+            p.id,
+            p.order_id,
+            o.number AS order_number,
+            p.date,
+            p.sale,
+            p.cost,
+            p.gain,
+            p.margin,
+            p.created_at,
+            p.updated_at
+          FROM production p
+          LEFT JOIN orders o
+            ON o.id = p.order_id
+          ORDER BY p.date DESC, p.created_at DESC
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            pi.id,
+            pi.production_id,
+            pi.recipe_id,
+            r.name AS recipe_name,
+            pi.quantity,
+            pi.unit_price,
+            pi.subtotal
+          FROM production_items pi
+          LEFT JOIN recipes r
+            ON r.id = pi.recipe_id
+          ORDER BY pi.production_id, pi.id
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            pgi.id,
+            pgi.production_id,
+            pgi.ingredient_id,
+            i.name AS ingredient_name,
+            pgi.quantity,
+            pgi.unit_cost,
+            pgi.subtotal
+          FROM production_ingredients pgi
+          LEFT JOIN ingredients i
+            ON i.id = pgi.ingredient_id
+          ORDER BY pgi.production_id, pgi.id
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            pgs.id,
+            pgs.production_id,
+            pgs.supply_id,
+            os.name AS supply_name,
+            pgs.quantity,
+            pgs.unit_cost,
+            pgs.subtotal
+          FROM production_supplies pgs
+          LEFT JOIN other_supplies os
+            ON os.id = pgs.supply_id
+          ORDER BY pgs.production_id, pgs.id
+        `)
+
+      ]);
+
+      const productionRows = productionResult.results || [];
+      const itemRows = itemsResult.results || [];
+      const ingredientRows = ingredientsResult.results || [];
+      const supplyRows = suppliesResult.results || [];
+
+      const production = productionRows.map(p => {
+
+        const items = itemRows
+          .filter(x => x.production_id === p.id)
+          .map(x => ({
+            id: x.id,
+            recipeId: x.recipe_id,
+            product: x.recipe_name || "",
+            qty: Number(x.quantity) || 0,
+            unitPrice: Number(x.unit_price) || 0,
+            subtotal: Number(x.subtotal) || 0
+          }));
+
+        const ingredients = ingredientRows
+          .filter(x => x.production_id === p.id)
+          .map(x => ({
+            id: x.id,
+            ingredientId: x.ingredient_id,
+            ingredient: x.ingredient_name || "",
+            quantity: Number(x.quantity) || 0,
+            unitCost: Number(x.unit_cost) || 0,
+            subtotal: Number(x.subtotal) || 0
+          }));
+
+        const supplies = supplyRows
+          .filter(x => x.production_id === p.id)
+          .map(x => ({
+            id: x.id,
+            supplyId: x.supply_id,
+            supply: x.supply_name || "",
+            quantity: Number(x.quantity) || 0,
+            unitCost: Number(x.unit_cost) || 0,
+            subtotal: Number(x.subtotal) || 0
+          }));
+
+        return {
+          id: p.id,
+          orderId: p.order_id,
+          orderNumber: p.order_number || "",
+          date: p.date,
+          sale: Number(p.sale) || 0,
+          cost: Number(p.cost) || 0,
+          gain: Number(p.gain) || 0,
+          margin: Number(p.margin) || 0,
+          items,
+          ingredients,
+          supplies
+        };
+      });
+
+      return json({
+        ok: true,
+        production
+      });
+    }
+
+    // =================================================
+    // POST — guardar cambios
+    // =================================================
+
+    if (request.method === "POST") {
+
+      const body = await request.json();
+      const { action, data } = body;
+
+      // =================================================
+      // CREAR PRODUCCIÓN
+      // =================================================
+
+      if (action === "create") {
+
+        const productionId =
+          data.id || uidServer("prod");
+
+        const items = Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        const ingredients = Array.isArray(data.ingredients)
+          ? data.ingredients
+          : [];
+
+        const supplies = Array.isArray(data.supplies)
+          ? data.supplies
+          : [];
+
+        const statements = [];
+
+        // CABECERA
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO production
+              (
+                id,
+                order_id,
+                date,
+                sale,
+                cost,
+                gain,
+                margin
+              )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            productionId,
+            data.orderId || null,
+            data.date || null,
+            Number(data.sale) || 0,
+            Number(data.cost) || 0,
+            Number(data.gain) || 0,
+            Number(data.margin) || 0
+          )
+        );
+
+        // PRODUCTOS PRODUCIDOS
+        for (const item of items) {
+
+          const quantity =
+            Number(item.qty) || 0;
+
+          const unitPrice =
+            Number(item.unitPrice) || 0;
+
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitPrice;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO production_items
+                (
+                  id,
+                  production_id,
+                  recipe_id,
+                  quantity,
+                  unit_price,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("prod-item"),
+              productionId,
+              item.recipeId || null,
+              quantity,
+              unitPrice,
+              subtotal
+            )
+          );
+        }
+
+        // INGREDIENTES CONSUMIDOS
+        for (const item of ingredients) {
+
+          const quantity =
+            Number(item.quantity) || 0;
+
+          const unitCost =
+            Number(item.unitCost) || 0;
+
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitCost;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO production_ingredients
+                (
+                  id,
+                  production_id,
+                  ingredient_id,
+                  quantity,
+                  unit_cost,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("prod-ing"),
+              productionId,
+              item.ingredientId || null,
+              quantity,
+              unitCost,
+              subtotal
+            )
+          );
+        }
+
+        // OTROS INSUMOS CONSUMIDOS
+        for (const item of supplies) {
+
+          const quantity =
+            Number(item.quantity) || 0;
+
+          const unitCost =
+            Number(item.unitCost) || 0;
+
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitCost;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO production_supplies
+                (
+                  id,
+                  production_id,
+                  supply_id,
+                  quantity,
+                  unit_cost,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("prod-sup"),
+              productionId,
+              item.supplyId || null,
+              quantity,
+              unitCost,
+              subtotal
+            )
+          );
+        }
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true,
+          id: productionId
+        });
+      }
+
+      // =================================================
+      // ACTUALIZAR PRODUCCIÓN
+      // =================================================
+
+      if (action === "update") {
+
+        const productionId = data.id;
+
+        const items = Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        const ingredients = Array.isArray(data.ingredients)
+          ? data.ingredients
+          : [];
+
+        const supplies = Array.isArray(data.supplies)
+          ? data.supplies
+          : [];
+
+        const statements = [
+
+          env.DB.prepare(`
+            UPDATE production
+            SET
+              order_id = ?,
+              date = ?,
+              sale = ?,
+              cost = ?,
+              gain = ?,
+              margin = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.orderId || null,
+            data.date || null,
+            Number(data.sale) || 0,
+            Number(data.cost) || 0,
+            Number(data.gain) || 0,
+            Number(data.margin) || 0,
+            productionId
+          ),
+
+          env.DB.prepare(`
+            DELETE FROM production_items
+            WHERE production_id = ?
+          `).bind(productionId),
+
+          env.DB.prepare(`
+            DELETE FROM production_ingredients
+            WHERE production_id = ?
+          `).bind(productionId),
+
+          env.DB.prepare(`
+            DELETE FROM production_supplies
+            WHERE production_id = ?
+          `).bind(productionId)
+
+        ];
+
+        for (const item of items) {
+
+          const quantity =
+            Number(item.qty) || 0;
+
+          const unitPrice =
+            Number(item.unitPrice) || 0;
+
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitPrice;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO production_items
+                (
+                  id,
+                  production_id,
+                  recipe_id,
+                  quantity,
+                  unit_price,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("prod-item"),
+              productionId,
+              item.recipeId || null,
+              quantity,
+              unitPrice,
+              subtotal
+            )
+          );
+        }
+
+        for (const item of ingredients) {
+
+          const quantity =
+            Number(item.quantity) || 0;
+
+          const unitCost =
+            Number(item.unitCost) || 0;
+
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitCost;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO production_ingredients
+                (
+                  id,
+                  production_id,
+                  ingredient_id,
+                  quantity,
+                  unit_cost,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("prod-ing"),
+              productionId,
+              item.ingredientId || null,
+              quantity,
+              unitCost,
+              subtotal
+            )
+          );
+        }
+
+        for (const item of supplies) {
+
+          const quantity =
+            Number(item.quantity) || 0;
+
+          const unitCost =
+            Number(item.unitCost) || 0;
+
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitCost;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO production_supplies
+                (
+                  id,
+                  production_id,
+                  supply_id,
+                  quantity,
+                  unit_cost,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("prod-sup"),
+              productionId,
+              item.supplyId || null,
+              quantity,
+              unitCost,
+              subtotal
+            )
+          );
+        }
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true
+        });
+      }
+
+      // =================================================
+      // ELIMINAR PRODUCCIÓN
+      // =================================================
+
+      if (action === "delete") {
+
+        await env.DB.batch([
+
+          env.DB.prepare(`
+            DELETE FROM production_items
+            WHERE production_id = ?
+          `).bind(data.id),
+
+          env.DB.prepare(`
+            DELETE FROM production_ingredients
+            WHERE production_id = ?
+          `).bind(data.id),
+
+          env.DB.prepare(`
+            DELETE FROM production_supplies
+            WHERE production_id = ?
+          `).bind(data.id),
+
+          env.DB.prepare(`
+            DELETE FROM production
+            WHERE id = ?
+          `).bind(data.id)
+
+        ]);
+
+        return json({
+          ok: true
+        });
+      }
+
+      return json({
+        ok: false,
+        error: "Acción no reconocida"
+      }, 400);
+    }
+
+    return json({
+      error: "Método no permitido"
+    }, 405);
+
+  } catch (error) {
+
+    console.error("Error en producción D1:", error);
+
+    return json({
+      ok: false,
+      error: error.message
+    }, 500);
+  }
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
@@ -2093,6 +2644,9 @@ export default {
 }
     if (url.pathname === "/api/purchases") {
   return handlePurchases(request, env);
+}
+    if (url.pathname === "/api/production") {
+  return handleProduction(request, env);
 }
 
     if (url.pathname === "/api/login") {
