@@ -1815,9 +1815,8 @@ async function handlePurchases(request, env) {
                   supply_id,
                   quantity,
                   unit_cost,
-                  lot_id
                 )
-              VALUES (?, ?, ?, ?, ?, ?, ?)
+              VALUES (?, ?, ?, ?, ?, ?)
             `).bind(
               itemId,
               purchaseId,
