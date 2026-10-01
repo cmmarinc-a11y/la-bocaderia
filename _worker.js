@@ -2136,7 +2136,7 @@ async function handleProduction(request, env) {
             i.name AS ingredient_name,
             pgi.quantity,
             pgi.unit_cost,
-            pgi.subtotal
+            pgi.total_cost AS subtotal
           FROM production_ingredients pgi
           LEFT JOIN ingredients i
             ON i.id = pgi.ingredient_id
@@ -2151,7 +2151,7 @@ async function handleProduction(request, env) {
             os.name AS supply_name,
             pgs.quantity,
             pgs.unit_cost,
-            pgs.subtotal
+            pgs.total_cost AS subtotal
           FROM production_supplies pgs
           LEFT JOIN other_supplies os
             ON os.id = pgs.supply_id
@@ -2332,11 +2332,11 @@ async function handleProduction(request, env) {
                   ingredient_id,
                   quantity,
                   unit_cost,
-                  subtotal
+                  total_cost
                 )
               VALUES (?, ?, ?, ?, ?, ?)
             `).bind(
-              item.id || uidServer("prod-ing"),
+              item.id || uidServer("prod-ingredient"),
               productionId,
               item.ingredientId || null,
               quantity,
@@ -2368,11 +2368,11 @@ async function handleProduction(request, env) {
                   supply_id,
                   quantity,
                   unit_cost,
-                  subtotal
+                  total_cost
                 )
               VALUES (?, ?, ?, ?, ?, ?)
             `).bind(
-              item.id || uidServer("prod-sup"),
+              item.id || uidServer("prod-supply"),
               productionId,
               item.supplyId || null,
               quantity,
