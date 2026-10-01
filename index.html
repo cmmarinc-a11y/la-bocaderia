@@ -1460,16 +1460,173 @@ function openStockDetail(category,item){
   }).join(''):'<div class="empty-state muted">Todavía no hay movimientos registrados.</div>';
   openModal('stockDetailModal');
 }
-function renderStock(){
-  const el=document.getElementById('stockList'),badge=document.getElementById('stockPossible');
+async function renderStock(){
+  const el=document.getElementById('stockList'),
+        badge=document.getElementById('stockPossible');
+
   if(!el||!badge)return;
-  const recipes=(db.recipes||[]).filter(r=>(r.status||'active')==='active');
-  badge.textContent=recipes.length+' '+(recipes.length===1?'producto':'productos');
-  const ingNames=[...new Set([...ingredientNames(),...Object.keys(db.inventory||{})])];
-  const ingredientHtml=ingNames.length?ingNames.map(ing=>`<div class="row stock-clickable" onclick="openStockDetail('ingredient','${esc(ing)}')"><div><b>${esc(ing)}</b><div class="muted">${Math.max(0,Math.round(db.inventory[ing]||0)).toLocaleString('es-CL')} ${esc(ingredientUnit(ing))}${currentUnitCost('ingredient',ing)>0?' · Costo unitario: '+money(Math.round(currentUnitCost('ingredient',ing))):''}</div></div><span class="dot ${((db.inventory[ing]||0)<=0?'red':(db.inventory[ing]||0)<100?'yellow':'green')}" ></span></div>`).join(''):'<div class="empty-state muted">Aún no tienes ingredientes.</div>';
-  const suppliesHtml=db.otherSupplies.length?db.otherSupplies.map(s=>`<div class="row stock-clickable" onclick="openStockDetail('other','${esc(s.name)}')"><div><b>${esc(s.name)}</b><div class="muted">${Number(db.otherInventory[s.name]||0).toLocaleString('es-CL')} ${esc(s.unit||'un')}</div></div><span class="dot ${((db.otherInventory[s.name]||0)<=0?'red':'green')}"></span></div>`).join(''):'<div class="muted">Aún no tienes otros insumos.</div>';
-  const capacityHtml=recipes.length?recipes.map(r=>{const c=recipeCapacity(r);let status=c.capacity===0?'red':c.capacity<=1?'yellow':'green';let detail=c.capacity===0?(c.missing.length?'Faltan: '+c.missing.map(x=>esc(x.name)+' · '+x.missing+' '+esc((db.ingredientUnits&&db.ingredientUnits[x.name])||'g')).join(' · '):'Faltan ingredientes o insumos'):('Puedes hacer '+c.capacity+' '+(c.capacity===1?'unidad':'unidades'));return '<div class="production-capacity-row"><div style="display:flex;justify-content:space-between;gap:10px"><b>'+esc(r.name)+'</b><span class="dot '+status+'" style="margin-top:6px"></span></div><div class="capacity-missing">'+detail+'</div></div>'}).join(''):'<div class="empty-state muted">Aún no tienes recetas.</div>';
-  el.innerHTML='<div class="section" style="margin-top:0">Ingredientes</div>'+ingredientHtml+'<div class="section">Otros insumos</div>'+suppliesHtml+'<div class="section stock-production">Capacidad de producción</div>'+capacityHtml;
+
+  try{
+    const response=await fetch('/api/stock',{
+      method:'GET',
+      credentials:'include'
+    });
+
+    const data=await response.json();
+
+    if(!response.ok||!data.ok){
+      throw new Error(data.error||'No se pudo cargar el stock');
+    }
+
+    // D1 es la fuente de verdad del stock
+    db.inventory={};
+    db.otherInventory={};
+
+    // Ingredientes
+    (data.ingredients||[]).forEach(item=>{
+      db.inventory[item.name]=Number(item.stock||0);
+
+      if(!db.ingredientUnits)db.ingredientUnits={};
+      db.ingredientUnits[item.name]=item.unit||'g';
+    });
+
+    // Otros insumos
+    (data.otherSupplies||[]).forEach(item=>{
+      db.otherInventory[item.name]=Number(item.stock||0);
+    });
+
+    const recipes=(db.recipes||[]).filter(
+      r=>(r.status||'active')==='active'
+    );
+
+    badge.textContent=
+      recipes.length+' '+
+      (recipes.length===1?'producto':'productos');
+
+    const ingNames=[
+      ...new Set([
+        ...ingredientNames(),
+        ...Object.keys(db.inventory||{})
+      ])
+    ];
+
+    const ingredientHtml=ingNames.length
+      ?ingNames.map(ing=>{
+          const stock=Number(db.inventory[ing]||0);
+          const cost=(data.ingredients||[])
+            .find(x=>x.name===ing)?.unitCost||0;
+
+          return `
+            <div class="row stock-clickable"
+                 onclick="openStockDetail('ingredient','${esc(ing)}')">
+              <div>
+                <b>${esc(ing)}</b>
+                <div class="muted">
+                  ${Math.max(0,Math.round(stock)).toLocaleString('es-CL')}
+                  ${esc(ingredientUnit(ing))}
+                  ${cost>0
+                    ?' · Costo unitario: '+money(Math.round(cost))
+                    :''
+                  }
+                </div>
+              </div>
+              <span class="dot ${
+                stock<=0
+                  ?'red'
+                  :stock<100
+                    ?'yellow'
+                    :'green'
+              }"></span>
+            </div>
+          `;
+        }).join('')
+      :'<div class="empty-state muted">Aún no tienes ingredientes.</div>';
+
+    const suppliesHtml=(db.otherSupplies||[]).length
+      ?db.otherSupplies.map(s=>{
+          const stock=Number(db.otherInventory[s.name]||0);
+
+          return `
+            <div class="row stock-clickable"
+                 onclick="openStockDetail('other','${esc(s.name)}')">
+              <div>
+                <b>${esc(s.name)}</b>
+                <div class="muted">
+                  ${stock.toLocaleString('es-CL')}
+                  ${esc(s.unit||'un')}
+                </div>
+              </div>
+              <span class="dot ${
+                stock<=0?'red':'green'
+              }"></span>
+            </div>
+          `;
+        }).join('')
+      :'<div class="muted">Aún no tienes otros insumos.</div>';
+
+    const capacityHtml=recipes.length
+      ?recipes.map(r=>{
+          const c=recipeCapacity(r);
+          let status=
+            c.capacity===0
+              ?'red'
+              :c.capacity<=1
+                ?'yellow'
+                :'green';
+
+          let detail=
+            c.capacity===0
+              ?(
+                c.missing.length
+                  ?'Faltan: '+
+                    c.missing.map(x=>
+                      esc(x.name)+' · '+
+                      x.missing+' '+
+                      esc(
+                        (db.ingredientUnits&&
+                         db.ingredientUnits[x.name])||'g'
+                      )
+                    ).join(' · ')
+                  :'Faltan ingredientes o insumos'
+               )
+              :'Puedes hacer '+
+                c.capacity+' '+
+                (c.capacity===1?'unidad':'unidades');
+
+          return `
+            <div class="production-capacity-row">
+              <div style="display:flex;justify-content:space-between;gap:10px">
+                <b>${esc(r.name)}</b>
+                <span class="dot ${status}" style="margin-top:6px"></span>
+              </div>
+              <div class="capacity-missing">${detail}</div>
+            </div>
+          `;
+        }).join('')
+      :'<div class="empty-state muted">Aún no tienes recetas.</div>';
+
+    el.innerHTML=
+      '<div class="section" style="margin-top:0">Ingredientes</div>'+
+      ingredientHtml+
+      '<div class="section">Otros insumos</div>'+
+      suppliesHtml+
+      '<div class="section stock-production">Capacidad de producción</div>'+
+      capacityHtml;
+
+  }catch(error){
+    console.error('Error cargando stock desde D1:',error);
+
+    el.innerHTML=`
+      <div class="empty-state">
+        <div style="font-weight:600;margin-bottom:6px">
+          No se pudo cargar el stock
+        </div>
+        <div class="muted">
+          ${esc(error.message||'Error desconocido')}
+        </div>
+      </div>
+    `;
+  }
 }
 function renderPurchaseSuppliers(selectedId=''){
   const s=document.getElementById('purchaseSupplier');
