@@ -1660,7 +1660,7 @@ async function handlePurchases(request, env) {
             os.name AS supply_name,
             pi.quantity,
             pi.unit_cost,
-            pi.lot_id,
+            pl.id AS lot_id,
             pi.created_at,
             pi.updated_at
           FROM purchase_items pi
@@ -1668,6 +1668,8 @@ async function handlePurchases(request, env) {
             ON i.id = pi.ingredient_id
           LEFT JOIN other_supplies os
             ON os.id = pi.supply_id
+          LEFT JOIN purchase_lots pl
+            ON pl.purchase_item_id = pi.id
           ORDER BY pi.purchase_id, pi.id
         `),
 
