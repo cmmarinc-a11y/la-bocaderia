@@ -912,7 +912,7 @@ async function handleCatalog(request, env) {
 
 
 // Generador de IDs del Worker
-function uidServer(prefix) {
+function uidServer(prefix = "id") {
   return prefix + "-" + crypto.randomUUID();
 }
 // =====================================================
@@ -2621,9 +2621,6 @@ async function handleProduction(request, env) {
 // BLOQUE 6 — STOCK Y MOVIMIENTOS
 // ============================================================
 
-function uidServer(prefix = "id") {
-  return `${prefix}-${crypto.randomUUID()}`;
-}
 
 function num(v) {
   const n = Number(v);
