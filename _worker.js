@@ -1210,6 +1210,406 @@ async function handleContacts(request, env) {
     }, 500);
   }
 }
+// =====================================================
+// D1 — PEDIDOS
+// =====================================================
+
+async function handleOrders(request, env) {
+  try {
+    const user = await getSessionUser(request, env);
+
+    if (!user) {
+      return json({ error: "No autorizado" }, 401);
+    }
+
+    // =================================================
+    // GET — cargar pedidos
+    // =================================================
+
+    if (request.method === "GET") {
+
+      const [
+        ordersResult,
+        itemsResult
+      ] = await env.DB.batch([
+
+        env.DB.prepare(`
+          SELECT
+            o.id,
+            o.number,
+            o.client_id,
+            c.name AS client_name,
+            o.date,
+            o.time,
+            o.deposit,
+            o.balance,
+            o.note,
+            o.status,
+            o.created_at,
+            o.updated_at
+          FROM orders o
+          LEFT JOIN clients c
+            ON c.id = o.client_id
+          ORDER BY o.date DESC, o.time DESC, o.created_at DESC
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            oi.id,
+            oi.order_id,
+            oi.recipe_id,
+            r.name AS recipe_name,
+            oi.quantity,
+            oi.unit_price,
+            oi.subtotal,
+            oi.created_at,
+            oi.updated_at
+          FROM order_items oi
+          LEFT JOIN recipes r
+            ON r.id = oi.recipe_id
+          ORDER BY oi.order_id, oi.id
+        `)
+
+      ]);
+
+      const ordersRows = ordersResult.results || [];
+      const itemsRows = itemsResult.results || [];
+
+      const orders = ordersRows.map(order => {
+
+        const items = itemsRows
+          .filter(item => item.order_id === order.id)
+          .map(item => ({
+            id: item.id,
+            recipeId: item.recipe_id,
+            product: item.recipe_name || "",
+            qty: Number(item.quantity) || 0,
+            unitPrice: Number(item.unit_price) || 0,
+            subtotal: Number(item.subtotal) || 0
+          }));
+
+        return {
+          id: order.id,
+          number: order.number,
+          clientId: order.client_id,
+          clientName: order.client_name || "",
+          date: order.date,
+          time: order.time,
+          deposit: Number(order.deposit) || 0,
+          balance: Number(order.balance) || 0,
+          note: order.note || "",
+          status: order.status || "Solicitado",
+          items
+        };
+      });
+
+      return json({
+        ok: true,
+        orders
+      });
+    }
+
+    // =================================================
+    // POST — guardar cambios
+    // =================================================
+
+    if (request.method === "POST") {
+
+      const body = await request.json();
+      const { action, data } = body;
+
+      // =================================================
+      // CREAR PEDIDO
+      // =================================================
+
+      if (action === "create") {
+
+        const orderId = data.id || uidServer("o");
+
+        const orderNumber =
+          data.number ||
+          await generateOrderNumber(env);
+
+        const items = Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        const statements = [];
+
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO orders
+              (
+                id,
+                number,
+                client_id,
+                date,
+                time,
+                deposit,
+                balance,
+                note,
+                status
+              )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(
+            orderId,
+            orderNumber,
+            data.clientId || null,
+            data.date || null,
+            data.time || null,
+            Number(data.deposit) || 0,
+            Number(data.balance) || 0,
+            data.note || "",
+            data.status || "Solicitado"
+          )
+        );
+
+        for (const item of items) {
+
+          const quantity = Number(item.qty) || 0;
+          const unitPrice = Number(item.unitPrice) || 0;
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitPrice;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO order_items
+                (
+                  id,
+                  order_id,
+                  recipe_id,
+                  quantity,
+                  unit_price,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("oi"),
+              orderId,
+              item.recipeId || null,
+              quantity,
+              unitPrice,
+              subtotal
+            )
+          );
+        }
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true,
+          id: orderId,
+          number: orderNumber
+        });
+      }
+
+      // =================================================
+      // ACTUALIZAR PEDIDO
+      // =================================================
+
+      if (action === "update") {
+
+        const orderId = data.id;
+
+        const items = Array.isArray(data.items)
+          ? data.items
+          : [];
+
+        const statements = [
+
+          env.DB.prepare(`
+            UPDATE orders
+            SET
+              number = ?,
+              client_id = ?,
+              date = ?,
+              time = ?,
+              deposit = ?,
+              balance = ?,
+              note = ?,
+              status = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.number,
+            data.clientId || null,
+            data.date || null,
+            data.time || null,
+            Number(data.deposit) || 0,
+            Number(data.balance) || 0,
+            data.note || "",
+            data.status || "Solicitado",
+            orderId
+          ),
+
+          env.DB.prepare(`
+            DELETE FROM order_items
+            WHERE order_id = ?
+          `).bind(orderId)
+
+        ];
+
+        for (const item of items) {
+
+          const quantity = Number(item.qty) || 0;
+          const unitPrice = Number(item.unitPrice) || 0;
+          const subtotal =
+            Number(item.subtotal) ||
+            quantity * unitPrice;
+
+          statements.push(
+            env.DB.prepare(`
+              INSERT INTO order_items
+                (
+                  id,
+                  order_id,
+                  recipe_id,
+                  quantity,
+                  unit_price,
+                  subtotal
+                )
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(
+              item.id || uidServer("oi"),
+              orderId,
+              item.recipeId || null,
+              quantity,
+              unitPrice,
+              subtotal
+            )
+          );
+        }
+
+        await env.DB.batch(statements);
+
+        return json({
+          ok: true
+        });
+      }
+
+      // =================================================
+      // CAMBIAR ESTADO
+      // =================================================
+
+      if (action === "status") {
+
+        const validStatuses = [
+          "Solicitado",
+          "Preparación",
+          "Preparado",
+          "Entregado",
+          "Cancelado"
+        ];
+
+        if (!validStatuses.includes(data.status)) {
+          return json({
+            ok: false,
+            error: "Estado de pedido no válido"
+          }, 400);
+        }
+
+        await env.DB.prepare(`
+          UPDATE orders
+          SET
+            status = ?,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).bind(
+          data.status,
+          data.id
+        ).run();
+
+        return json({
+          ok: true
+        });
+      }
+
+      // =================================================
+      // ELIMINAR PEDIDO
+      // =================================================
+
+      if (action === "delete") {
+
+        const productionHistory = await env.DB.prepare(`
+          SELECT COUNT(*) AS count
+          FROM production
+          WHERE order_id = ?
+        `).bind(data.id).first();
+
+        if (Number(productionHistory?.count || 0) > 0) {
+          return json({
+            ok: false,
+            error: "No se puede eliminar este pedido porque tiene producción asociada."
+          }, 400);
+        }
+
+        await env.DB.batch([
+
+          env.DB.prepare(`
+            DELETE FROM order_items
+            WHERE order_id = ?
+          `).bind(data.id),
+
+          env.DB.prepare(`
+            DELETE FROM orders
+            WHERE id = ?
+          `).bind(data.id)
+
+        ]);
+
+        return json({
+          ok: true
+        });
+      }
+
+      return json({
+        ok: false,
+        error: "Acción no reconocida"
+      }, 400);
+    }
+
+    return json({
+      error: "Método no permitido"
+    }, 405);
+
+  } catch (error) {
+
+    console.error("Error en pedidos D1:", error);
+
+    return json({
+      ok: false,
+      error: error.message
+    }, 500);
+  }
+}
+
+
+// =====================================================
+// GENERADOR DE NÚMERO DE PEDIDO
+// =====================================================
+
+async function generateOrderNumber(env) {
+
+  const row = await env.DB.prepare(`
+    SELECT number
+    FROM orders
+    WHERE number LIKE 'LB-%'
+    ORDER BY CAST(SUBSTR(number, 4) AS INTEGER) DESC
+    LIMIT 1
+  `).first();
+
+  let nextNumber = 1;
+
+  if (row?.number) {
+    const current =
+      Number(String(row.number).replace("LB-", "")) || 0;
+
+    nextNumber = current + 1;
+  }
+
+  return "LB-" + String(nextNumber).padStart(5, "0");
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
@@ -1227,6 +1627,9 @@ export default {
 }
     if (url.pathname === "/api/contacts") {
   return handleContacts(request, env);
+}
+    if (url.pathname === "/api/orders") {
+  return handleOrders(request, env);
 }
 
     if (url.pathname === "/api/login") {
