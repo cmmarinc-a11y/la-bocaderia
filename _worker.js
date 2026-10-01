@@ -915,6 +915,301 @@ async function handleCatalog(request, env) {
 function uidServer(prefix) {
   return prefix + "-" + crypto.randomUUID();
 }
+// =====================================================
+// D1 — CLIENTES Y PROVEEDORES
+// =====================================================
+
+async function handleContacts(request, env) {
+  try {
+    const user = await getSessionUser(request, env);
+
+    if (!user) {
+      return json({ error: "No autorizado" }, 401);
+    }
+
+    // -----------------------------
+    // GET — cargar clientes y proveedores
+    // -----------------------------
+    if (request.method === "GET") {
+
+      const [
+        clientsResult,
+        suppliersResult
+      ] = await env.DB.batch([
+
+        env.DB.prepare(`
+          SELECT
+            id,
+            name,
+            phone,
+            location,
+            note,
+            status,
+            created_at,
+            updated_at
+          FROM clients
+          ORDER BY name COLLATE NOCASE
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            id,
+            name,
+            supplies,
+            location,
+            contact,
+            status,
+            created_at,
+            updated_at
+          FROM suppliers
+          ORDER BY name COLLATE NOCASE
+        `)
+
+      ]);
+
+      return json({
+        ok: true,
+        clients: clientsResult.results || [],
+        suppliers: suppliersResult.results || []
+      });
+    }
+
+    // -----------------------------
+    // POST — guardar cambios
+    // -----------------------------
+    if (request.method === "POST") {
+
+      const body = await request.json();
+      const { type, action, data } = body;
+
+      // =================================================
+      // CLIENTES
+      // =================================================
+
+      if (type === "client") {
+
+        // CREAR
+        if (action === "create") {
+
+          const id = data.id || uidServer("c");
+
+          await env.DB.prepare(`
+            INSERT INTO clients
+              (id, name, phone, location, note, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(
+            id,
+            data.name,
+            data.phone || "",
+            data.location || "",
+            data.note || "",
+            data.status || "active"
+          ).run();
+
+          return json({
+            ok: true,
+            id
+          });
+        }
+
+        // ACTUALIZAR
+        if (action === "update") {
+
+          await env.DB.prepare(`
+            UPDATE clients
+            SET
+              name = ?,
+              phone = ?,
+              location = ?,
+              note = ?,
+              status = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.name,
+            data.phone || "",
+            data.location || "",
+            data.note || "",
+            data.status || "active",
+            data.id
+          ).run();
+
+          return json({
+            ok: true
+          });
+        }
+
+        // CAMBIAR ESTADO
+        if (action === "status") {
+
+          await env.DB.prepare(`
+            UPDATE clients
+            SET
+              status = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.status,
+            data.id
+          ).run();
+
+          return json({
+            ok: true
+          });
+        }
+
+        // ELIMINAR
+        if (action === "delete") {
+
+          // Verificar si el cliente tiene pedidos
+          const history = await env.DB.prepare(`
+            SELECT COUNT(*) AS count
+            FROM orders
+            WHERE client_id = ?
+          `).bind(data.id).first();
+
+          if (Number(history?.count || 0) > 0) {
+            return json({
+              ok: false,
+              error: "No se puede eliminar este cliente porque tiene pedidos asociados."
+            }, 400);
+          }
+
+          await env.DB.prepare(`
+            DELETE FROM clients
+            WHERE id = ?
+          `).bind(data.id).run();
+
+          return json({
+            ok: true
+          });
+        }
+      }
+
+      // =================================================
+      // PROVEEDORES
+      // =================================================
+
+      if (type === "supplier") {
+
+        // CREAR
+        if (action === "create") {
+
+          const id = data.id || uidServer("sup");
+
+          await env.DB.prepare(`
+            INSERT INTO suppliers
+              (id, name, supplies, location, contact, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(
+            id,
+            data.name,
+            data.supplies || "",
+            data.location || "",
+            data.contact || "",
+            data.status || "active"
+          ).run();
+
+          return json({
+            ok: true,
+            id
+          });
+        }
+
+        // ACTUALIZAR
+        if (action === "update") {
+
+          await env.DB.prepare(`
+            UPDATE suppliers
+            SET
+              name = ?,
+              supplies = ?,
+              location = ?,
+              contact = ?,
+              status = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.name,
+            data.supplies || "",
+            data.location || "",
+            data.contact || "",
+            data.status || "active",
+            data.id
+          ).run();
+
+          return json({
+            ok: true
+          });
+        }
+
+        // CAMBIAR ESTADO
+        if (action === "status") {
+
+          await env.DB.prepare(`
+            UPDATE suppliers
+            SET
+              status = ?,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.status,
+            data.id
+          ).run();
+
+          return json({
+            ok: true
+          });
+        }
+
+        // ELIMINAR
+        if (action === "delete") {
+
+          // Verificar si el proveedor tiene compras
+          const history = await env.DB.prepare(`
+            SELECT COUNT(*) AS count
+            FROM purchases
+            WHERE supplier_id = ?
+          `).bind(data.id).first();
+
+          if (Number(history?.count || 0) > 0) {
+            return json({
+              ok: false,
+              error: "No se puede eliminar este proveedor porque tiene compras asociadas."
+            }, 400);
+          }
+
+          await env.DB.prepare(`
+            DELETE FROM suppliers
+            WHERE id = ?
+          `).bind(data.id).run();
+
+          return json({
+            ok: true
+          });
+        }
+      }
+
+      return json({
+        ok: false,
+        error: "Tipo o acción no reconocidos"
+      }, 400);
+    }
+
+    return json({
+      error: "Método no permitido"
+    }, 405);
+
+  } catch (error) {
+
+    console.error("Error en clientes/proveedores D1:", error);
+
+    return json({
+      ok: false,
+      error: error.message
+    }, 500);
+  }
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
