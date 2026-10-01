@@ -538,53 +538,409 @@ async function handleDbTest(request, env) {
     }, 500);
   }
 }
+// =====================================================
+// D1 — CATÁLOGO: INGREDIENTES, OTROS INSUMOS Y RECETAS
+// =====================================================
+
+async function handleCatalog(request, env) {
+  try {
+    const user = await getSessionUser(request, env);
+
+    if (!user) {
+      return json({ error: "No autorizado" }, 401);
+    }
+
+    // -----------------------------
+    // GET — cargar catálogo
+    // -----------------------------
+    if (request.method === "GET") {
+      const [
+        ingredientsResult,
+        suppliesResult,
+        recipesResult,
+        recipeIngredientsResult
+      ] = await env.DB.batch([
+        env.DB.prepare(`
+          SELECT id, name, unit, status, created_at, updated_at
+          FROM ingredients
+          ORDER BY name COLLATE NOCASE
+        `),
+
+        env.DB.prepare(`
+          SELECT id, name, unit, consumable, status, created_at, updated_at
+          FROM other_supplies
+          ORDER BY name COLLATE NOCASE
+        `),
+
+        env.DB.prepare(`
+          SELECT id, name, sale_price, status, created_at, updated_at
+          FROM recipes
+          ORDER BY name COLLATE NOCASE
+        `),
+
+        env.DB.prepare(`
+          SELECT
+            ri.id,
+            ri.recipe_id,
+            ri.ingredient_id,
+            ri.quantity
+          FROM recipe_ingredients ri
+          ORDER BY ri.id
+        `)
+      ]);
+
+      const ingredients = ingredientsResult.results || [];
+      const supplies = suppliesResult.results || [];
+      const recipesRows = recipesResult.results || [];
+      const recipeIngredients = recipeIngredientsResult.results || [];
+
+      // Convertimos receta + recipe_ingredients
+      // al formato que actualmente entiende la app.
+      const recipes = recipesRows.map(recipe => {
+        const recipeIngredientRows = recipeIngredients.filter(
+          row => row.recipe_id === recipe.id
+        );
+
+        const ingredientMap = {};
+
+        recipeIngredientRows.forEach(row => {
+          const ingredient = ingredients.find(
+            item => item.id === row.ingredient_id
+          );
+
+          if (ingredient) {
+            ingredientMap[ingredient.name] = Number(row.quantity) || 0;
+          }
+        });
+
+        return {
+          id: recipe.id,
+          name: recipe.name,
+          salePrice: Number(recipe.sale_price) || 0,
+          status: recipe.status || "active",
+          ingredients: ingredientMap,
+          supplies: {}
+        };
+      });
+
+      return json({
+        ok: true,
+        ingredients,
+        otherSupplies: supplies,
+        recipes
+      });
+    }
+
+    // -----------------------------
+    // POST — guardar cambios
+    // -----------------------------
+    if (request.method === "POST") {
+      const body = await request.json();
+      const { type, action, data } = body;
+
+      // =================================================
+      // INGREDIENTES
+      // =================================================
+      if (type === "ingredient") {
+
+        if (action === "create") {
+          const id = data.id || uidServer("ing");
+
+          await env.DB.prepare(`
+            INSERT INTO ingredients
+              (id, name, unit, status)
+            VALUES (?, ?, ?, ?)
+          `).bind(
+            id,
+            data.name,
+            data.unit || "g",
+            data.status || "active"
+          ).run();
+
+          return json({
+            ok: true,
+            id
+          });
+        }
+
+        if (action === "update") {
+          await env.DB.prepare(`
+            UPDATE ingredients
+            SET name = ?,
+                unit = ?,
+                status = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.name,
+            data.unit || "g",
+            data.status || "active",
+            data.id
+          ).run();
+
+          return json({ ok: true });
+        }
+
+        if (action === "delete") {
+          await env.DB.prepare(`
+            DELETE FROM ingredients
+            WHERE id = ?
+          `).bind(data.id).run();
+
+          return json({ ok: true });
+        }
+      }
+
+      // =================================================
+      // OTROS INSUMOS
+      // =================================================
+      if (type === "supply") {
+
+        if (action === "create") {
+          const id = data.id || uidServer("os");
+
+          await env.DB.prepare(`
+            INSERT INTO other_supplies
+              (id, name, unit, consumable, status)
+            VALUES (?, ?, ?, ?, ?)
+          `).bind(
+            id,
+            data.name,
+            data.unit || "un",
+            data.consumable === false ? 0 : 1,
+            data.status || "active"
+          ).run();
+
+          return json({
+            ok: true,
+            id
+          });
+        }
+
+        if (action === "update") {
+          await env.DB.prepare(`
+            UPDATE other_supplies
+            SET name = ?,
+                unit = ?,
+                consumable = ?,
+                status = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `).bind(
+            data.name,
+            data.unit || "un",
+            data.consumable === false ? 0 : 1,
+            data.status || "active",
+            data.id
+          ).run();
+
+          return json({ ok: true });
+        }
+
+        if (action === "delete") {
+          await env.DB.prepare(`
+            DELETE FROM other_supplies
+            WHERE id = ?
+          `).bind(data.id).run();
+
+          return json({ ok: true });
+        }
+      }
+
+      // =================================================
+      // RECETAS
+      // =================================================
+      if (type === "recipe") {
+
+        if (action === "create") {
+          const recipeId = data.id || uidServer("r");
+
+          const statements = [
+            env.DB.prepare(`
+              INSERT INTO recipes
+                (id, name, sale_price, status)
+              VALUES (?, ?, ?, ?)
+            `).bind(
+              recipeId,
+              data.name,
+              Number(data.salePrice) || 0,
+              data.status || "active"
+            )
+          ];
+
+          const ingredientEntries = Object.entries(
+            data.ingredients || {}
+          );
+
+          for (const [ingredientName, quantity] of ingredientEntries) {
+
+            const ingredient = await env.DB.prepare(`
+              SELECT id
+              FROM ingredients
+              WHERE name = ?
+              LIMIT 1
+            `).bind(ingredientName).first();
+
+            if (!ingredient) {
+              throw new Error(
+                `No se encontró el ingrediente: ${ingredientName}`
+              );
+            }
+
+            statements.push(
+              env.DB.prepare(`
+                INSERT INTO recipe_ingredients
+                  (id, recipe_id, ingredient_id, quantity)
+                VALUES (?, ?, ?, ?)
+              `).bind(
+                uidServer("ri"),
+                recipeId,
+                ingredient.id,
+                Number(quantity) || 0
+              )
+            );
+          }
+
+          await env.DB.batch(statements);
+
+          return json({
+            ok: true,
+            id: recipeId
+          });
+        }
+
+        if (action === "update") {
+
+          const recipeId = data.id;
+
+          const statements = [
+            env.DB.prepare(`
+              UPDATE recipes
+              SET name = ?,
+                  sale_price = ?,
+                  status = ?,
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE id = ?
+            `).bind(
+              data.name,
+              Number(data.salePrice) || 0,
+              data.status || "active",
+              recipeId
+            ),
+
+            env.DB.prepare(`
+              DELETE FROM recipe_ingredients
+              WHERE recipe_id = ?
+            `).bind(recipeId)
+          ];
+
+          const ingredientEntries = Object.entries(
+            data.ingredients || {}
+          );
+
+          for (const [ingredientName, quantity] of ingredientEntries) {
+
+            const ingredient = await env.DB.prepare(`
+              SELECT id
+              FROM ingredients
+              WHERE name = ?
+              LIMIT 1
+            `).bind(ingredientName).first();
+
+            if (!ingredient) {
+              throw new Error(
+                `No se encontró el ingrediente: ${ingredientName}`
+              );
+            }
+
+            statements.push(
+              env.DB.prepare(`
+                INSERT INTO recipe_ingredients
+                  (id, recipe_id, ingredient_id, quantity)
+                VALUES (?, ?, ?, ?)
+              `).bind(
+                uidServer("ri"),
+                recipeId,
+                ingredient.id,
+                Number(quantity) || 0
+              )
+            );
+          }
+
+          await env.DB.batch(statements);
+
+          return json({ ok: true });
+        }
+
+        if (action === "delete") {
+
+          await env.DB.batch([
+            env.DB.prepare(`
+              DELETE FROM recipe_ingredients
+              WHERE recipe_id = ?
+            `).bind(data.id),
+
+            env.DB.prepare(`
+              DELETE FROM recipes
+              WHERE id = ?
+            `).bind(data.id)
+          ]);
+
+          return json({ ok: true });
+        }
+      }
+
+      return json({
+        ok: false,
+        error: "Tipo o acción no reconocidos"
+      }, 400);
+    }
+
+    return json({
+      error: "Método no permitido"
+    }, 405);
+
+  } catch (error) {
+    console.error("Error en catálogo D1:", error);
+
+    return json({
+      ok: false,
+      error: error.message
+    }, 500);
+  }
+}
+
+
+// Generador de IDs del Worker
+function uidServer(prefix) {
+  return prefix + "-" + crypto.randomUUID();
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(
       request.url
     );
 
-    if (
-      url.pathname ===
-      "/api/setup"
-    ) {
-      return handleSetup(
-        request,
-        env
-      );
+    if (url.pathname === "/api/setup") {
+      return handleSetup(request, env);
     }
     if (url.pathname === "/api/db-test") {
   return handleDbTest(request, env);
 }
+    if (url.pathname === "/api/catalog") {
+  return handleCatalog(request, env);
+}
 
-    if (
-      url.pathname ===
-      "/api/login"
-    ) {
-      return handleLogin(
-        request,
-        env
-      );
+    if (url.pathname === "/api/login") {
+      return handleLogin(request, env);
     }
 
-    if (
-      url.pathname ===
-      "/api/me"
-    ) {
-      return handleMe(
-        request,
-        env
-      );
+    if (url.pathname === "/api/me") {
+      return handleMe(request, env);
     }
 
-    if (
-      url.pathname ===
-      "/api/logout"
-    ) {
-      return handleLogout(
-        request,
-        env
-      );
+    if (url.pathname === "/api/logout") {
+      return handleLogout(request, env);
     }
 
     return env.ASSETS.fetch(
