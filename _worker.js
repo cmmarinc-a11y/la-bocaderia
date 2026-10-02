@@ -1617,457 +1617,300 @@ async function generateOrderNumber(env) {
 async function handlePurchases(request, env) {
   try {
     const user = await getSessionUser(request, env);
-
-    if (!user) {
-      return json({ error: "No autorizado" }, 401);
-    }
-
-    // =================================================
-    // GET — cargar compras
-    // =================================================
+    if (!user) return json({ error: "No autorizado" }, 401);
 
     if (request.method === "GET") {
-
-      const [
-        purchasesResult,
-        itemsResult,
-        lotsResult
-      ] = await env.DB.batch([
-
+      const [purchasesResult, itemsResult, lotsResult] = await env.DB.batch([
         env.DB.prepare(`
-          SELECT
-            p.id,
-            p.doc_type,
-            p.doc_number,
-            p.date,
-            p.supplier_id,
-            s.name AS supplier_name,
-            p.created_at,
-            p.updated_at
+          SELECT p.id, p.doc_type, p.doc_number, p.date, p.supplier_id,
+                 s.name AS supplier_name, p.created_at, p.updated_at
           FROM purchases p
-          LEFT JOIN suppliers s
-            ON s.id = p.supplier_id
+          LEFT JOIN suppliers s ON s.id = p.supplier_id
           ORDER BY p.date DESC, p.created_at DESC
         `),
-
         env.DB.prepare(`
-          SELECT
-            pi.id,
-            pi.purchase_id,
-            pi.ingredient_id,
-            i.name AS ingredient_name,
-            pi.supply_id,
-            os.name AS supply_name,
-            pi.quantity,
-            pi.unit_cost,
-            pl.id AS lot_id,
-            pi.created_at,
-            pi.updated_at
+          SELECT pi.id, pi.purchase_id, pi.ingredient_id, i.name AS ingredient_name,
+                 pi.supply_id, os.name AS supply_name, pi.quantity, pi.unit_cost,
+                 pl.id AS lot_id, pi.created_at, pi.updated_at
           FROM purchase_items pi
-          LEFT JOIN ingredients i
-            ON i.id = pi.ingredient_id
-          LEFT JOIN other_supplies os
-            ON os.id = pi.supply_id
-          LEFT JOIN purchase_lots pl
-            ON pl.purchase_item_id = pi.id
+          LEFT JOIN ingredients i ON i.id = pi.ingredient_id
+          LEFT JOIN other_supplies os ON os.id = pi.supply_id
+          LEFT JOIN purchase_lots pl ON pl.purchase_item_id = pi.id
           ORDER BY pi.purchase_id, pi.id
         `),
-
         env.DB.prepare(`
-          SELECT
-            pl.id,
-            pl.purchase_item_id,
-            pl.quantity_initial,
-            pl.quantity_available,
-            pl.unit_cost,
-            pl.created_at,
-            pl.updated_at
-          FROM purchase_lots pl
-          ORDER BY pl.created_at
+          SELECT id, purchase_item_id, quantity_initial, quantity_available,
+                 unit_cost, created_at, updated_at
+          FROM purchase_lots
+          ORDER BY created_at
         `)
-
       ]);
 
       const purchasesRows = purchasesResult.results || [];
       const itemsRows = itemsResult.results || [];
       const lotsRows = lotsResult.results || [];
 
-      const purchases = purchasesRows.map(purchase => {
-
-        const items = itemsRows
+      const purchases = purchasesRows.map(purchase => ({
+        id: purchase.id,
+        docType: purchase.doc_type || "",
+        docNumber: purchase.doc_number || "",
+        date: purchase.date || "",
+        supplierId: purchase.supplier_id || null,
+        supplier: purchase.supplier_id || "",
+        supplierName: purchase.supplier_name || "",
+        lines: itemsRows
           .filter(item => item.purchase_id === purchase.id)
           .map(item => {
-
-            const lot = lotsRows.find(
-              l => l.id === item.lot_id
-            );
-
+            const lot = lotsRows.find(l => l.id === item.lot_id);
+            const category = item.ingredient_id ? "ingredient" : "other";
             return {
               id: item.id,
-
+              category,
+              item: item.ingredient_name || item.supply_name || "",
               ingredientId: item.ingredient_id || null,
-              ingredientName: item.ingredient_name || "",
-
               supplyId: item.supply_id || null,
+              ingredientName: item.ingredient_name || "",
               supplyName: item.supply_name || "",
-
               qty: Number(item.quantity) || 0,
+              quantity: Number(item.quantity) || 0,
+              cost: (Number(item.quantity) || 0) * (Number(item.unit_cost) || 0),
               unitCost: Number(item.unit_cost) || 0,
-
               lotId: item.lot_id || null,
-
               lot: lot ? {
                 id: lot.id,
-                quantityInitial:
-                  Number(lot.quantity_initial) || 0,
-                quantityAvailable:
-                  Number(lot.quantity_available) || 0,
-                unitCost:
-                  Number(lot.unit_cost) || 0
+                quantityInitial: Number(lot.quantity_initial) || 0,
+                quantityAvailable: Number(lot.quantity_available) || 0,
+                unitCost: Number(lot.unit_cost) || 0
               } : null
             };
-          });
+          })
+      }));
 
-        return {
-          id: purchase.id,
-          docType: purchase.doc_type || "",
-          docNumber: purchase.doc_number || "",
-          date: purchase.date || "",
-          supplierId: purchase.supplier_id || null,
-          supplierName: purchase.supplier_name || "",
-          items
-        };
-      });
-
-      return json({
-        ok: true,
-        purchases
-      });
+      return json({ ok: true, purchases });
     }
 
-    // =================================================
-    // POST — guardar cambios
-    // =================================================
+    if (request.method !== "POST") {
+      return json({ error: "Método no permitido" }, 405);
+    }
 
-    if (request.method === "POST") {
+    const body = await request.json();
+    const { action, data } = body;
+    if (!data) return json({ ok: false, error: "Faltan datos de compra" }, 400);
 
-      const body = await request.json();
-      const { action, data } = body;
+    const items = Array.isArray(data.items) ? data.items : [];
+    if (!items.length) return json({ ok: false, error: "La compra debe tener al menos un producto" }, 400);
 
-      // =================================================
-      // CREAR COMPRA
-      // =================================================
+    if (action === "create") {
+      const purchaseId = data.id || uidServer("p");
+      const statements = [
+        env.DB.prepare(`
+          INSERT INTO purchases (id, doc_type, doc_number, date, supplier_id)
+          VALUES (?, ?, ?, ?, ?)
+        `).bind(
+          purchaseId,
+          data.docType || "",
+          data.docNumber || "",
+          data.date || null,
+          data.supplierId || null
+        )
+      ];
 
-      if (action === "create") {
+      for (const item of items) {
+        const itemId = item.id || uidServer("pi");
+        const quantity = Number(item.qty ?? item.quantity) || 0;
+        const unitCost = Number(item.unitCost ?? (quantity ? Number(item.cost || 0) / quantity : 0)) || 0;
+        if (quantity <= 0 || unitCost < 0) {
+          return json({ ok: false, error: "Cantidad o costo inválido en la compra" }, 400);
+        }
 
-        const purchaseId =
-          data.id || uidServer("p");
+        const lotId = item.lotId || uidServer("lot");
+        const ingredientId = item.ingredientId || null;
+        const supplyId = item.supplyId || null;
 
-        const items = Array.isArray(data.items)
-          ? data.items
-          : [];
+        if (!ingredientId && !supplyId) {
+          return json({ ok: false, error: "Cada línea debe indicar un ingrediente o un insumo" }, 400);
+        }
 
-        const statements = [];
-
-        // Cabecera
         statements.push(
           env.DB.prepare(`
-            INSERT INTO purchases
-              (
-                id,
-                doc_type,
-                doc_number,
-                date,
-                supplier_id
-              )
+            INSERT INTO purchase_items
+              (id, purchase_id, ingredient_id, supply_id, quantity, unit_cost)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(itemId, purchaseId, ingredientId, supplyId, quantity, unitCost)
+        );
+
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO purchase_lots
+              (id, purchase_item_id, quantity_initial, quantity_available, unit_cost)
             VALUES (?, ?, ?, ?, ?)
-          `).bind(
-            purchaseId,
-            data.docType || "",
-            data.docNumber || "",
-            data.date || null,
-            data.supplierId || null
-          )
-        );
-
-        // Detalle + lotes
-        for (const item of items) {
-
-          const itemId =
-            item.id || uidServer("pi");
-
-          const quantity =
-            Number(item.qty) || 0;
-
-          const unitCost =
-            Number(item.unitCost) || 0;
-
-          const lotId =
-            item.lotId || uidServer("lot");
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO purchase_items
-                (
-                  id,
-                  purchase_id,
-                  ingredient_id,
-                  supply_id,
-                  quantity,
-                  unit_cost,
-                )
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(
-              itemId,
-              purchaseId,
-              item.ingredientId || null,
-              item.supplyId || null,
-              quantity,
-              unitCost,
-              lotId
-            )
-          );
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO purchase_lots
-                (
-                  id,
-                  purchase_item_id,
-                  quantity_initial,
-                  quantity_available,
-                  unit_cost
-                )
-              VALUES (?, ?, ?, ?, ?)
-            `).bind(
-              lotId,
-              itemId,
-              quantity,
-              quantity,
-              unitCost
-            )
-          );
-        }
-
-        await env.DB.batch(statements);
-
-        return json({
-          ok: true,
-          id: purchaseId
-        });
-      }
-
-      // =================================================
-      // ACTUALIZAR COMPRA
-      // =================================================
-
-      if (action === "update") {
-
-        const purchaseId = data.id;
-
-        const items = Array.isArray(data.items)
-          ? data.items
-          : [];
-
-        // Primero eliminamos detalle y lotes anteriores.
-        // La compra se vuelve a construir con los datos actuales.
-
-        const oldItems =
-          await env.DB.prepare(`
-            SELECT id
-            FROM purchase_items
-            WHERE purchase_id = ?
-          `).bind(purchaseId).all();
-
-        const statements = [];
-
-        for (const oldItem of oldItems.results || []) {
-
-          statements.push(
-            env.DB.prepare(`
-              DELETE FROM purchase_lots
-              WHERE purchase_item_id = ?
-            `).bind(oldItem.id)
-          );
-        }
-
-        statements.push(
-          env.DB.prepare(`
-            DELETE FROM purchase_items
-            WHERE purchase_id = ?
-          `).bind(purchaseId)
+          `).bind(lotId, itemId, quantity, quantity, unitCost)
         );
 
         statements.push(
           env.DB.prepare(`
-            UPDATE purchases
-            SET
-              doc_type = ?,
-              doc_number = ?,
-              date = ?,
-              supplier_id = ?,
-              updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            INSERT INTO movements
+              (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id)
+            VALUES (?, ?, 'purchase', ?, ?, ?, ?, ?, ?)
           `).bind(
-            data.docType || "",
-            data.docNumber || "",
-            data.date || null,
-            data.supplierId || null,
+            uidServer("movement"),
+            data.date || new Date().toISOString(),
+            ingredientId,
+            supplyId,
+            quantity,
+            unitCost,
+            quantity * unitCost,
             purchaseId
           )
         );
-
-        for (const item of items) {
-
-          const itemId =
-            item.id || uidServer("pi");
-
-          const quantity =
-            Number(item.qty) || 0;
-
-          const unitCost =
-            Number(item.unitCost) || 0;
-
-          const lotId =
-            item.lotId || uidServer("lot");
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO purchase_items
-                (
-                  id,
-                  purchase_id,
-                  ingredient_id,
-                  supply_id,
-                  quantity,
-                  unit_cost,
-                  lot_id
-                )
-              VALUES (?, ?, ?, ?, ?, ?, ?)
-            `).bind(
-              itemId,
-              purchaseId,
-              item.ingredientId || null,
-              item.supplyId || null,
-              quantity,
-              unitCost,
-              lotId
-            )
-          );
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO purchase_lots
-                (
-                  id,
-                  purchase_item_id,
-                  quantity_initial,
-                  quantity_available,
-                  unit_cost
-                )
-              VALUES (?, ?, ?, ?, ?)
-            `).bind(
-              lotId,
-              itemId,
-              quantity,
-              quantity,
-              unitCost
-            )
-          );
-        }
-
-        await env.DB.batch(statements);
-
-        return json({
-          ok: true
-        });
       }
 
-      // =================================================
-      // ELIMINAR COMPRA
-      // =================================================
-
-      if (action === "delete") {
-
-        // Antes de eliminar verificamos si los lotes
-        // ya fueron utilizados en retiros.
-
-        const usedLots = await env.DB.prepare(`
-          SELECT COUNT(*) AS count
-          FROM withdrawal_allocations wa
-          INNER JOIN purchase_lots pl
-            ON pl.id = wa.lot_id
-          INNER JOIN purchase_items pi
-            ON pi.id = pl.purchase_item_id
-          WHERE pi.purchase_id = ?
-        `).bind(data.id).first();
-
-        if (Number(usedLots?.count || 0) > 0) {
-          return json({
-            ok: false,
-            error:
-              "No se puede eliminar esta compra porque sus lotes ya fueron utilizados en movimientos de stock."
-          }, 400);
-        }
-
-        const oldItems =
-          await env.DB.prepare(`
-            SELECT id
-            FROM purchase_items
-            WHERE purchase_id = ?
-          `).bind(data.id).all();
-
-        const statements = [];
-
-        for (const item of oldItems.results || []) {
-
-          statements.push(
-            env.DB.prepare(`
-              DELETE FROM purchase_lots
-              WHERE purchase_item_id = ?
-            `).bind(item.id)
-          );
-        }
-
-        statements.push(
-          env.DB.prepare(`
-            DELETE FROM purchase_items
-            WHERE purchase_id = ?
-          `).bind(data.id)
-        );
-
-        statements.push(
-          env.DB.prepare(`
-            DELETE FROM purchases
-            WHERE id = ?
-          `).bind(data.id)
-        );
-
-        await env.DB.batch(statements);
-
-        return json({
-          ok: true
-        });
-      }
-
-      return json({
-        ok: false,
-        error: "Acción no reconocida"
-      }, 400);
+      await env.DB.batch(statements);
+      return json({ ok: true, id: purchaseId });
     }
 
-    return json({
-      error: "Método no permitido"
-    }, 405);
+    if (action === "update") {
+      const purchaseId = data.id;
+      if (!purchaseId) return json({ ok: false, error: "Falta el ID de la compra" }, 400);
 
+      const used = await env.DB.prepare(`
+        SELECT COUNT(*) AS count
+        FROM purchase_lots pl
+        LEFT JOIN withdrawal_allocations wa ON wa.lot_id = pl.id
+        WHERE pl.purchase_item_id IN (
+          SELECT id FROM purchase_items WHERE purchase_id = ?
+        )
+        AND (
+          pl.quantity_available < pl.quantity_initial
+          OR wa.id IS NOT NULL
+        )
+      `).bind(purchaseId).first();
+
+      if (Number(used?.count || 0) > 0) {
+        return json({
+          ok: false,
+          error: "No se puede editar esta compra porque uno o más lotes ya fueron utilizados en movimientos de stock."
+        }, 400);
+      }
+
+      const oldItems = await env.DB.prepare(`
+        SELECT id FROM purchase_items WHERE purchase_id = ?
+      `).bind(purchaseId).all();
+
+      const statements = [];
+      statements.push(
+        env.DB.prepare(`DELETE FROM movements WHERE type = 'purchase' AND reference_id = ?`).bind(purchaseId)
+      );
+      for (const oldItem of oldItems.results || []) {
+        statements.push(
+          env.DB.prepare(`DELETE FROM purchase_lots WHERE purchase_item_id = ?`).bind(oldItem.id)
+        );
+      }
+      statements.push(
+        env.DB.prepare(`DELETE FROM purchase_items WHERE purchase_id = ?`).bind(purchaseId)
+      );
+      statements.push(
+        env.DB.prepare(`
+          UPDATE purchases
+          SET doc_type = ?, doc_number = ?, date = ?, supplier_id = ?,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).bind(
+          data.docType || "",
+          data.docNumber || "",
+          data.date || null,
+          data.supplierId || null,
+          purchaseId
+        )
+      );
+
+      for (const item of items) {
+        const itemId = item.id || uidServer("pi");
+        const quantity = Number(item.qty ?? item.quantity) || 0;
+        const unitCost = Number(item.unitCost ?? (quantity ? Number(item.cost || 0) / quantity : 0)) || 0;
+        const lotId = item.lotId || uidServer("lot");
+        const ingredientId = item.ingredientId || null;
+        const supplyId = item.supplyId || null;
+
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO purchase_items
+              (id, purchase_id, ingredient_id, supply_id, quantity, unit_cost)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(itemId, purchaseId, ingredientId, supplyId, quantity, unitCost)
+        );
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO purchase_lots
+              (id, purchase_item_id, quantity_initial, quantity_available, unit_cost)
+            VALUES (?, ?, ?, ?, ?)
+          `).bind(lotId, itemId, quantity, quantity, unitCost)
+        );
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO movements
+              (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id)
+            VALUES (?, ?, 'purchase', ?, ?, ?, ?, ?, ?)
+          `).bind(
+            uidServer("movement"),
+            data.date || new Date().toISOString(),
+            ingredientId,
+            supplyId,
+            quantity,
+            unitCost,
+            quantity * unitCost,
+            purchaseId
+          )
+        );
+      }
+
+      await env.DB.batch(statements);
+      return json({ ok: true });
+    }
+
+    if (action === "delete") {
+      const purchaseId = data.id;
+      const used = await env.DB.prepare(`
+        SELECT COUNT(*) AS count
+        FROM purchase_lots pl
+        LEFT JOIN withdrawal_allocations wa ON wa.lot_id = pl.id
+        WHERE pl.purchase_item_id IN (
+          SELECT id FROM purchase_items WHERE purchase_id = ?
+        )
+        AND (
+          pl.quantity_available < pl.quantity_initial
+          OR wa.id IS NOT NULL
+        )
+      `).bind(purchaseId).first();
+
+      if (Number(used?.count || 0) > 0) {
+        return json({
+          ok: false,
+          error: "No se puede eliminar esta compra porque sus lotes ya fueron utilizados en movimientos de stock."
+        }, 400);
+      }
+
+      const oldItems = await env.DB.prepare(`
+        SELECT id FROM purchase_items WHERE purchase_id = ?
+      `).bind(purchaseId).all();
+
+      const statements = [
+        env.DB.prepare(`DELETE FROM movements WHERE type = 'purchase' AND reference_id = ?`).bind(purchaseId)
+      ];
+      for (const oldItem of oldItems.results || []) {
+        statements.push(env.DB.prepare(`DELETE FROM purchase_lots WHERE purchase_item_id = ?`).bind(oldItem.id));
+      }
+      statements.push(env.DB.prepare(`DELETE FROM purchase_items WHERE purchase_id = ?`).bind(purchaseId));
+      statements.push(env.DB.prepare(`DELETE FROM purchases WHERE id = ?`).bind(purchaseId));
+
+      await env.DB.batch(statements);
+      return json({ ok: true });
+    }
+
+    return json({ ok: false, error: "Acción no reconocida" }, 400);
   } catch (error) {
-
     console.error("Error en compras D1:", error);
-
-    return json({
-      ok: false,
-      error: error.message
-    }, 500);
+    return json({ ok: false, error: error.message }, 500);
   }
 }
 // =====================================================
@@ -2077,87 +1920,41 @@ async function handlePurchases(request, env) {
 async function handleProduction(request, env) {
   try {
     const user = await getSessionUser(request, env);
-
-    if (!user) {
-      return json({ error: "No autorizado" }, 401);
-    }
-
-    // =================================================
-    // GET — cargar producción
-    // =================================================
+    if (!user) return json({ error: "No autorizado" }, 401);
 
     if (request.method === "GET") {
-
-      const [
-        productionResult,
-        itemsResult,
-        ingredientsResult,
-        suppliesResult
-      ] = await env.DB.batch([
-
+      const [productionResult, itemsResult, ingredientsResult, suppliesResult] = await env.DB.batch([
         env.DB.prepare(`
-          SELECT
-            p.id,
-            p.order_id,
-            o.number AS order_number,
-            p.date,
-            p.sale,
-            p.cost,
-            p.gain,
-            p.margin,
-            p.created_at,
-            p.updated_at
+          SELECT p.id, p.order_id, o.number AS order_number, p.date,
+                 p.sale, p.cost, p.gain, p.margin, p.created_at, p.updated_at
           FROM production p
-          LEFT JOIN orders o
-            ON o.id = p.order_id
+          LEFT JOIN orders o ON o.id = p.order_id
           ORDER BY p.date DESC, p.created_at DESC
         `),
-
         env.DB.prepare(`
-          SELECT
-            pi.id,
-            pi.production_id,
-            pi.recipe_id,
-            r.name AS recipe_name,
-            pi.quantity,
-            r.sale_price AS unit_price,
-            (pi.quantity * r.sale_price) AS subtotal
+          SELECT pi.id, pi.production_id, pi.recipe_id, r.name AS recipe_name,
+                 pi.quantity, r.sale_price AS unit_price,
+                 (pi.quantity * r.sale_price) AS subtotal
           FROM production_items pi
-          LEFT JOIN recipes r
-            ON r.id = pi.recipe_id
+          LEFT JOIN recipes r ON r.id = pi.recipe_id
           ORDER BY pi.production_id, pi.id
         `),
-
         env.DB.prepare(`
-          SELECT
-            pgi.id,
-            pgi.production_id,
-            pgi.ingredient_id,
-            i.name AS ingredient_name,
-            pgi.quantity,
-            pgi.unit_cost,
-            pgi.total_cost AS subtotal
+          SELECT pgi.id, pgi.production_id, pgi.ingredient_id,
+                 i.name AS ingredient_name, pgi.quantity, pgi.unit_cost,
+                 pgi.total_cost AS subtotal
           FROM production_ingredients pgi
-          LEFT JOIN ingredients i
-            ON i.id = pgi.ingredient_id
+          LEFT JOIN ingredients i ON i.id = pgi.ingredient_id
           ORDER BY pgi.production_id, pgi.id
         `),
-
         env.DB.prepare(`
-          SELECT
-            pgs.id,
-            pgs.production_id,
-            pgs.supply_id,
-            os.name AS supply_name,
-            pgs.quantity,
-            pgs.unit_cost,
-            pgs.total_cost AS subtotal
+          SELECT pgs.id, pgs.production_id, pgs.supply_id,
+                 os.name AS supply_name, pgs.quantity, pgs.unit_cost,
+                 pgs.total_cost AS subtotal
           FROM production_supplies pgs
-          LEFT JOIN other_supplies os
-            ON os.id = pgs.supply_id
+          LEFT JOIN other_supplies os ON os.id = pgs.supply_id
           ORDER BY pgs.production_id, pgs.id
         `)
-
       ]);
 
       const productionRows = productionResult.results || [];
@@ -2165,456 +1962,308 @@ async function handleProduction(request, env) {
       const ingredientRows = ingredientsResult.results || [];
       const supplyRows = suppliesResult.results || [];
 
-      const production = productionRows.map(p => {
+      const production = productionRows.map(p => ({
+        id: p.id,
+        orderId: p.order_id,
+        orderNumber: p.order_number || "",
+        date: p.date,
+        sale: Number(p.sale) || 0,
+        cost: Number(p.cost) || 0,
+        gain: Number(p.gain) || 0,
+        margin: Number(p.margin) || 0,
+        items: itemRows.filter(x => x.production_id === p.id).map(x => ({
+          id: x.id,
+          recipeId: x.recipe_id,
+          product: x.recipe_name || "",
+          qty: Number(x.quantity) || 0,
+          unitPrice: Number(x.unit_price) || 0,
+          subtotal: Number(x.subtotal) || 0
+        })),
+        ingredients: ingredientRows.filter(x => x.production_id === p.id).map(x => ({
+          id: x.id,
+          ingredientId: x.ingredient_id,
+          ingredient: x.ingredient_name || "",
+          quantity: Number(x.quantity) || 0,
+          unitCost: Number(x.unit_cost) || 0,
+          subtotal: Number(x.subtotal) || 0
+        })),
+        supplies: supplyRows.filter(x => x.production_id === p.id).map(x => ({
+          id: x.id,
+          supplyId: x.supply_id,
+          supply: x.supply_name || "",
+          quantity: Number(x.quantity) || 0,
+          unitCost: Number(x.unit_cost) || 0,
+          subtotal: Number(x.subtotal) || 0
+        }))
+      }));
 
-        const items = itemRows
-          .filter(x => x.production_id === p.id)
-          .map(x => ({
-            id: x.id,
-            recipeId: x.recipe_id,
-            product: x.recipe_name || "",
-            qty: Number(x.quantity) || 0,
-            unitPrice: Number(x.unit_price) || 0,
-            subtotal: Number(x.subtotal) || 0
-          }));
+      return json({ ok: true, production });
+    }
 
-        const ingredients = ingredientRows
-          .filter(x => x.production_id === p.id)
-          .map(x => ({
-            id: x.id,
-            ingredientId: x.ingredient_id,
-            ingredient: x.ingredient_name || "",
-            quantity: Number(x.quantity) || 0,
-            unitCost: Number(x.unit_cost) || 0,
-            subtotal: Number(x.subtotal) || 0
-          }));
+    if (request.method !== "POST") {
+      return json({ error: "Método no permitido" }, 405);
+    }
 
-        const supplies = supplyRows
-          .filter(x => x.production_id === p.id)
-          .map(x => ({
-            id: x.id,
-            supplyId: x.supply_id,
-            supply: x.supply_name || "",
-            quantity: Number(x.quantity) || 0,
-            unitCost: Number(x.unit_cost) || 0,
-            subtotal: Number(x.subtotal) || 0
-          }));
+    const body = await request.json();
+    const { action, data } = body;
 
-        return {
-          id: p.id,
-          orderId: p.order_id,
-          orderNumber: p.order_number || "",
-          date: p.date,
-          sale: Number(p.sale) || 0,
-          cost: Number(p.cost) || 0,
-          gain: Number(p.gain) || 0,
-          margin: Number(p.margin) || 0,
-          items,
-          ingredients,
-          supplies
-        };
-      });
+    if (action === "create") {
+      const productionId = data.id || uidServer("prod");
+      const items = Array.isArray(data.items) ? data.items : [];
+      const ingredients = Array.isArray(data.ingredients) ? data.ingredients : [];
+      const supplies = Array.isArray(data.supplies) ? data.supplies : [];
+
+      if (!data.orderId) return json({ ok: false, error: "Falta el pedido asociado" }, 400);
+      if (!ingredients.length && !supplies.length) {
+        return json({ ok: false, error: "La producción no tiene consumos registrados" }, 400);
+      }
+
+      const order = await env.DB.prepare(`
+        SELECT id, status FROM orders WHERE id = ?
+      `).bind(data.orderId).first();
+
+      if (!order) return json({ ok: false, error: "Pedido no encontrado" }, 404);
+      if (order.status !== "Preparación") {
+        return json({ ok: false, error: "El pedido debe estar en Preparación para registrarlo como producido" }, 400);
+      }
+
+      const lotCache = new Map();
+      async function loadLots(category, itemId) {
+        const key = category + ":" + itemId;
+        if (lotCache.has(key)) return lotCache.get(key);
+        const lots = await getAvailableLots(env, category, itemId);
+        const normalized = lots.map(l => ({
+          lotId: String(l.lot_id),
+          available: Number(l.quantity_available) || 0,
+          unitCost: Number(l.unit_cost) || 0
+        }));
+        lotCache.set(key, normalized);
+        return normalized;
+      }
+
+      async function allocate(category, itemId, quantity) {
+        let remaining = Number(quantity) || 0;
+        if (remaining <= 0) return { allocations: [], totalCost: 0 };
+
+        const lots = await loadLots(category, itemId);
+        const allocations = [];
+        let totalCost = 0;
+
+        for (const lot of lots) {
+          if (remaining <= 0.000001) break;
+          const take = Math.min(lot.available, remaining);
+          if (take > 0) {
+            allocations.push({
+              lotId: lot.lotId,
+              quantity: take,
+              unitCost: lot.unitCost,
+              totalCost: take * lot.unitCost
+            });
+            lot.available -= take;
+            remaining -= take;
+            totalCost += take * lot.unitCost;
+          }
+        }
+
+        if (remaining > 0.000001) {
+          throw new Error("Stock insuficiente para completar la producción.");
+        }
+
+        return { allocations, totalCost };
+      }
+
+      const normalizedIngredients = [];
+      const normalizedSupplies = [];
+      const lotUpdates = [];
+      const movementStatements = [];
+      let totalCost = 0;
+
+      for (const item of ingredients) {
+        const quantity = Number(item.quantity) || 0;
+        if (quantity <= 0) continue;
+        const result = await allocate("ingredient", item.ingredientId, quantity);
+        const unitCost = quantity ? result.totalCost / quantity : 0;
+        normalizedIngredients.push({
+          id: item.id || uidServer("prod-ingredient"),
+          ingredientId: item.ingredientId,
+          quantity,
+          unitCost,
+          totalCost: result.totalCost
+        });
+        totalCost += result.totalCost;
+        for (const a of result.allocations) {
+          lotUpdates.push(
+            env.DB.prepare(`
+              UPDATE purchase_lots
+              SET quantity_available = quantity_available - ?, updated_at = CURRENT_TIMESTAMP
+              WHERE id = ? AND quantity_available >= ?
+            `).bind(a.quantity, a.lotId, a.quantity)
+          );
+        }
+        movementStatements.push(
+          env.DB.prepare(`
+            INSERT INTO movements
+              (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id)
+            VALUES (?, ?, 'production', ?, NULL, ?, ?, ?, ?)
+          `).bind(
+            uidServer("movement"),
+            data.date || new Date().toISOString(),
+            item.ingredientId,
+            quantity,
+            unitCost,
+            result.totalCost,
+            productionId
+          )
+        );
+      }
+
+      for (const item of supplies) {
+        const quantity = Number(item.quantity) || 0;
+        if (quantity <= 0) continue;
+        const result = await allocate("other", item.supplyId, quantity);
+        const unitCost = quantity ? result.totalCost / quantity : 0;
+        normalizedSupplies.push({
+          id: item.id || uidServer("prod-supply"),
+          supplyId: item.supplyId,
+          quantity,
+          unitCost,
+          totalCost: result.totalCost
+        });
+        totalCost += result.totalCost;
+        for (const a of result.allocations) {
+          lotUpdates.push(
+            env.DB.prepare(`
+              UPDATE purchase_lots
+              SET quantity_available = quantity_available - ?, updated_at = CURRENT_TIMESTAMP
+              WHERE id = ? AND quantity_available >= ?
+            `).bind(a.quantity, a.lotId, a.quantity)
+          );
+        }
+        movementStatements.push(
+          env.DB.prepare(`
+            INSERT INTO movements
+              (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id)
+            VALUES (?, ?, 'production', NULL, ?, ?, ?, ?, ?)
+          `).bind(
+            uidServer("movement"),
+            data.date || new Date().toISOString(),
+            item.supplyId,
+            quantity,
+            unitCost,
+            result.totalCost,
+            productionId
+          )
+        );
+      }
+
+      const saleFromItems = items.reduce(
+        (sum, item) => sum + (Number(item.subtotal) || ((Number(item.qty) || 0) * (Number(item.unitPrice) || 0))),
+        0
+      );
+      const sale = Number(data.sale) || saleFromItems;
+      const gain = sale - totalCost;
+      const margin = sale > 0 ? gain / sale : 0;
+
+      const statements = [
+        env.DB.prepare(`
+          INSERT INTO production
+            (id, order_id, date, sale, cost, gain, margin)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          productionId,
+          data.orderId,
+          data.date || new Date().toISOString(),
+          sale,
+          totalCost,
+          gain,
+          margin
+        )
+      ];
+
+      for (const item of items) {
+        const quantity = Number(item.qty) || 0;
+        if (quantity <= 0) continue;
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO production_items
+              (id, production_id, recipe_id, quantity)
+            VALUES (?, ?, ?, ?)
+          `).bind(
+            item.id || uidServer("prod-item"),
+            productionId,
+            item.recipeId || null,
+            quantity
+          )
+        );
+      }
+
+      for (const item of normalizedIngredients) {
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO production_ingredients
+              (id, production_id, ingredient_id, quantity, unit_cost, total_cost)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(
+            item.id,
+            productionId,
+            item.ingredientId,
+            item.quantity,
+            item.unitCost,
+            item.totalCost
+          )
+        );
+      }
+
+      for (const item of normalizedSupplies) {
+        statements.push(
+          env.DB.prepare(`
+            INSERT INTO production_supplies
+              (id, production_id, supply_id, quantity, unit_cost, total_cost)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(
+            item.id,
+            productionId,
+            item.supplyId,
+            item.quantity,
+            item.unitCost,
+            item.totalCost
+          )
+        );
+      }
+
+      statements.push(
+        env.DB.prepare(`
+          UPDATE orders
+          SET status = 'Preparado', updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).bind(data.orderId)
+      );
+
+      statements.push(...lotUpdates, ...movementStatements);
+
+      await env.DB.batch(statements);
 
       return json({
         ok: true,
-        production
+        id: productionId,
+        sale,
+        cost: totalCost,
+        gain,
+        margin
       });
     }
 
-    // =================================================
-    // POST — guardar cambios
-    // =================================================
-
-    if (request.method === "POST") {
-
-      const body = await request.json();
-      const { action, data } = body;
-
-      // =================================================
-      // CREAR PRODUCCIÓN
-      // =================================================
-
-      if (action === "create") {
-
-        const productionId =
-          data.id || uidServer("prod");
-
-        const items = Array.isArray(data.items)
-          ? data.items
-          : [];
-
-        const ingredients = Array.isArray(data.ingredients)
-          ? data.ingredients
-          : [];
-
-        const supplies = Array.isArray(data.supplies)
-          ? data.supplies
-          : [];
-
-        const statements = [];
-
-        // CABECERA
-        statements.push(
-          env.DB.prepare(`
-            INSERT INTO production
-              (
-                id,
-                order_id,
-                date,
-                sale,
-                cost,
-                gain,
-                margin
-              )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-          `).bind(
-            productionId,
-            data.orderId || null,
-            data.date || null,
-            Number(data.sale) || 0,
-            Number(data.cost) || 0,
-            Number(data.gain) || 0,
-            Number(data.margin) || 0
-          )
-        );
-
-        // PRODUCTOS PRODUCIDOS
-        for (const item of items) {
-
-          const quantity =
-            Number(item.qty) || 0;
-
-          const unitPrice =
-            Number(item.unitPrice) || 0;
-
-          const subtotal =
-            Number(item.subtotal) ||
-            quantity * unitPrice;
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO production_items
-                (
-                  id,
-                  production_id,
-                  recipe_id,
-                  quantity,
-                )
-              VALUES (?, ?, ?, ?)
-            `).bind(
-              item.id || uidServer("prod-item"),
-              productionId,
-              item.recipeId || null,
-              quantity,
-            )
-          );
-        }
-
-        // INGREDIENTES CONSUMIDOS
-        for (const item of ingredients) {
-
-          const quantity =
-            Number(item.quantity) || 0;
-
-          const unitCost =
-            Number(item.unitCost) || 0;
-
-          const subtotal =
-            Number(item.subtotal) ||
-            quantity * unitCost;
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO production_ingredients
-                (
-                  id,
-                  production_id,
-                  ingredient_id,
-                  quantity,
-                  unit_cost,
-                  total_cost
-                )
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(
-              item.id || uidServer("prod-ingredient"),
-              productionId,
-              item.ingredientId || null,
-              quantity,
-              unitCost,
-              subtotal
-            )
-          );
-        }
-
-        // OTROS INSUMOS CONSUMIDOS
-        for (const item of supplies) {
-
-          const quantity =
-            Number(item.quantity) || 0;
-
-          const unitCost =
-            Number(item.unitCost) || 0;
-
-          const subtotal =
-            Number(item.subtotal) ||
-            quantity * unitCost;
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO production_supplies
-                (
-                  id,
-                  production_id,
-                  supply_id,
-                  quantity,
-                  unit_cost,
-                  total_cost
-                )
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(
-              item.id || uidServer("prod-supply"),
-              productionId,
-              item.supplyId || null,
-              quantity,
-              unitCost,
-              subtotal
-            )
-          );
-        }
-
-        await env.DB.batch(statements);
-
-        return json({
-          ok: true,
-          id: productionId
-        });
-      }
-
-      // =================================================
-      // ACTUALIZAR PRODUCCIÓN
-      // =================================================
-
-      if (action === "update") {
-
-        const productionId = data.id;
-
-        const items = Array.isArray(data.items)
-          ? data.items
-          : [];
-
-        const ingredients = Array.isArray(data.ingredients)
-          ? data.ingredients
-          : [];
-
-        const supplies = Array.isArray(data.supplies)
-          ? data.supplies
-          : [];
-
-        const statements = [
-
-          env.DB.prepare(`
-            UPDATE production
-            SET
-              order_id = ?,
-              date = ?,
-              sale = ?,
-              cost = ?,
-              gain = ?,
-              margin = ?,
-              updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-          `).bind(
-            data.orderId || null,
-            data.date || null,
-            Number(data.sale) || 0,
-            Number(data.cost) || 0,
-            Number(data.gain) || 0,
-            Number(data.margin) || 0,
-            productionId
-          ),
-
-          env.DB.prepare(`
-            DELETE FROM production_items
-            WHERE production_id = ?
-          `).bind(productionId),
-
-          env.DB.prepare(`
-            DELETE FROM production_ingredients
-            WHERE production_id = ?
-          `).bind(productionId),
-
-          env.DB.prepare(`
-            DELETE FROM production_supplies
-            WHERE production_id = ?
-          `).bind(productionId)
-
-        ];
-
-        for (const item of items) {
-
-          const quantity =
-            Number(item.qty) || 0;
-
-          const unitPrice =
-            Number(item.unitPrice) || 0;
-
-          const subtotal =
-            Number(item.subtotal) ||
-            quantity * unitPrice;
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO production_items
-                (
-                  id,
-                  production_id,
-                  recipe_id,
-                  quantity,
-                  unit_price,
-                  subtotal
-                )
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(
-              item.id || uidServer("prod-item"),
-              productionId,
-              item.recipeId || null,
-              quantity,
-              unitPrice,
-              subtotal
-            )
-          );
-        }
-
-        for (const item of ingredients) {
-
-          const quantity =
-            Number(item.quantity) || 0;
-
-          const unitCost =
-            Number(item.unitCost) || 0;
-
-          const subtotal =
-            Number(item.subtotal) ||
-            quantity * unitCost;
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO production_ingredients
-                (
-                  id,
-                  production_id,
-                  ingredient_id,
-                  quantity,
-                  unit_cost,
-                  subtotal
-                )
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(
-              item.id || uidServer("prod-ing"),
-              productionId,
-              item.ingredientId || null,
-              quantity,
-              unitCost,
-              subtotal
-            )
-          );
-        }
-
-        for (const item of supplies) {
-
-          const quantity =
-            Number(item.quantity) || 0;
-
-          const unitCost =
-            Number(item.unitCost) || 0;
-
-          const subtotal =
-            Number(item.subtotal) ||
-            quantity * unitCost;
-
-          statements.push(
-            env.DB.prepare(`
-              INSERT INTO production_supplies
-                (
-                  id,
-                  production_id,
-                  supply_id,
-                  quantity,
-                  unit_cost,
-                  subtotal
-                )
-              VALUES (?, ?, ?, ?, ?, ?)
-            `).bind(
-              item.id || uidServer("prod-sup"),
-              productionId,
-              item.supplyId || null,
-              quantity,
-              unitCost,
-              subtotal
-            )
-          );
-        }
-
-        await env.DB.batch(statements);
-
-        return json({
-          ok: true
-        });
-      }
-
-      // =================================================
-      // ELIMINAR PRODUCCIÓN
-      // =================================================
-
-      if (action === "delete") {
-
-        await env.DB.batch([
-
-          env.DB.prepare(`
-            DELETE FROM production_items
-            WHERE production_id = ?
-          `).bind(data.id),
-
-          env.DB.prepare(`
-            DELETE FROM production_ingredients
-            WHERE production_id = ?
-          `).bind(data.id),
-
-          env.DB.prepare(`
-            DELETE FROM production_supplies
-            WHERE production_id = ?
-          `).bind(data.id),
-
-          env.DB.prepare(`
-            DELETE FROM production
-            WHERE id = ?
-          `).bind(data.id)
-
-        ]);
-
-        return json({
-          ok: true
-        });
-      }
-
+    if (action === "update" || action === "delete") {
       return json({
         ok: false,
-        error: "Acción no reconocida"
+        error: "La producción registrada no se puede editar ni eliminar desde este flujo."
       }, 400);
     }
 
-    return json({
-      error: "Método no permitido"
-    }, 405);
-
+    return json({ ok: false, error: "Acción no reconocida" }, 400);
   } catch (error) {
-
     console.error("Error en producción D1:", error);
-
-    return json({
-      ok: false,
-      error: error.message
-    }, 500);
+    return json({ ok: false, error: error.message }, 500);
   }
 }
 // ============================================================
@@ -2634,76 +2283,117 @@ function num(v) {
 
 async function handleStock(request, env) {
   try {
-    const ingredients = await env.DB.prepare(`
-      SELECT
-        i.id,
-        i.name,
-        i.unit,
-        i.status,
-        COALESCE(SUM(pl.quantity_available), 0) AS stock,
-        COALESCE(
-          (
+    const user = await getSessionUser(request, env);
+    if (!user) return json({ error: "No autorizado" }, 401);
+
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
+    const itemId = url.searchParams.get("itemId");
+
+    if (category && itemId) {
+      const excludeWithdrawalId = url.searchParams.get("excludeWithdrawalId");
+      const lots = await getAvailableLots(env, category, itemId);
+
+      if (excludeWithdrawalId) {
+        const old = await env.DB.prepare(`
+          SELECT wa.lot_id, wa.quantity,
+                 pl.quantity_available, pl.quantity_initial, pl.unit_cost,
+                 p.date AS purchase_date
+          FROM withdrawal_allocations wa
+          JOIN purchase_lots pl ON pl.id = wa.lot_id
+          JOIN purchase_items pi ON pi.id = pl.purchase_item_id
+          JOIN purchases p ON p.id = pi.purchase_id
+          WHERE wa.withdrawal_id = ?
+            AND (
+              (? = 'ingredient' AND pi.ingredient_id = ?)
+              OR
+              (? = 'other' AND pi.supply_id = ?)
+            )
+        `).bind(
+          excludeWithdrawalId,
+          category, itemId,
+          category, itemId
+        ).all();
+
+        const map = new Map(lots.map(l => [String(l.lot_id), {
+          lot_id:String(l.lot_id),
+          purchase_item_id:l.purchase_item_id,
+          quantity_initial:Number(l.quantity_initial)||0,
+          quantity_available:Number(l.quantity_available)||0,
+          unit_cost:Number(l.unit_cost)||0,
+          purchase_date:l.purchase_date
+        }]));
+
+        for (const row of old.results || []) {
+          const key=String(row.lot_id);
+          if (map.has(key)) {
+            map.get(key).quantity_available += Number(row.quantity)||0;
+          } else {
+            map.set(key,{
+              lot_id:key,
+              purchase_item_id:row.purchase_item_id,
+              quantity_initial:Number(row.quantity_initial)||0,
+              quantity_available:(Number(row.quantity_available)||0)+(Number(row.quantity)||0),
+              unit_cost:Number(row.unit_cost)||0,
+              purchase_date:row.purchase_date
+            });
+          }
+        }
+
+        return json({ ok:true, lots:Array.from(map.values()).filter(l=>l.quantity_available>0) });
+      }
+
+      return json({ ok: true, lots });
+    }
+
+    const [ingredients, otherSupplies] = await Promise.all([
+      env.DB.prepare(`
+        SELECT
+          i.id, i.name, i.unit, i.status,
+          COALESCE(SUM(pl.quantity_available), 0) AS stock,
+          COALESCE((
             SELECT pl2.unit_cost
             FROM purchase_lots pl2
-            JOIN purchase_items pi2
-              ON pi2.id = pl2.purchase_item_id
+            JOIN purchase_items pi2 ON pi2.id = pl2.purchase_item_id
             WHERE pi2.ingredient_id = i.id
               AND pl2.quantity_available > 0
             ORDER BY pl2.created_at ASC
             LIMIT 1
-          ),
-          0
-        ) AS unit_cost
-      FROM ingredients i
-      LEFT JOIN purchase_items pi
-        ON pi.ingredient_id = i.id
-      LEFT JOIN purchase_lots pl
-        ON pl.purchase_item_id = pi.id
-      GROUP BY i.id, i.name, i.unit, i.status
-      ORDER BY i.name ASC
-    `).all();
-
-    const otherSupplies = await env.DB.prepare(`
-      SELECT
-        os.id,
-        os.name,
-        os.unit,
-        os.consumable,
-        os.status,
-        COALESCE(SUM(pl.quantity_available), 0) AS stock,
-        COALESCE(
-          (
+          ), 0) AS unit_cost
+        FROM ingredients i
+        LEFT JOIN purchase_items pi ON pi.ingredient_id = i.id
+        LEFT JOIN purchase_lots pl ON pl.purchase_item_id = pi.id
+        GROUP BY i.id, i.name, i.unit, i.status
+        ORDER BY i.name ASC
+      `).all(),
+      env.DB.prepare(`
+        SELECT
+          os.id, os.name, os.unit, os.consumable, os.status,
+          COALESCE(SUM(pl.quantity_available), 0) AS stock,
+          COALESCE((
             SELECT pl2.unit_cost
             FROM purchase_lots pl2
-            JOIN purchase_items pi2
-              ON pi2.id = pl2.purchase_item_id
+            JOIN purchase_items pi2 ON pi2.id = pl2.purchase_item_id
             WHERE pi2.supply_id = os.id
               AND pl2.quantity_available > 0
             ORDER BY pl2.created_at ASC
             LIMIT 1
-          ),
-          0
-        ) AS unit_cost
-      FROM other_supplies os
-      LEFT JOIN purchase_items pi
-        ON pi.supply_id = os.id
-      LEFT JOIN purchase_lots pl
-        ON pl.purchase_item_id = pi.id
-      GROUP BY os.id, os.name, os.unit, os.consumable, os.status
-      ORDER BY os.name ASC
-    `).all();
+          ), 0) AS unit_cost
+        FROM other_supplies os
+        LEFT JOIN purchase_items pi ON pi.supply_id = os.id
+        LEFT JOIN purchase_lots pl ON pl.purchase_item_id = pi.id
+        GROUP BY os.id, os.name, os.unit, os.consumable, os.status
+        ORDER BY os.name ASC
+      `).all()
+    ]);
 
     return json({
       ok: true,
       ingredients: ingredients.results || [],
       otherSupplies: otherSupplies.results || []
     });
-
   } catch (error) {
-    return json({
-      ok: false,
-      error: String(error)
-    }, 500);
+    return json({ ok: false, error: String(error) }, 500);
   }
 }
 
@@ -2714,38 +2404,25 @@ async function handleStock(request, env) {
 
 async function handleMovements(request, env) {
   try {
+    const user = await getSessionUser(request, env);
+    if (!user) return json({ error: "No autorizado" }, 401);
+
     const result = await env.DB.prepare(`
       SELECT
-        m.id,
-        m.date,
-        m.type,
-        m.ingredient_id,
-        i.name AS ingredient_name,
-        m.supply_id,
-        os.name AS supply_name,
-        m.quantity,
-        m.unit_cost,
-        m.total_cost,
-        m.reference_id,
-        m.created_at
+        m.id, m.date, m.type,
+        m.ingredient_id, i.name AS ingredient_name,
+        m.supply_id, os.name AS supply_name,
+        m.quantity, m.unit_cost, m.total_cost,
+        m.reference_id, m.created_at
       FROM movements m
-      LEFT JOIN ingredients i
-        ON i.id = m.ingredient_id
-      LEFT JOIN other_supplies os
-        ON os.id = m.supply_id
+      LEFT JOIN ingredients i ON i.id = m.ingredient_id
+      LEFT JOIN other_supplies os ON os.id = m.supply_id
       ORDER BY m.date DESC, m.created_at DESC
     `).all();
 
-    return json({
-      ok: true,
-      movements: result.results || []
-    });
-
+    return json({ ok: true, movements: result.results || [] });
   } catch (error) {
-    return json({
-      ok: false,
-      error: String(error)
-    }, 500);
+    return json({ ok: false, error: String(error) }, 500);
   }
 }
 
@@ -2756,51 +2433,34 @@ async function handleMovements(request, env) {
 
 async function handleWithdrawals(request, env) {
   try {
-    const withdrawals = await env.DB.prepare(`
-      SELECT
-        w.id,
-        w.date,
-        w.ingredient_id,
-        i.name AS ingredient_name,
-        w.supply_id,
-        os.name AS supply_name,
-        w.quantity,
-        w.reason,
-        w.note,
-        w.created_at,
-        w.updated_at
-      FROM withdrawals w
-      LEFT JOIN ingredients i
-        ON i.id = w.ingredient_id
-      LEFT JOIN other_supplies os
-        ON os.id = w.supply_id
-      ORDER BY w.date DESC, w.created_at DESC
-    `).all();
+    const user = await getSessionUser(request, env);
+    if (!user) return json({ error: "No autorizado" }, 401);
 
-    const allocations = await env.DB.prepare(`
-      SELECT
-        wa.id,
-        wa.withdrawal_id,
-        wa.lot_id,
-        wa.quantity,
-        wa.unit_cost,
-        wa.total_cost,
-        wa.created_at
-      FROM withdrawal_allocations wa
-      ORDER BY wa.withdrawal_id, wa.created_at
-    `).all();
+    const [withdrawals, allocations] = await env.DB.batch([
+      env.DB.prepare(`
+        SELECT
+          w.id, w.date, w.ingredient_id, i.name AS ingredient_name,
+          w.supply_id, os.name AS supply_name,
+          w.quantity, w.reason, w.note, w.created_at, w.updated_at
+        FROM withdrawals w
+        LEFT JOIN ingredients i ON i.id = w.ingredient_id
+        LEFT JOIN other_supplies os ON os.id = w.supply_id
+        ORDER BY w.date DESC, w.created_at DESC
+      `),
+      env.DB.prepare(`
+        SELECT id, withdrawal_id, lot_id, quantity, unit_cost, total_cost, created_at
+        FROM withdrawal_allocations
+        ORDER BY withdrawal_id, created_at
+      `)
+    ]);
 
     return json({
       ok: true,
       withdrawals: withdrawals.results || [],
       allocations: allocations.results || []
     });
-
   } catch (error) {
-    return json({
-      ok: false,
-      error: String(error)
-    }, 500);
+    return json({ ok: false, error: String(error) }, 500);
   }
 }
 
@@ -3108,187 +2768,101 @@ async function createWithdrawal(request, env) {
 
 async function updateWithdrawal(request, env) {
   const body = await request.json();
+  const { id, date, category, itemId, quantity, reason, note, allocations } = body;
 
-  const {
-    id,
-    date,
-    category,
-    itemId,
-    quantity,
-    reason,
-    note,
-    allocations
-  } = body;
+  if (!id) return json({ ok:false, error:"Falta el ID del retiro" }, 400);
 
-  if (!id) {
-    return json({
-      ok: false,
-      error: "Falta el ID del retiro"
-    }, 400);
-  }
-
-  // Buscar retiro actual
   const current = await env.DB.prepare(`
-    SELECT *
-    FROM withdrawals
-    WHERE id = ?
+    SELECT * FROM withdrawals WHERE id = ?
   `).bind(id).first();
+  if (!current) return json({ ok:false, error:"Retiro no encontrado" }, 404);
 
-  if (!current) {
-    return json({
-      ok: false,
-      error: "Retiro no encontrado"
-    }, 404);
-  }
-
-  // Buscar asignaciones anteriores
   const oldAllocations = await env.DB.prepare(`
-    SELECT *
-    FROM withdrawal_allocations
-    WHERE withdrawal_id = ?
+    SELECT * FROM withdrawal_allocations WHERE withdrawal_id = ?
   `).bind(id).all();
 
-  const statements = [];
+  const totalQuantity = num(quantity);
+  if (totalQuantity <= 0) return json({ ok:false, error:"La cantidad debe ser mayor que cero" }, 400);
+  if (!Array.isArray(allocations) || !allocations.length) {
+    return json({ ok:false, error:"Debes asignar el retiro a uno o más lotes" }, 400);
+  }
 
-  // ----------------------------------------------------------
-  // 1. Devolver al stock las cantidades anteriores
-  // ----------------------------------------------------------
+  const allocationQuantity = allocations.reduce((sum,a)=>sum+num(a.quantity),0);
+  if (Math.abs(allocationQuantity-totalQuantity)>0.000001) {
+    return json({ ok:false, error:"La cantidad asignada a los lotes no coincide con la cantidad retirada" },400);
+  }
 
+  const lots = await getAvailableLots(env, category, itemId);
+  const lotMap = new Map(lots.map(l=>[String(l.lot_id),{
+    ...l,
+    quantity_available:num(l.quantity_available)
+  }]));
+
+  // Para editar, el stock del retiro anterior se considera temporalmente disponible.
   for (const old of oldAllocations.results || []) {
+    const key=String(old.lot_id);
+    if (lotMap.has(key)) {
+      lotMap.get(key).quantity_available += num(old.quantity);
+    } else {
+      const lot=await env.DB.prepare(`
+        SELECT pl.id AS lot_id, pl.purchase_item_id, pl.quantity_initial,
+               pl.quantity_available, pl.unit_cost, p.date AS purchase_date
+        FROM purchase_lots pl
+        JOIN purchase_items pi ON pi.id = pl.purchase_item_id
+        JOIN purchases p ON p.id = pi.purchase_id
+        WHERE pl.id = ?
+      `).bind(old.lot_id).first();
+      if(lot){
+        lotMap.set(key,{
+          ...lot,
+          quantity_available:num(lot.quantity_available)+num(old.quantity)
+        });
+      }
+    }
+  }
+
+  let totalCost=0;
+  const normalizedAllocations=[];
+
+  for(const allocation of allocations){
+    const lotId=String(allocation.lotId||"");
+    const qty=num(allocation.quantity);
+    if(!lotId||qty<=0)return json({ok:false,error:"Existe una asignación de lote inválida"},400);
+
+    const lot=lotMap.get(lotId);
+    if(!lot)return json({ok:false,error:`El lote ${lotId} no existe o ya no tiene stock disponible`},400);
+    if(qty>num(lot.quantity_available)+0.000001){
+      return json({ok:false,error:`Stock insuficiente en el lote ${lotId}`},400);
+    }
+
+    const unitCost=num(lot.unit_cost);
+    const allocationCost=qty*unitCost;
+    totalCost+=allocationCost;
+    normalizedAllocations.push({lotId,quantity:qty,unitCost,totalCost:allocationCost});
+  }
+
+  const statements=[];
+
+  for(const old of oldAllocations.results || []){
     statements.push(
       env.DB.prepare(`
         UPDATE purchase_lots
-        SET
-          quantity_available = quantity_available + ?,
-          updated_at = CURRENT_TIMESTAMP
+        SET quantity_available = quantity_available + ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `).bind(
-        num(old.quantity),
-        old.lot_id
-      )
+      `).bind(num(old.quantity),old.lot_id)
     );
   }
 
-  // ----------------------------------------------------------
-  // 2. Eliminar asignaciones y movimiento anterior
-  // ----------------------------------------------------------
-
   statements.push(
-    env.DB.prepare(`
-      DELETE FROM withdrawal_allocations
-      WHERE withdrawal_id = ?
-    `).bind(id)
-  );
-
-  statements.push(
+    env.DB.prepare(`DELETE FROM withdrawal_allocations WHERE withdrawal_id = ?`).bind(id),
     env.DB.prepare(`
       DELETE FROM movements
-      WHERE type = 'withdrawal'
-        AND reference_id = ?
-    `).bind(id)
-  );
-
-  // ----------------------------------------------------------
-  // 3. Validar nuevas asignaciones
-  // ----------------------------------------------------------
-
-  const totalQuantity = num(quantity);
-
-  if (totalQuantity <= 0) {
-    return json({
-      ok: false,
-      error: "La cantidad debe ser mayor que cero"
-    }, 400);
-  }
-
-  if (!Array.isArray(allocations) || allocations.length === 0) {
-    return json({
-      ok: false,
-      error: "Debes asignar el retiro a uno o más lotes"
-    }, 400);
-  }
-
-  const allocationQuantity = allocations.reduce(
-    (sum, a) => sum + num(a.quantity),
-    0
-  );
-
-  if (Math.abs(allocationQuantity - totalQuantity) > 0.000001) {
-    return json({
-      ok: false,
-      error: "La cantidad asignada a los lotes no coincide con la cantidad retirada"
-    }, 400);
-  }
-
-  // ----------------------------------------------------------
-  // 4. Obtener lotes después de devolver el retiro anterior
-  // ----------------------------------------------------------
-
-  const lots = await getAvailableLots(env, category, itemId);
-
-  const lotMap = new Map(
-    lots.map(lot => [String(lot.lot_id), lot])
-  );
-
-  let totalCost = 0;
-  const normalizedAllocations = [];
-
-  for (const allocation of allocations) {
-
-    const lotId = String(allocation.lotId || "");
-    const qty = num(allocation.quantity);
-
-    const lot = lotMap.get(lotId);
-
-    if (!lot) {
-      return json({
-        ok: false,
-        error: `El lote ${lotId} no existe`
-      }, 400);
-    }
-
-    if (qty <= 0) {
-      return json({
-        ok: false,
-        error: "La cantidad asignada debe ser mayor que cero"
-      }, 400);
-    }
-
-    if (qty > num(lot.quantity_available) + 0.000001) {
-      return json({
-        ok: false,
-        error: `Stock insuficiente en el lote ${lotId}`
-      }, 400);
-    }
-
-    const unitCost = num(lot.unit_cost);
-    const allocationCost = qty * unitCost;
-
-    totalCost += allocationCost;
-
-    normalizedAllocations.push({
-      lotId,
-      quantity: qty,
-      unitCost,
-      totalCost: allocationCost
-    });
-  }
-
-  // ----------------------------------------------------------
-  // 5. Actualizar retiro
-  // ----------------------------------------------------------
-
-  statements.push(
+      WHERE type = 'withdrawal' AND reference_id = ?
+    `).bind(id),
     env.DB.prepare(`
       UPDATE withdrawals
-      SET
-        date = ?,
-        ingredient_id = ?,
-        supply_id = ?,
-        quantity = ?,
-        reason = ?,
-        note = ?,
-        updated_at = CURRENT_TIMESTAMP
+      SET date = ?, ingredient_id = ?, supply_id = ?, quantity = ?,
+          reason = ?, note = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
       date || current.date,
@@ -3301,38 +2875,16 @@ async function updateWithdrawal(request, env) {
     )
   );
 
-  // ----------------------------------------------------------
-  // 6. Aplicar nuevas asignaciones
-  // ----------------------------------------------------------
-
-  for (const allocation of normalizedAllocations) {
-
+  for(const allocation of normalizedAllocations){
     statements.push(
       env.DB.prepare(`
         UPDATE purchase_lots
-        SET
-          quantity_available = quantity_available - ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-          AND quantity_available >= ?
-      `).bind(
-        allocation.quantity,
-        allocation.lotId,
-        allocation.quantity
-      )
-    );
-
-    statements.push(
+        SET quantity_available = quantity_available - ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND quantity_available >= ?
+      `).bind(allocation.quantity,allocation.lotId,allocation.quantity),
       env.DB.prepare(`
         INSERT INTO withdrawal_allocations
-        (
-          id,
-          withdrawal_id,
-          lot_id,
-          quantity,
-          unit_cost,
-          total_cost
-        )
+          (id, withdrawal_id, lot_id, quantity, unit_cost, total_cost)
         VALUES (?, ?, ?, ?, ?, ?)
       `).bind(
         uidServer("withdrawal-allocation"),
@@ -3345,44 +2897,25 @@ async function updateWithdrawal(request, env) {
     );
   }
 
-  // ----------------------------------------------------------
-  // 7. Crear nuevo movimiento
-  // ----------------------------------------------------------
-
   statements.push(
     env.DB.prepare(`
       INSERT INTO movements
-      (
-        id,
-        date,
-        type,
-        ingredient_id,
-        supply_id,
-        quantity,
-        unit_cost,
-        total_cost,
-        reference_id
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id)
+      VALUES (?, ?, 'withdrawal', ?, ?, ?, ?, ?, ?)
     `).bind(
       uidServer("movement"),
       date || current.date,
-      "withdrawal",
       category === "ingredient" ? itemId : null,
       category === "other" ? itemId : null,
       totalQuantity,
-      totalQuantity > 0 ? totalCost / totalQuantity : 0,
+      totalQuantity ? totalCost/totalQuantity : 0,
       totalCost,
       id
     )
   );
 
   await env.DB.batch(statements);
-
-  return json({
-    ok: true,
-    id
-  });
+  return json({ok:true,id,totalCost});
 }
 
 
