@@ -475,6 +475,36 @@ async function handleSetup(request, env) {
       .bind(username)
       .first();
 
+  // Permite restablecer la contraseña de un usuario existente
+  // usando la misma clave segura de configuración.
+  if (existingUser && body.action === "reset-password") {
+    const passwordHash =
+      await createPasswordHash(password);
+
+    await env.DB.prepare(`
+      UPDATE users
+      SET password_hash = ?
+      WHERE id = ?
+    `)
+      .bind(passwordHash, existingUser.id)
+      .run();
+
+    // Invalidamos sesiones anteriores para que el cambio de contraseña
+    // tenga efecto inmediatamente en todos los dispositivos.
+    await env.DB.prepare(`
+      DELETE FROM sessions
+      WHERE user_id = ?
+    `)
+      .bind(existingUser.id)
+      .run();
+
+    return json({
+      ok: true,
+      message: "Contraseña actualizada correctamente",
+      username
+    });
+  }
+
   if (existingUser) {
     return json(
       {
