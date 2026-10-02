@@ -1403,27 +1403,130 @@ function updateWithdrawalTotal(){
   const unit=item?(category==='ingredient'?ingredientUnit(item):((db.otherSupplies||[]).find(s=>s.name===item)?.unit||'un')):'';
   const total=document.getElementById('withdrawalTotal'); if(total)total.textContent=qty?qty.toLocaleString('es-CL')+' '+unit+' · '+money(Math.round(cost)):'0';
 }
-function saveWithdrawal(){
-  const category=document.getElementById('withdrawalCategory')?.value||'ingredient',item=document.getElementById('withdrawalItem')?.value||'',reason=document.getElementById('withdrawalReason')?.value||'',note=document.getElementById('withdrawalNote')?.value.trim()||'',editId=document.getElementById('withdrawalEditId')?.value||'';
-  const error=document.getElementById('withdrawalError'); if(!item){error.textContent='Selecciona un insumo.';return;} if(!reason){error.textContent='Selecciona un motivo.';return;}
-  const lots=getAvailableWithdrawalLots(category,item,editId),allocations=[]; let totalQty=0,totalCost=0;
-  document.querySelectorAll('#withdrawalLots [data-withdraw-lot]').forEach(input=>{const requested=Math.max(0,Number(input.value)||0),max=Number(input.dataset.withdrawMax)||0,qty=Math.min(requested,max),unitCost=Number(input.dataset.withdrawCost)||0;if(qty>0){allocations.push({lotId:input.dataset.withdrawLot,quantity:qty,unitCost,cost:qty*unitCost});totalQty+=qty;totalCost+=qty*unitCost;}});
-  if(!allocations.length){error.textContent='Indica cuánto quieres retirar de al menos un lote.';return;}
-  const availableTotal=lots.reduce((sum,l)=>sum+Number(l.qty||0),0); if(totalQty>availableTotal+0.0000001){error.textContent='La cantidad a retirar supera el stock disponible.';return;}
-  const movements=db.movements||[];
-  if(editId){
-    const old=movements.find(m=>String(m.id)===String(editId)); if(!old)return;
-    const oldQty=Number(old.quantity)||0;
-    if(old.category==='ingredient')db.inventory[old.item]=Math.max(0,Number(db.inventory[old.item]||0)+oldQty);else db.otherInventory[old.item]=Math.max(0,Number(db.otherInventory[old.item]||0)+oldQty);
-    Object.assign(old,{date:old.date||new Date().toISOString(),category,item,quantity:totalQty,cost:totalCost,reason,note,allocations});
-    if(category==='ingredient')db.inventory[item]=Math.max(0,Number(db.inventory[item]||0)-totalQty);else db.otherInventory[item]=Math.max(0,Number(db.otherInventory[item]||0)-totalQty);
-  }else{
-    if(category==='ingredient')db.inventory[item]=Math.max(0,Number(db.inventory[item]||0)-totalQty);else db.otherInventory[item]=Math.max(0,Number(db.otherInventory[item]||0)-totalQty);
-    movements.push({id:Date.now(),type:'withdrawal',date:new Date().toISOString(),category,item,quantity:totalQty,cost:totalCost,reason,note,allocations});
-    db.movements=movements;
+async function saveWithdrawal(){
+  const category=document.getElementById('withdrawalCategory')?.value||'ingredient';
+  const item=document.getElementById('withdrawalItem')?.value||'';
+  const reason=document.getElementById('withdrawalReason')?.value||'';
+  const note=document.getElementById('withdrawalNote')?.value.trim()||'';
+  const editId=document.getElementById('withdrawalEditId')?.value||'';
+  const error=document.getElementById('withdrawalError');
+
+  if(error)error.textContent='';
+
+  if(!item){
+    if(error)error.textContent='Selecciona un insumo.';
+    return;
   }
-  persist();closeModal(null,'withdrawalModal');renderStock();renderWithdrawalHistory();
-  showFeedback(editId?'¡Retiro actualizado!':'¡Stock retirado!',editId?'Los cambios fueron guardados y el stock se actualizó correctamente.':'El retiro quedó registrado por lote y el stock se actualizó correctamente.','assets/Todo listo.png','Aceptar',()=>closeFeedback());
+
+  if(!reason){
+    if(error)error.textContent='Selecciona un motivo.';
+    return;
+  }
+
+  const lots=getAvailableWithdrawalLots(category,item,editId);
+  const allocations=[];
+
+  let totalQty=0;
+  let totalCost=0;
+
+  document.querySelectorAll('#withdrawalLots [data-withdraw-lot]').forEach(input=>{
+    const requested=Math.max(0,Number(input.value)||0);
+    const max=Number(input.dataset.withdrawMax)||0;
+    const quantity=Math.min(requested,max);
+    const unitCost=Number(input.dataset.withdrawCost)||0;
+
+    if(quantity>0){
+      allocations.push({
+        lotId:input.dataset.withdrawLot,
+        quantity,
+        unitCost,
+        cost:quantity*unitCost
+      });
+
+      totalQty+=quantity;
+      totalCost+=quantity*unitCost;
+    }
+  });
+
+  if(!allocations.length){
+    if(error)error.textContent='Indica cuánto quieres retirar de al menos un lote.';
+    return;
+  }
+
+  const availableTotal=lots.reduce(
+    (sum,l)=>sum+Number(l.qty||0),
+    0
+  );
+
+  if(totalQty>availableTotal+0.0000001){
+    if(error)error.textContent='La cantidad a retirar supera el stock disponible.';
+    return;
+  }
+
+  try{
+    const payload={
+      action:editId?'update':'create',
+      id:editId||null,
+      date:new Date().toISOString(),
+      category,
+      item,
+      reason,
+      note,
+      quantity:totalQty,
+      allocations:allocations.map(a=>({
+        lotId:a.lotId,
+        quantity:a.quantity,
+        unitCost:a.unitCost,
+        cost:a.cost
+      }))
+    };
+
+    const response=await fetch('/api/withdrawals',{
+      method:'POST',
+      credentials:'include',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify(payload)
+    });
+
+    const data=await response.json();
+
+    if(!response.ok||!data.ok){
+      throw new Error(
+        data.error||'No se pudo guardar el retiro'
+      );
+    }
+
+    closeModal(null,'withdrawalModal');
+
+    await renderStock();
+    await renderWithdrawalHistory();
+
+    showFeedback(
+      editId
+        ?'¡Retiro actualizado!'
+        :'¡Stock retirado!',
+      editId
+        ?'Los cambios fueron guardados y el stock se actualizó correctamente.'
+        :'El retiro quedó registrado por lote y el stock se actualizó correctamente.',
+      'assets/Todo listo.png',
+      'Aceptar',
+      ()=>closeFeedback()
+    );
+
+  }catch(errorCaught){
+    console.error(
+      'Error guardando retiro en D1:',
+      errorCaught
+    );
+
+    if(error){
+      error.textContent=
+        errorCaught.message||
+        'No se pudo guardar el retiro.';
+    }
+  }
 }
 async function renderWithdrawalHistory(){
   const el=document.getElementById('withdrawalHistory');
