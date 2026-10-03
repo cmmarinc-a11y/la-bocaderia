@@ -1356,9 +1356,7 @@ async function handleOrders(request, env) {
 
         const orderId = data.id || uidServer("o");
 
-        const orderNumber =
-          data.number ||
-          await generateOrderNumber(env);
+        const orderNumber = await generateOrderNumber(env);
 
         const items = Array.isArray(data.items)
           ? data.items
