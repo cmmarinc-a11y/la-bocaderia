@@ -2503,7 +2503,7 @@ async function handleWithdrawals(request, env) {
           wa.quantity, wa.unit_cost, wa.total_cost, wa.created_at
         FROM withdrawal_allocations wa
         LEFT JOIN purchase_lots pl ON pl.id = wa.lot_id
-        ORDER BY withdrawal_id, created_at
+        ORDER BY wa.withdrawal_id, wa.created_at
       `)
     ]);
 
