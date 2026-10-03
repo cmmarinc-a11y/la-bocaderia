@@ -299,6 +299,17 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 }
 
 
+/* V51 — administración, movimientos y exportaciones */
+.settings-card{margin-top:12px}
+.settings-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.settings-row:last-child{border-bottom:0}
+.settings-label b{display:block;font-size:13px}.settings-label span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.movement-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.movement-toolbar input,.movement-toolbar select{margin:0}
+.movement-list{max-height:62vh;overflow:auto}
+.movement-card{padding:13px 0;border-bottom:1px solid var(--line)}.movement-card:last-child{border-bottom:0}
+.movement-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.movement-type{font-size:12px;font-weight:800}.movement-meta{font-size:11px;color:var(--muted);margin-top:3px}.movement-qty{font-size:14px;font-weight:900;white-space:nowrap}.movement-detail{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.45}
+.danger-outline{border:1px solid #e8b8b8!important;background:#fff0ef!important;color:var(--red)!important}
+@media(max-width:700px){.movement-toolbar{grid-template-columns:1fr}.settings-row{align-items:flex-start}}
 .report-product-card{margin-bottom:12px}
 .report-product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .report-product-stat{background:#faf2f2;border-radius:11px;padding:9px}
@@ -590,11 +601,12 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <span class="more-icon stock-icon"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M8 9h8M8 12h8M8 15h5"/><path d="M16 15l-2 2 2 2"/></svg></span>
     <span class="more-copy"><span class="more-label">Retiro stock</span></span><span class="chev">›</span>
   </button>
+<button class="more-item" onclick="show('movements')"><span class="more-icon">↕</span><span class="more-copy"><span class="more-label">Movimientos</span></span><span class="chev">›</span></button>
 <button class="more-item" onclick="show('reports')">
     <span class="more-icon reportes-icon"><svg viewBox="0 0 24 24"><path d="M5 19V10"/><path d="M12 19V5"/><path d="M19 19v-7"/><path d="M3 19h18"/></svg></span>
     <span class="more-copy"><span class="more-label">Reportes</span></span><span class="chev">›</span>
   </button>
-<button class="more-item" onclick="alert('Configuración estará disponible en una próxima versión.')">
+<button class="more-item" onclick="show('settings')">
     <span class="more-icon configuracion-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 0 0-2-1.2L14.3 3h-4.6l-.3 2.6a7 7 0 0 0-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 0 0 2 1.2l.3 2.6h4.6l.3-2.6a7 7 0 0 0 2-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z"/></svg></span>
     <span class="more-copy"><span class="more-label">Configuración</span></span><span class="chev">›</span>
   </button>
@@ -698,6 +710,27 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   <div id="supplyList" class="card" style="margin-top:12px"></div>
 </section>
 
+  <!-- MOVIMIENTOS -->
+<section id="movements" class="hidden">
+  <button class="back-btn" onclick="show('more')">← Volver</button>
+  <div class="titleline"><b>Movimientos</b><button class="btn small light" onclick="downloadReportCSV('movements')">↓ Excel</button></div>
+  <div class="helper">Aquí puedes revisar el detalle completo de los movimientos registrados. En Stock solo se muestran los últimos movimientos de cada insumo.</div>
+  <div class="movement-toolbar"><select id="movementTypeFilter" onchange="renderMovements()"><option value="all">Todos los tipos</option><option value="purchase">Compras</option><option value="production">Producción</option><option value="withdrawal">Retiros</option></select><input id="movementItemFilter" placeholder="Buscar insumo o producto" oninput="renderMovements()"></div>
+  <div class="card"><div id="movementCount" class="muted" style="margin-bottom:8px"></div><div id="movementList" class="movement-list"></div></div>
+</section>
+
+  <!-- CONFIGURACIÓN -->
+<section id="settings" class="hidden">
+  <button class="back-btn" onclick="show('more')">← Volver</button>
+  <div class="titleline"><b>Configuración</b></div>
+  <div class="helper">Administración de tu acceso a La Bocadería y estado del sistema.</div>
+  <div class="card settings-card">
+    <div class="settings-row"><div class="settings-label"><b>Usuario</b><span id="settingsUser">—</span></div><span class="pill">Acceso</span></div>
+    <div class="settings-row"><div class="settings-label"><b>Base de datos</b><span>La información se guarda en D1 y es compartida entre tus dispositivos autorizados.</span></div><span class="badge active">Conectada</span></div>
+    <div class="settings-row"><div class="settings-label"><b>Sesión</b><span>Tu sesión actual se mantiene mientras esté vigente.</span></div><button class="btn small danger-outline" onclick="logout()">Cerrar sesión</button></div>
+  </div>
+</section>
+
   <!-- REPORTES -->
 <section id="reports" class="hidden">
   <button class="back-btn" onclick="show('more')">← Volver</button>
@@ -738,6 +771,9 @@ label{font-size:12px;color:var(--muted);font-weight:700}
     <div class="report-download-grid">
       <button class="btn light" onclick="downloadReportCSV('orders')">Pedidos</button>
       <button class="btn light" onclick="downloadReportCSV('purchases')">Compras</button>
+      <button class="btn light" onclick="downloadReportCSV('production')">Producción</button>
+      <button class="btn light" onclick="downloadReportCSV('withdrawals')">Retiros</button>
+      <button class="btn light" onclick="downloadReportCSV('movements')">Movimientos</button>
       <button class="btn light" onclick="downloadReportCSV('stock')">Stock</button>
       <button class="btn light" onclick="downloadReportCSV('profitability')">Rentabilidad</button>
     </div>
@@ -1045,6 +1081,7 @@ async function loadD1Data(){
   const productionByOrder=new Map(db.production.filter(p=>p.orderId).map(p=>[String(p.orderId),p]));
   db.orders.forEach(o=>{const p=productionByOrder.get(String(o.id));if(p){o.productionCost=p.cost;o.productionSale=p.sale;o.productionGain=p.gain;o.productionMargin=p.margin;o.preparedAt=p.date;o.stockApplied=true}});
   db.withdrawals=withdrawals.withdrawals||[];
+  window.__lastWithdrawalAllocations=withdrawals.allocations||[];
   db.movements=(movements.movements||[]).map(m=>({
     ...m,
     category:m.ingredient_id?'ingredient':m.supply_id?'other':'',
@@ -1055,44 +1092,37 @@ async function loadD1Data(){
     id:m.id
   }));
 
-  // Compatibilidad con los cálculos históricos de la interfaz.
+  // Las compras también forman parte del historial de movimientos, aunque su entrada
+  // de stock se materializa mediante purchase_lots.
+  const purchaseMovementKeys=new Set(db.movements.map(m=>String(m.type||'')+'|'+String(m.id||'')));
+  (db.purchases||[]).forEach(p=>(p.lines||[]).forEach(l=>{
+    const key='purchase|'+String(p.id||'')+'|'+String(l.id||l.lotId||'');
+    if(purchaseMovementKeys.has(key))return;
+    db.movements.push({id:String(p.id||'')+'|'+String(l.id||l.lotId||''),type:'purchase',date:p.date,category:l.category,item:l.item,quantity:Number(l.quantity||l.qty||0),unit_cost:Number(l.unitCost||0),total_cost:Number(l.cost||0),purchaseId:p.id});
+    purchaseMovementKeys.add(key);
+  }));
+
+  // Compatibilidad con registros históricos. Si el movimiento ya viene desde D1,
+  // no lo duplicamos al reconstruir los datos auxiliares.
+  const movementKeySet=new Set(db.movements.map(m=>String(m.type||'')+'|'+String(m.id||'')));
   db.production.forEach(p=>{
+    const key='production|'+String(p.id||'');
+    if(movementKeySet.has(key))return;
     const ingredients={};
     const supplies={};
     (p.ingredients||[]).forEach(x=>{ingredients[x.ingredient]=Number(x.quantity||0)});
     (p.supplies||[]).forEach(x=>{supplies[x.supply]=Number(x.quantity||0)});
-    db.movements.push({
-      id:p.id,
-      type:'production',
-      date:p.date,
-      orderId:p.orderId,
-      items:(p.items||[]).map(x=>({product:x.product,qty:x.qty})),
-      ingredients,
-      supplies,
-      cost:p.cost,
-      sale:p.sale,
-      gain:p.gain,
-      margin:p.margin
-    });
+    db.movements.push({id:p.id,type:'production',date:p.date,orderId:p.orderId,items:(p.items||[]).map(x=>({product:x.product,qty:x.qty})),ingredients,supplies,cost:p.cost,sale:p.sale,gain:p.gain,margin:p.margin});
+    movementKeySet.add(key);
   });
-
   db.withdrawals.forEach(w=>{
+    const key='withdrawal|'+String(w.id||'');
+    if(movementKeySet.has(key))return;
     const category=w.ingredient_id?'ingredient':'other';
     const item=w.ingredient_name||w.supply_name||'';
-    const allocations=(withdrawals.allocations||[])
-      .filter(a=>String(a.withdrawal_id)===String(w.id))
-      .map(a=>({lotId:a.lot_id,quantity:Number(a.quantity||0),unitCost:Number(a.unit_cost||0),cost:Number(a.total_cost||0)}));
-    db.movements.push({
-      id:w.id,
-      type:'withdrawal',
-      date:w.date,
-      category,
-      item,
-      quantity:Number(w.quantity||0),
-      reason:w.reason||'',
-      note:w.note||'',
-      allocations
-    });
+    const allocations=(withdrawals.allocations||[]).filter(a=>String(a.withdrawal_id)===String(w.id)).map(a=>({lotId:a.lot_id,quantity:Number(a.quantity||0),unitCost:Number(a.unit_cost||0),cost:Number(a.total_cost||0)}));
+    db.movements.push({id:w.id,type:'withdrawal',date:w.date,category,item,quantity:Number(w.quantity||0),reason:w.reason||'',note:w.note||'',allocations});
+    movementKeySet.add(key);
   });
 
   db.inventory={};
@@ -1136,16 +1166,16 @@ function show(id,btn){
   const section=document.getElementById(id);if(section)section.classList.remove('hidden');
   document.getElementById('app').classList.toggle('home-active',id==='home');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,purchases:4,withdrawals:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4,help:4};
+  const navMap={home:0,orders:1,production:2,stock:3,more:4,recipes:4,purchase:4,purchases:4,withdrawals:4,movements:4,clients:4,suppliers:4,otherSupplies:4,ingredients:4,reports:4,settings:4,help:4};
   const activeBtn=btn||document.querySelectorAll('.nav button')[navMap[id]];if(activeBtn)activeBtn.classList.add('active');
-  const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Registra una compra'],purchases:['Compras','Registro e historial de compras'],withdrawals:['Retiros de stock','Registro e historial de retiros'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad'],help:['Ayuda','Cómo usar La Bocadería']};
+  const titles={home:['',''],orders:['Pedidos','Lo que tienes que preparar y entregar'],production:['Producción','Lo que tienes que preparar hoy'],stock:['Stock','Lo que tienes disponible'],recipes:['Recetas','Costos, precios y márgenes'],purchase:['Nueva compra','Registra una compra'],purchases:['Compras','Registro e historial de compras'],withdrawals:['Retiros de stock','Registro e historial de retiros'],movements:['Movimientos','Detalle completo de entradas y salidas'],more:['Más','Administración'],clients:['Clientes','Personas y empresas que compran'],suppliers:['Proveedores','Dónde compras tus ingredientes'],otherSupplies:['Otros insumos','Materiales usados en la producción'],ingredients:['Ingredientes','Catálogo común de ingredientes'],reports:['Reportes','Ventas, costos y rentabilidad'],settings:['Configuración','Cuenta y sistema'],help:['Ayuda','Cómo usar La Bocadería']};
   if(titles[id]){
     const pageTitle=document.getElementById('pageTitle');
     const pageSub=document.getElementById('pageSub');
     if(pageTitle)pageTitle.textContent=titles[id][0];
     if(pageSub)pageSub.textContent=titles[id][1];
   }
-  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();if(!editingPurchaseId)resetPurchaseForm()}if(id==='purchases'){renderPurchaseHistory()}if(id==='withdrawals'){renderWithdrawalHistory()}if(id==='reports'){renderReports()}if(id==='home')renderHome()
+  if(id==='orders')renderOrders();if(id==='production')renderProduction();if(id==='stock')renderStock();if(id==='recipes')renderRecipes();if(id==='clients')renderClients();if(id==='suppliers')renderSuppliers();if(id==='otherSupplies')renderSupplies();if(id==='purchase'){renderPurchaseSuppliers();if(!editingPurchaseId)resetPurchaseForm()}if(id==='purchases'){renderPurchaseHistory()}if(id==='withdrawals'){renderWithdrawalHistory()}if(id==='movements'){renderMovements()}if(id==='reports'){renderReports()}if(id==='settings'){renderSettings()}if(id==='home')renderHome()
 }
 
 function openHelpTopic(topic){
@@ -1586,17 +1616,19 @@ async function cancelOrder(id){
 async function deleteOrder(id){
   const o=db.orders.find(x=>x.id===id);
   if(!o||o.status!=='Solicitado')return;
-  if(!confirm('¿Eliminar este pedido? Esta acción solo está disponible antes de pasarlo a preparación.'))return;
-  try{
-    await apiJson('/api/orders',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'delete',data:{id}})
-    });
-    await loadD1Data();
-    renderOrders();
-  }catch(error){alert(error.message)}
+  showFeedback('¿Eliminar pedido?','Esta acción solo está disponible antes de pasar el pedido a preparación. El pedido se eliminará definitivamente.','assets/No se pudo guardar.png','Eliminar',async()=>{
+    closeFeedback();
+    try{
+      await apiJson('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'delete',data:{id}})});
+      await loadD1Data();
+      renderOrders();
+      showFeedback('¡Pedido eliminado!','El pedido fue eliminado correctamente.','assets/Todo listo.png','Aceptar',()=>closeFeedback(),'','');
+    }catch(error){
+      showFeedback('No se pudo eliminar',error.message,'assets/No se pudo guardar.png','Cerrar',()=>closeFeedback(),'','');
+    }
+  },'Cancelar',()=>closeFeedback());
 }
+
   // STOCK Y COMPRAS
 function recipeCapacity(r){
   const entries=Object.entries(r.ingredients||{}).filter(([,qty])=>Number(qty)>0);
@@ -1825,7 +1857,7 @@ async function renderWithdrawalHistory(){
       );
 
       const alloc=allocs.map(a=>
-        esc(a.lot_id)+
+        esc(lotLabel(a.lot_id))+
         ' · '+
         Number(a.quantity||0).toLocaleString('es-CL')+
         ' '+
@@ -2290,7 +2322,7 @@ function renderPurchaseHistory(){
   if(!purchases.length){el.innerHTML='<div class="card empty-state muted">Aún no tienes compras registradas.</div>';return;}
   el.innerHTML=purchases.map(p=>{
     const supplierName=(db.suppliers||[]).find(s=>s.id===p.supplier)?.name||p.supplier||'—';const total=(p.lines||[]).reduce((sum,l)=>sum+Number(l.cost||0),0);const date=p.date?new Date(p.date).toLocaleDateString('es-CL'):'—';
-    const lines=(p.lines||[]).map(l=>{const unit=getPurchaseUnit(l.category,l.item),unitCost=Number(l.quantity)>0?Math.round(Number(l.cost)/Number(l.quantity)):0;return '<div class="purchase-history-line"><div><b>'+esc(l.item)+'</b><span class="muted">'+esc(l.category==='ingredient'?'Ingrediente':'Otro insumo')+' · '+esc(l.lotId||'—')+'</span></div><div><b>'+Number(l.quantity||0).toLocaleString('es-CL')+' '+esc(unit)+'</b><span class="muted">Cantidad</span></div><div><b>'+money(unitCost)+'</b><span class="muted">Costo unitario</span></div><div><b>'+money(l.cost)+'</b><span class="muted">Costo total</span></div></div>'}).join('');
+    const lines=(p.lines||[]).map(l=>{const unit=getPurchaseUnit(l.category,l.item),unitCost=Number(l.quantity)>0?Math.round(Number(l.cost)/Number(l.quantity)):0;return '<div class="purchase-history-line"><div><b>'+esc(l.item)+'</b><span class="muted">'+esc(l.category==='ingredient'?'Ingrediente':'Otro insumo')+' · '+esc(lotLabel(l.lotId))+'</span></div><div><b>'+Number(l.quantity||0).toLocaleString('es-CL')+' '+esc(unit)+'</b><span class="muted">Cantidad</span></div><div><b>'+money(unitCost)+'</b><span class="muted">Costo unitario</span></div><div><b>'+money(l.cost)+'</b><span class="muted">Costo total</span></div></div>'}).join('');
     return '<div class="card purchase-history-card"><div class="purchase-history-head"><div><b>'+esc(p.docType||'Compra')+(p.docNumber?' Nº '+esc(p.docNumber):'')+'</b><div class="muted">'+date+' · '+esc(supplierName)+'</div></div><div style="display:flex;align-items:center;gap:8px"><b>'+money(total)+'</b><button class="icon-btn" onclick="openPurchaseEdit(\''+esc(p.id)+'\')" title="Editar compra" aria-label="Editar compra">✎</button></div></div><div class="purchase-history-lines">'+lines+'</div></div>';
   }).join('');
 }
@@ -2499,14 +2531,39 @@ function renderReports(){
   }
 }
 function csvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
-function downloadCSV(filename,headers,rows){const csv=[headers, ...rows].map(r=>r.map(csvCell).join(';')).join('\
-');const blob=new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function csvDate(v){if(!v)return '';const raw=String(v).slice(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){const [y,m,d]=raw.split('-');return d+'/'+m+'/'+y}return String(v)}
+function lotLabel(lotId){
+  if(!lotId)return '—';
+  const all=[];
+  [...(db.purchases||[])].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||String(a.id||'').localeCompare(String(b.id||''))).forEach(p=>(p.lines||[]).forEach(l=>{if(l.lotId&&!all.includes(String(l.lotId)))all.push(String(l.lotId))}));
+  const idx=all.indexOf(String(lotId));
+  return 'LOT-'+String(idx>=0?idx+1:all.length+1).padStart(4,'0');
+}
+function downloadCSV(filename,headers,rows){const csv=[headers,...rows].map(r=>r.map(csvCell).join(';')).join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function downloadReportCSV(type){
   const filter=periodFilter();
-  if(type==='orders'){const rows=(db.orders||[]).filter(o=>filter(o.date)).map(o=>[o.number,o.date,o.client,orderProductsText(o),o.status,o.price,o.productionCost??'',o.productionGain??'',o.productionMargin!=null?(o.productionMargin*100).toFixed(1)+'%':'']);downloadCSV('reporte_pedidos.csv',['Pedido','Fecha','Cliente','Productos','Estado','Venta','Costo real','Ganancia','Margen'],rows);return}
-  if(type==='purchases'){const rows=[];(db.purchases||[]).filter(p=>filter(p.date)).forEach(p=>(p.lines||[]).forEach(l=>rows.push([p.id,p.date,p.docType,p.docNumber,p.supplier,l.category,l.item,l.quantity,getPurchaseUnit(l.category,l.item),l.cost,l.quantity?Math.round(l.cost/l.quantity):0,l.lotId])));downloadCSV('reporte_compras.csv',['Compra','Fecha','Documento','N° documento','Proveedor','Tipo','Producto','Cantidad','Unidad','Costo total','Costo unitario','Lote'],rows);return}
-  if(type==='stock'){const rows=[];ingredientNames().forEach(n=>rows.push(['Ingrediente',n,db.inventory[n]||0,ingredientUnit(n),Math.round(currentUnitCost('ingredient',n))]));(db.otherSupplies||[]).forEach(s=>rows.push(['Otro insumo',s.name,db.otherInventory[s.name]||0,s.unit||'un',Math.round(currentUnitCost('other',s.name))]));downloadCSV('reporte_stock.csv',['Tipo','Producto','Stock','Unidad','Costo unitario'],rows);return}
-  if(type==='profitability'){const rows=(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date)).map(o=>[o.number,o.date,orderProductsText(o),o.price,o.productionCost??'',o.productionGain??'',o.productionMargin!=null?(o.productionMargin*100).toFixed(1)+'%':'']);downloadCSV('reporte_rentabilidad.csv',['Pedido','Fecha','Productos','Venta','Costo real','Ganancia','Margen'],rows)}
+  if(type==='orders'){
+    const rows=[];(db.orders||[]).filter(o=>filter(o.date)).forEach(o=>{const items=productionItems(o);items.forEach(i=>rows.push([o.number,csvDate(o.date),o.clientId||'',o.client||'',i.product||'',Number(i.qty||1),Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),Number(i.subtotal||((Number(i.qty||1))*Number(i.unitPrice||getRecipe(i.product)?.salePrice||0))),o.status]));});
+    downloadCSV('reporte_pedidos.csv',['Pedido','Fecha','ID Cliente','Nombre Cliente','Producto','Cantidad','Precio Unitario','Subtotal','Estado'],rows);return;
+  }
+  if(type==='purchases'){
+    const rows=[];(db.purchases||[]).filter(p=>filter(p.date)).forEach(p=>(p.lines||[]).forEach(l=>rows.push([p.id,csvDate(p.date),p.docType,p.docNumber,p.supplierName||p.supplier||'',l.category==='ingredient'?'Ingrediente':'Otro insumo',l.item,l.quantity,getPurchaseUnit(l.category,l.item),Number(l.cost||0),Number(l.quantity)>0?Math.round(Number(l.cost)/Number(l.quantity)):0,lotLabel(l.lotId)])));downloadCSV('reporte_compras.csv',['Compra','Fecha','Documento','N° documento','Proveedor','Tipo','Producto','Cantidad','Unidad','Costo total','Costo unitario','Lote'],rows);return;
+  }
+  if(type==='production'){
+    const rows=[];(db.production||[]).filter(p=>filter(p.date)).forEach(p=>(p.items||[]).forEach(i=>rows.push([p.id,csvDate(p.date),p.orderId||'',i.product||'',Number(i.qty||0),Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),Number(i.subtotal||((Number(i.qty||0))*Number(i.unitPrice||getRecipe(i.product)?.salePrice||0))),Number(p.cost||0),Number(p.sale||0),Number(p.gain||0),p.margin!=null?(Number(p.margin)*100).toFixed(1)+'%':''])));downloadCSV('reporte_produccion.csv',['Producción','Fecha','Pedido','Producto','Cantidad','Precio Unitario','Subtotal','Costo producción','Venta','Ganancia','Margen'],rows);return;
+  }
+  if(type==='withdrawals'){
+    const rows=[];(db.withdrawals||[]).filter(w=>filter(w.date)).forEach(w=>{const allocs=(window.__lastWithdrawalAllocations||[]).filter(a=>String(a.withdrawal_id)===String(w.id));if(!allocs.length)rows.push([w.id,csvDate(w.date),w.ingredient_id?'Ingrediente':'Otro insumo',w.ingredient_name||w.supply_name||'',w.quantity||0,w.reason||'',w.note||'','']);else allocs.forEach(a=>rows.push([w.id,csvDate(w.date),w.ingredient_id?'Ingrediente':'Otro insumo',w.ingredient_name||w.supply_name||'',a.quantity||0,w.reason||'',w.note||'',lotLabel(a.lot_id)]));});downloadCSV('reporte_retiros.csv',['Retiro','Fecha','Tipo','Insumo','Cantidad','Motivo','Observación','Lote'],rows);return;
+  }
+  if(type==='movements'){
+    const rows=(db.movements||[]).filter(m=>filter(m.date)).sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)).map(m=>[m.id,csvDate(m.date),movementTypeLabel(m.type),m.item||'',Number(m.quantity||0),m.unit_cost||0,m.total_cost||m.cost||0,m.reference_id||m.purchaseId||m.orderId||'']);downloadCSV('reporte_movimientos.csv',['ID Movimiento','Fecha','Tipo','Insumo','Cantidad','Costo unitario','Costo total','Referencia'],rows);return;
+  }
+  if(type==='stock'){
+    const rows=[];ingredientNames().forEach(n=>rows.push(['Ingrediente',n,db.inventory[n]||0,ingredientUnit(n),Math.round(currentUnitCost('ingredient',n))]));(db.otherSupplies||[]).forEach(s=>rows.push(['Otro insumo',s.name,db.otherInventory[s.name]||0,s.unit||'un',Math.round(currentUnitCost('other',s.name))]));downloadCSV('reporte_stock.csv',['Tipo','Producto','Stock','Unidad','Costo unitario'],rows);return;
+  }
+  if(type==='profitability'){
+    const rows=[];(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date)).forEach(o=>productionItems(o).forEach(i=>{const qty=Number(i.qty||1),unitPrice=Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),unitCost=getRecipe(i.product)?Number(calculateRecipeCostFromRecipe(getRecipe(i.product))||0):0;rows.push([o.number,csvDate(o.date),o.client||'',i.product||'',qty,unitPrice,unitPrice*qty,unitCost,unitCost*qty,(unitPrice-unitCost)*qty,unitPrice?(((unitPrice-unitCost)/unitPrice)*100).toFixed(1)+'%':'']);}));downloadCSV('reporte_rentabilidad.csv',['Pedido','Fecha','Cliente','Producto','Cantidad','Precio Unitario','Venta','Costo unitario','Costo total','Ganancia','Margen'],rows);return;
+  }
 }
 
   // RECETAS
@@ -2832,7 +2889,8 @@ let clientFilter='all', supplierFilter='all';
 function setClientFilter(f){clientFilter=f;renderClients()}
 function setSupplierFilter(f){supplierFilter=f;renderSuppliers()}
 function filterButtons(prefix,current){['all','active','blocked'].forEach(f=>{const b=document.getElementById(prefix+'Filter'+f.charAt(0).toUpperCase()+f.slice(1));if(b)b.classList.toggle('active',f===current)})}
-function renderClients(){const el=document.getElementById('clientList');if(!el)return;filterButtons('client',clientFilter);const list=db.clients.filter(c=>clientFilter==='all'||(c.status||'active')===clientFilter);el.innerHTML=list.map(c=>{const blocked=(c.status||'active')==='blocked';return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(c.name)+'</b></div><div class="muted">'+(c.location?esc(c.location):'Sin ubicación')+'</div>'+(c.phone?'<div class="muted">'+esc(c.phone)+'</div>':'')+(c.note?'<div class="muted">'+esc(c.note)+'</div>':'')+'</div><div class="entity-actions"><span class="badge '+(blocked?'blocked':'active')+'">'+(blocked?'Bloqueado':'Activo')+'</span><button class="icon-btn" onclick="openClientModal(\''+c.id+'\')">✎</button></div></div></div>'}).join('')||'<div class="empty">No hay clientes en este estado.</div>'}
+function clientOrderHistoryCount(c){return (db.orders||[]).filter(o=>String(o.clientId||'')===String(c.id||'')).length}
+function renderClients(){const el=document.getElementById('clientList');if(!el)return;filterButtons('client',clientFilter);const list=db.clients.filter(c=>clientFilter==='all'||(c.status||'active')===clientFilter);el.innerHTML=list.map(c=>{const blocked=(c.status||'active')==='blocked',history=clientOrderHistoryCount(c),canDelete=!history;return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(c.name)+'</b></div><div class="muted">'+(c.location?esc(c.location):'Sin ubicación')+'</div>'+(c.phone?'<div class="muted">'+esc(c.phone)+'</div>':'')+(c.note?'<div class="muted">'+esc(c.note)+'</div>':'')+'</div><div class="entity-actions"><span class="badge '+(blocked?'blocked':'active')+'">'+(blocked?'Bloqueado':'Activo')+'</span><div style="display:flex;gap:6px"><button class="icon-btn" onclick="openClientModal(\''+c.id+'\')">✎</button><button class="icon-btn danger-outline" '+(canDelete?'':'disabled')+' onclick="deleteClient(\''+c.id+'\')" title="'+(canDelete?'Eliminar cliente':'No se puede eliminar: tiene pedidos asociados')+'">🗑</button></div></div></div></div>'}).join('')||'<div class="empty">No hay clientes en este estado.</div>'}
 function openClientModal(id){const c=id?db.clients.find(x=>x.id===id):{id:'',name:'',phone:'',location:'',note:'',status:'active'};document.getElementById('clientId').value=c.id;document.getElementById('clientName').value=c.name;document.getElementById('clientPhone').value=c.phone||'';document.getElementById('clientLocation').value=c.location||'';document.getElementById('clientNote').value=c.note||'';document.getElementById('clientStatus').value=c.status||'active';document.getElementById('clientModalTitle').textContent=id?'Editar cliente':'Nuevo cliente';openModal('clientModal')}
 async function saveClient(){
   const id=document.getElementById('clientId').value;
@@ -2859,7 +2917,19 @@ async function saveClient(){
     showFeedback(id?'¡Cliente actualizado!':'¡Cliente creado!','El cliente ha sido guardado correctamente.','assets/Proveedor creado.png','Ver clientes',()=>{closeFeedback();show('clients')},'Crear otro',()=>{closeFeedback();openClientModal()});
   }catch(error){alert(error.message)}
 }
-function renderSuppliers(){const el=document.getElementById('supplierList');if(!el)return;filterButtons('supplier',supplierFilter);const list=db.suppliers.filter(s=>supplierFilter==='all'||(s.status||'active')===supplierFilter);el.innerHTML=list.map(s=>{const blocked=(s.status||'active')==='blocked';return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b></div><div class="muted">Proveedor de: '+(s.supplies?esc(s.supplies):'Sin especificar')+'</div><div class="muted">'+(s.location?esc(s.location):'Sin ubicación')+(s.contact?' · '+esc(s.contact):'')+'</div></div><div class="entity-actions"><span class="badge '+(blocked?'blocked':'active')+'">'+(blocked?'Bloqueado':'Activo')+'</span><button class="icon-btn" onclick="openSupplierModal(\''+s.id+'\')">✎</button></div></div></div>'}).join('')||'<div class="empty">No hay proveedores en este estado.</div>'}
+async function deleteClient(id){
+  const c=(db.clients||[]).find(x=>String(x.id)===String(id));if(!c)return;
+  if(clientOrderHistoryCount(c))return;
+  showFeedback('¿Eliminar cliente?','Este cliente no tiene pedidos asociados y se eliminará definitivamente.','assets/No se pudo guardar.png','Eliminar',async()=>{closeFeedback();try{await apiJson('/api/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'client',action:'delete',data:{id}})});await loadD1Data();renderClients();refreshOrderClients();showFeedback('¡Cliente eliminado!','El cliente fue eliminado correctamente.','assets/Todo listo.png','Aceptar',()=>closeFeedback(),'','')}catch(error){showFeedback('No se pudo eliminar',error.message,'assets/No se pudo guardar.png','Cerrar',()=>closeFeedback(),'','')}},'Cancelar',()=>closeFeedback());
+}
+function supplierPurchaseHistoryCount(s){return (db.purchases||[]).filter(p=>String(p.supplierId||p.supplier||'')===String(s.id||'')).length}
+function renderSuppliers(){const el=document.getElementById('supplierList');if(!el)return;filterButtons('supplier',supplierFilter);const list=db.suppliers.filter(s=>supplierFilter==='all'||(s.status||'active')===supplierFilter);el.innerHTML=list.map(s=>{const blocked=(s.status||'active')==='blocked',history=supplierPurchaseHistoryCount(s),canDelete=!history;return '<div class="row"><div class="entity-card-main"><div class="entity-info"><div class="titleline" style="margin:0"><b>'+esc(s.name)+'</b></div><div class="muted">Proveedor de: '+(s.supplies?esc(s.supplies):'Sin especificar')+'</div><div class="muted">'+(s.location?esc(s.location):'Sin ubicación')+(s.contact?' · '+esc(s.contact):'')+'</div></div><div class="entity-actions"><span class="badge '+(blocked?'blocked':'active')+'">'+(blocked?'Bloqueado':'Activo')+'</span><div style="display:flex;gap:6px"><button class="icon-btn" onclick="openSupplierModal(\''+s.id+'\')">✎</button><button class="icon-btn danger-outline" '+(canDelete?'':'disabled')+' onclick="deleteSupplier(\''+s.id+'\')" title="'+(canDelete?'Eliminar proveedor':'No se puede eliminar: tiene compras asociadas')+'">🗑</button></div></div></div></div>'}).join('')||'<div class="empty">No hay proveedores en este estado.</div>'}
+
+async function deleteSupplier(id){
+  const sp=(db.suppliers||[]).find(x=>String(x.id)===String(id));if(!sp)return;
+  if(supplierPurchaseHistoryCount(sp))return;
+  showFeedback('¿Eliminar proveedor?','Este proveedor no tiene compras asociadas y se eliminará definitivamente.','assets/No se pudo guardar.png','Eliminar',async()=>{closeFeedback();try{await apiJson('/api/contacts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'supplier',action:'delete',data:{id}})});await loadD1Data();renderSuppliers();renderPurchaseSuppliers();showFeedback('¡Proveedor eliminado!','El proveedor fue eliminado correctamente.','assets/Todo listo.png','Aceptar',()=>closeFeedback(),'','')}catch(error){showFeedback('No se pudo eliminar',error.message,'assets/No se pudo guardar.png','Cerrar',()=>closeFeedback(),'','')}},'Cancelar',()=>closeFeedback());
+}
 function openSupplierModal(id){const s=id?db.suppliers.find(x=>x.id===id):{id:'',name:'',supplies:'',location:'',contact:'',status:'active'};document.getElementById('supplierId').value=s.id;document.getElementById('supplierName').value=s.name;document.getElementById('supplierSupplies').value=s.supplies||'';document.getElementById('supplierLocation').value=s.location||'';document.getElementById('supplierContact').value=s.contact||'';document.getElementById('supplierStatus').value=s.status||'active';document.getElementById('supplierModalTitle').textContent=id?'Editar proveedor':'Nuevo proveedor';openModal('supplierModal')}
 async function saveSupplier(){
   const id=document.getElementById('supplierId').value;
@@ -2994,6 +3064,18 @@ function renderHome(){
   }
 }
 
+let currentUser=null;
+function renderSettings(){const el=document.getElementById('settingsUser');if(el)el.textContent=currentUser?(currentUser.name?currentUser.name+' · ':'')+(currentUser.username||''):'Sesión activa'}
+function movementTypeLabel(type){return type==='purchase'?'Compra':type==='production'?'Producción':type==='withdrawal'?'Retiro':type==='adjustment'?'Ajuste':(type||'Movimiento')}
+function renderMovements(){
+  const listEl=document.getElementById('movementList');if(!listEl)return;
+  const type=document.getElementById('movementTypeFilter')?.value||'all';const term=(document.getElementById('movementItemFilter')?.value||'').trim().toLowerCase();
+  const rows=[...(db.movements||[])].filter(m=>(type==='all'||m.type===type)&&(!term||String(m.item||'').toLowerCase().includes(term)||String(m.id||'').toLowerCase().includes(term))).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)||String(b.id||'').localeCompare(String(a.id||'')));
+  const count=document.getElementById('movementCount');if(count)count.textContent=rows.length+' movimiento'+(rows.length===1?'':'s');
+  listEl.innerHTML=rows.length?rows.map(m=>{const sign=m.type==='purchase'?'+':'−';const unit=m.category==='ingredient'?ingredientUnit(m.item):((db.otherSupplies||[]).find(s=>s.name===m.item)?.unit||'un');const qty=Number(m.quantity||0);const ref=m.purchaseId||m.orderId||m.reference_id||'';return '<div class="movement-card"><div class="movement-head"><div><div class="movement-type">'+esc(movementTypeLabel(m.type))+' · '+esc(m.item||'Movimiento')+'</div><div class="movement-meta">'+esc(formatLotDate(m.date))+(ref?' · Ref. '+esc(ref):'')+'</div></div><div class="movement-qty">'+sign+qty.toLocaleString('es-CL')+' '+esc(unit)+'</div></div><div class="movement-detail">Costo: '+money(Math.round(Number(m.total_cost||m.cost||0)))+(m.reason?' · Motivo: '+esc(m.reason):'')+(m.note?' · '+esc(m.note):'')+'</div></div>'}).join(''):'<div class="empty-state muted">No hay movimientos que coincidan con los filtros.</div>';
+}
+async function logout(){try{await apiJson('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'}})}catch{}currentUser=null;document.getElementById('app')?.classList.add('hidden');document.getElementById('loginScreen')?.classList.remove('hidden');show('home');}
+
   // AUTENTICACIÓN
 async function login(){
   const username=document.getElementById('loginUser')?.value.trim()||'';
@@ -3013,6 +3095,7 @@ async function login(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({username,password})
     });
+    const me=await apiJson('/api/me');currentUser=me.user||null;
     await loadD1Data();
     document.getElementById('loginScreen')?.classList.add('hidden');
     document.getElementById('app')?.classList.remove('hidden');
@@ -3039,6 +3122,7 @@ async function checkSession(){
     }
     const data=await response.json();
     if(data.authenticated){
+      currentUser=data.user||null;
       await loadD1Data();
       document.getElementById('loginScreen')?.classList.add('hidden');
       document.getElementById('app')?.classList.remove('hidden');
