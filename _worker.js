@@ -1659,7 +1659,7 @@ async function handlePurchases(request, env) {
         env.DB.prepare(`
           SELECT pi.id, pi.purchase_id, pi.ingredient_id, i.name AS ingredient_name,
                  pi.supply_id, os.name AS supply_name, pi.quantity, pi.unit_cost,
-                 pl.id AS lot_id, pi.created_at, pi.updated_at
+                 pl.id AS lot_id, pl.lot_number, pi.created_at, pi.updated_at
           FROM purchase_items pi
           LEFT JOIN ingredients i ON i.id = pi.ingredient_id
           LEFT JOIN other_supplies os ON os.id = pi.supply_id
@@ -1668,7 +1668,7 @@ async function handlePurchases(request, env) {
         `),
         env.DB.prepare(`
           SELECT id, purchase_item_id, quantity_initial, quantity_available,
-                 unit_cost, created_at, updated_at
+                 unit_cost, lot_number, created_at, updated_at
           FROM purchase_lots
           ORDER BY created_at
         `)
@@ -1704,8 +1704,10 @@ async function handlePurchases(request, env) {
               cost: (Number(item.quantity) || 0) * (Number(item.unit_cost) || 0),
               unitCost: Number(item.unit_cost) || 0,
               lotId: item.lot_id || null,
+              lotNumber: item.lot_number != null ? Number(item.lot_number) : null,
               lot: lot ? {
                 id: lot.id,
+                lotNumber: lot.lot_number != null ? Number(lot.lot_number) : null,
                 quantityInitial: Number(lot.quantity_initial) || 0,
                 quantityAvailable: Number(lot.quantity_available) || 0,
                 unitCost: Number(lot.unit_cost) || 0
@@ -1743,6 +1745,13 @@ async function handlePurchases(request, env) {
         )
       ];
 
+      const lotCounterRow = await env.DB.prepare(`
+        SELECT COALESCE(MAX(lot_number), 0) AS max_lot_number
+        FROM purchase_lots
+      `).first();
+
+      let nextLotNumber = Number(lotCounterRow?.max_lot_number || 0) + 1;
+
       for (const item of items) {
         const itemId = item.id || uidServer("pi");
         const quantity = Number(item.qty ?? item.quantity) || 0;
@@ -1752,6 +1761,7 @@ async function handlePurchases(request, env) {
         }
 
         const lotId = item.lotId || uidServer("lot");
+        const lotNumber = nextLotNumber++;
         const ingredientId = item.ingredientId || null;
         const supplyId = item.supplyId || null;
 
@@ -1770,9 +1780,9 @@ async function handlePurchases(request, env) {
         statements.push(
           env.DB.prepare(`
             INSERT INTO purchase_lots
-              (id, purchase_item_id, quantity_initial, quantity_available, unit_cost)
-            VALUES (?, ?, ?, ?, ?)
-          `).bind(lotId, itemId, quantity, quantity, unitCost)
+              (id, purchase_item_id, quantity_initial, quantity_available, unit_cost, lot_number)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(lotId, itemId, quantity, quantity, unitCost, lotNumber)
         );
 
         statements.push(
@@ -1852,11 +1862,19 @@ async function handlePurchases(request, env) {
         )
       );
 
+      const lotCounterRow = await env.DB.prepare(`
+        SELECT COALESCE(MAX(lot_number), 0) AS max_lot_number
+        FROM purchase_lots
+      `).first();
+
+      let nextLotNumber = Number(lotCounterRow?.max_lot_number || 0) + 1;
+
       for (const item of items) {
         const itemId = item.id || uidServer("pi");
         const quantity = Number(item.qty ?? item.quantity) || 0;
         const unitCost = Number(item.unitCost ?? (quantity ? Number(item.cost || 0) / quantity : 0)) || 0;
         const lotId = item.lotId || uidServer("lot");
+        const lotNumber = nextLotNumber++;
         const ingredientId = item.ingredientId || null;
         const supplyId = item.supplyId || null;
 
@@ -1870,9 +1888,9 @@ async function handlePurchases(request, env) {
         statements.push(
           env.DB.prepare(`
             INSERT INTO purchase_lots
-              (id, purchase_item_id, quantity_initial, quantity_available, unit_cost)
-            VALUES (?, ?, ?, ?, ?)
-          `).bind(lotId, itemId, quantity, quantity, unitCost)
+              (id, purchase_item_id, quantity_initial, quantity_available, unit_cost, lot_number)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(lotId, itemId, quantity, quantity, unitCost, lotNumber)
         );
         statements.push(
           env.DB.prepare(`
@@ -2325,7 +2343,9 @@ async function handleStock(request, env) {
       if (excludeWithdrawalId) {
         const old = await env.DB.prepare(`
           SELECT wa.lot_id, wa.quantity,
+                 pl.purchase_item_id,
                  pl.quantity_available, pl.quantity_initial, pl.unit_cost,
+                 pl.lot_number,
                  p.date AS purchase_date
           FROM withdrawal_allocations wa
           JOIN purchase_lots pl ON pl.id = wa.lot_id
@@ -2349,6 +2369,7 @@ async function handleStock(request, env) {
           quantity_initial:Number(l.quantity_initial)||0,
           quantity_available:Number(l.quantity_available)||0,
           unit_cost:Number(l.unit_cost)||0,
+          lot_number:l.lot_number != null ? Number(l.lot_number) : null,
           purchase_date:l.purchase_date
         }]));
 
@@ -2363,6 +2384,7 @@ async function handleStock(request, env) {
               quantity_initial:Number(row.quantity_initial)||0,
               quantity_available:(Number(row.quantity_available)||0)+(Number(row.quantity)||0),
               unit_cost:Number(row.unit_cost)||0,
+              lot_number:row.lot_number != null ? Number(row.lot_number) : null,
               purchase_date:row.purchase_date
             });
           }
@@ -2476,8 +2498,11 @@ async function handleWithdrawals(request, env) {
         ORDER BY w.date DESC, w.created_at DESC
       `),
       env.DB.prepare(`
-        SELECT id, withdrawal_id, lot_id, quantity, unit_cost, total_cost, created_at
-        FROM withdrawal_allocations
+        SELECT
+          wa.id, wa.withdrawal_id, wa.lot_id, pl.lot_number,
+          wa.quantity, wa.unit_cost, wa.total_cost, wa.created_at
+        FROM withdrawal_allocations wa
+        LEFT JOIN purchase_lots pl ON pl.id = wa.lot_id
         ORDER BY withdrawal_id, created_at
       `)
     ]);
@@ -2509,6 +2534,7 @@ async function getAvailableLots(env, category, itemId) {
         pl.quantity_initial,
         pl.quantity_available,
         pl.unit_cost,
+        pl.lot_number,
         p.date AS purchase_date
       FROM purchase_lots pl
       JOIN purchase_items pi
@@ -2529,6 +2555,7 @@ async function getAvailableLots(env, category, itemId) {
         pl.quantity_initial,
         pl.quantity_available,
         pl.unit_cost,
+        pl.lot_number,
         p.date AS purchase_date
       FROM purchase_lots pl
       JOIN purchase_items pi
@@ -2667,6 +2694,7 @@ async function createWithdrawal(request, env) {
 
     normalizedAllocations.push({
       lotId,
+      lotNumber: lot.lot_number != null ? Number(lot.lot_number) : null,
       quantity: qty,
       unitCost,
       totalCost: allocationCost
@@ -2834,7 +2862,8 @@ async function updateWithdrawal(request, env) {
     } else {
       const lot=await env.DB.prepare(`
         SELECT pl.id AS lot_id, pl.purchase_item_id, pl.quantity_initial,
-               pl.quantity_available, pl.unit_cost, p.date AS purchase_date
+               pl.quantity_available, pl.unit_cost, pl.lot_number,
+               p.date AS purchase_date
         FROM purchase_lots pl
         JOIN purchase_items pi ON pi.id = pl.purchase_item_id
         JOIN purchases p ON p.id = pi.purchase_id
@@ -2866,7 +2895,13 @@ async function updateWithdrawal(request, env) {
     const unitCost=num(lot.unit_cost);
     const allocationCost=qty*unitCost;
     totalCost+=allocationCost;
-    normalizedAllocations.push({lotId,quantity:qty,unitCost,totalCost:allocationCost});
+    normalizedAllocations.push({
+      lotId,
+      lotNumber: lot.lot_number != null ? Number(lot.lot_number) : null,
+      quantity: qty,
+      unitCost,
+      totalCost: allocationCost
+    });
   }
 
   const statements=[];
