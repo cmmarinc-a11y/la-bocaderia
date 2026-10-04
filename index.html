@@ -438,6 +438,13 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 }
 </style>
 
+
+<style id="movement-layout-final-style">
+.movement-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex:0 0 auto;min-width:112px}
+.movement-right .movement-qty{white-space:nowrap}
+.movement-right .movement-cost{display:block;margin-top:6px;color:#8f8585;font-size:14px;font-weight:400;white-space:nowrap}
+</style>
+
 </head>
 <body>
   <!-- LOGIN -->
@@ -1102,14 +1109,6 @@ async function loadD1Data(){
   db.withdrawals=withdrawals.withdrawals||[];
   window.__lastWithdrawalAllocations=withdrawals.allocations||[];
 
-  // Índice de movimientos de retiro ya persistidos en D1.
-  // Se usa para no reconstruirlos nuevamente y evitar duplicados.
-  const movementKeySet=new Set(
-    db.movements
-      .filter(m=>m.type==='withdrawal')
-      .map(m=>'withdrawal|'+String(m.reference_id||m.id||''))
-  );
-
   // Los movimientos de D1 son la fuente oficial. En producción, D1 guarda un
   // movimiento por ingrediente/insumo consumido y reference_id = productionId.
   // Enriquecemos cada movimiento con el pedido asociado para mostrar LB-xxxxx.
@@ -1143,27 +1142,8 @@ async function loadD1Data(){
     });
   });
 
-  // Compatibilidad con históricos antiguos que no tengan movimientos de producción.
-  // Si D1 ya tiene uno o más movimientos para una producción, no agregamos otro
-  // movimiento agregado que duplicaría la información.
-  const productionRefsInD1=new Set(db.movements.filter(m=>m.type==='production'&&m.reference_id).map(m=>String(m.reference_id)));
-  db.production.forEach(p=>{
-    if(productionRefsInD1.has(String(p.id)))return;
-    const ingredients={};
-    const supplies={};
-    (p.ingredients||[]).forEach(x=>{ingredients[x.ingredient]=Number(x.quantity||0)});
-    (p.supplies||[]).forEach(x=>{supplies[x.supply]=Number(x.quantity||0)});
-    db.movements.push({id:p.id,type:'production',date:p.date,orderId:p.orderId,items:(p.items||[]).map(x=>({product:x.product,qty:x.qty})),ingredients,supplies,cost:p.cost,sale:p.sale,gain:p.gain,margin:p.margin});
-  });
-  db.withdrawals.forEach(w=>{
-    const key='withdrawal|'+String(w.id||'');
-    if(movementKeySet.has(key))return;
-    const category=w.ingredient_id?'ingredient':'other';
-    const item=w.ingredient_name||w.supply_name||'';
-    const allocations=(withdrawals.allocations||[]).filter(a=>String(a.withdrawal_id)===String(w.id)).map(a=>({lotId:a.lot_id,quantity:Number(a.quantity||0),unitCost:Number(a.unit_cost||0),cost:Number(a.total_cost||0)}));
-    db.movements.push({id:w.id,type:'withdrawal',date:w.date,category,item,quantity:Number(w.quantity||0),reason:w.reason||'',note:w.note||'',allocations});
-    movementKeySet.add(key);
-  });
+  // Producción y retiros ya vienen persistidos en D1 como movimientos.
+  // No los reconstruimos desde production/withdrawals para evitar duplicados.
 
   db.inventory={};
   db.otherInventory={};
@@ -1987,30 +1967,87 @@ async function renderWithdrawalHistory(){
 }
 function openStockDetail(category,item){
   const modal=document.getElementById('stockDetailModal');if(!modal)return;
-  const unit=category==='ingredient'?ingredientUnit(item):((db.otherSupplies||[]).find(s=>s.name===item)?.unit||'un');
-  const stock=category==='ingredient'?Number(db.inventory?.[item]||0):Number(db.otherInventory?.[item]||0);
+
+  const unit=category==='ingredient'
+    ?ingredientUnit(item)
+    :((db.otherSupplies||[]).find(s=>s.name===item)?.unit||'un');
+
+  const stock=category==='ingredient'
+    ?Number(db.inventory?.[item]||0)
+    :Number(db.otherInventory?.[item]||0);
+
   const cost=currentUnitCost(category,item);
+
   document.getElementById('stockDetailTitle').textContent=item;
-  document.getElementById('stockDetailQty').textContent=Math.max(0,Math.round(stock)).toLocaleString('es-CL')+' '+unit;
-  document.getElementById('stockDetailCost').textContent=cost>0?money(Math.round(cost))+' / '+unit:'—';
-  const events=[];
-  (db.purchases||[]).forEach(p=>(p.lines||[]).forEach(l=>{
-    if(l.category===category&&l.item===item){events.push({date:p.date,type:'Compra',qty:Number(l.quantity)||0,sign:'+'});}
-  }));
-  (db.movements||[]).forEach(m=>{
-    if(m.type==='withdrawal'&&m.category===category&&m.item===item)events.push({date:m.date,type:'Retiro',qty:Number(m.quantity)||0,sign:'−'});
-    if(m.type==='production'){
-      const source=category==='ingredient'?(m.ingredients||{}):(m.supplies||{});
-      const qty=Number(source[item]||0);
-      if(qty>0)events.push({date:m.date,type:'Producción',qty,sign:'−'});
-    }
-  });
+  document.getElementById('stockDetailQty').textContent=
+    Math.max(0,Math.round(stock)).toLocaleString('es-CL')+' '+unit;
+
+  document.getElementById('stockDetailCost').textContent=
+    cost>0?money(Math.round(cost))+' / '+unit:'—';
+
+  // D1 es la fuente oficial del historial de movimientos.
+  // Cada movimiento ya viene normalizado con category, item, quantity,
+  // reference_id, orderId y datos de lote cuando corresponde.
+  const events=(db.movements||[])
+    .filter(m=>
+      String(m.category||'')===String(category) &&
+      String(m.item||'')===String(item)
+    )
+    .map(m=>{
+      let detail='';
+
+      if(m.type==='production'){
+        const order=m.orderId
+          ?(db.orders||[]).find(o=>String(o.id)===String(m.orderId))
+          :null;
+        const orderNumber=order?.number || m.orderNumber || '';
+        detail=orderNumber?'Pedido '+orderNumber:'Producción';
+      }else if(m.type==='purchase'){
+        const purchase=m.purchaseId
+          ?(db.purchases||[]).find(p=>String(p.id)===String(m.purchaseId))
+          :null;
+        const doc=(purchase?.docNumber||m.docNumber||'').toString().trim();
+        detail=doc?'Boleta '+doc:'Compra';
+        if(m.lotNumber) detail+=' · '+m.lotNumber;
+      }else if(m.type==='withdrawal'){
+        detail='Retiro';
+        if(m.lotNumber) detail+=' · '+m.lotNumber;
+        if(m.reason) detail+=' · '+m.reason;
+      }else{
+        detail=m.type||'Movimiento';
+      }
+
+      return {
+        date:m.date,
+        type:m.type==='production'?'Producción':
+             m.type==='purchase'?'Compra':
+             m.type==='withdrawal'?'Retiro':
+             (m.type||'Movimiento'),
+        qty:Number(m.quantity||0),
+        sign:(m.type==='purchase'||m.type==='inventory_entry')?'+':'−',
+        detail
+      };
+    });
+
   events.sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+
   const el=document.getElementById('stockDetailMovements');
-  el.innerHTML=events.length?events.slice(0,6).map(e=>{
-    const d=formatLotDate(e.date);
-    return '<div class="stock-detail-movement"><div><div class="stock-movement-type">'+esc(e.type)+'</div><div class="muted">'+esc(d)+'</div></div><div class="stock-movement-qty">'+e.sign+Number(e.qty||0).toLocaleString('es-CL')+' '+esc(unit)+'</div></div>';
-  }).join(''):'<div class="empty-state muted">Todavía no hay movimientos registrados.</div>';
+
+  el.innerHTML=events.length
+    ?events.slice(0,6).map(e=>{
+        const d=formatLotDate(e.date);
+        return '<div class="stock-detail-movement">'+
+          '<div>'+
+            '<div class="stock-movement-type">'+esc(e.type)+'</div>'+
+            '<div class="muted">'+esc(d)+(e.detail?' · '+esc(e.detail):'')+'</div>'+
+          '</div>'+
+          '<div class="stock-movement-qty">'+
+            e.sign+Number(e.qty||0).toLocaleString('es-CL')+' '+esc(unit)+
+          '</div>'+
+        '</div>';
+      }).join('')
+    :'<div class="empty-state muted">Todavía no hay movimientos registrados.</div>';
+
   openModal('stockDetailModal');
 }
 async function renderStock(){
@@ -3183,7 +3220,7 @@ function renderMovements(){
     if(m.type==='withdrawal'&&m.reason)detailParts.push('Tipo: '+esc(m.reason));
     if(m.note)detailParts.push(esc(m.note));
     const cost=Number(m.total_cost||m.cost||0);
-    return '<div class="movement-card"><div class="movement-head"><div><div class="movement-type '+c.direction+'">'+esc(movementTypeLabel(m.type))+'</div><div class="movement-item">'+esc(m.item||'Movimiento')+'</div><div class="movement-meta">'+date+(detailParts.length?' · '+detailParts.join(' · '):'')+'</div></div><div class="movement-qty '+c.direction+'">'+c.sign+c.qty.toLocaleString('es-CL')+' '+esc(c.unit)+' <span class="movement-cost-inline">· Costo: '+money(Math.round(cost))+'</span></div></div></div>'
+    return '<div class="movement-card"><div class="movement-head"><div><div class="movement-type '+c.direction+'">'+esc(movementTypeLabel(m.type))+'</div><div class="movement-item">'+esc(m.item||'Movimiento')+'</div><div class="movement-meta">'+date+(detailParts.length?' · '+detailParts.join(' · '):'')+'</div></div><div class="movement-right"><div class="movement-qty '+c.direction+'">'+c.sign+c.qty.toLocaleString('es-CL')+' '+esc(c.unit)+'</div><div class="movement-cost">Costo: '+money(Math.round(cost))+'</div></div></div></div>'
   }).join(''):'<div class="empty-state muted">No hay movimientos que coincidan con los filtros.</div>';
 }
 async function logout(){try{await apiJson('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'}})}catch{}currentUser=null;document.getElementById('app')?.classList.add('hidden');document.getElementById('loginScreen')?.classList.remove('hidden');show('home');}
