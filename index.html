@@ -1091,6 +1091,14 @@ async function loadD1Data(){
   db.withdrawals=withdrawals.withdrawals||[];
   window.__lastWithdrawalAllocations=withdrawals.allocations||[];
 
+  // Índice de movimientos de retiro ya persistidos en D1.
+  // Se usa para no reconstruirlos nuevamente y evitar duplicados.
+  const movementKeySet=new Set(
+    db.movements
+      .filter(m=>m.type==='withdrawal')
+      .map(m=>'withdrawal|'+String(m.reference_id||m.id||''))
+  );
+
   // Los movimientos de D1 son la fuente oficial. En producción, D1 guarda un
   // movimiento por ingrediente/insumo consumido y reference_id = productionId.
   // Enriquecemos cada movimiento con el pedido asociado para mostrar LB-xxxxx.
