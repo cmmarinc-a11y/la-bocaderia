@@ -445,6 +445,17 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .movement-right .movement-cost{display:block;margin-top:6px;color:#8f8585;font-size:14px;font-weight:400;white-space:nowrap}
 </style>
 
+
+<style id="movement-final-layout-style">
+.movement-main{width:100%}
+.movement-topline{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.movement-topline .movement-type{flex:1;min-width:0}
+.movement-topline .movement-qty{flex:none;white-space:nowrap}
+.movement-main .movement-item{margin-top:5px}
+.movement-main .movement-meta{margin-top:4px}
+.movement-main .movement-cost{display:block;margin-top:5px;color:#8f8585;font-size:14px;font-weight:400}
+</style>
+
 </head>
 <body>
   <!-- LOGIN -->
@@ -1124,6 +1135,25 @@ async function loadD1Data(){
       productionId:m.type==='production'?m.reference_id:'',
       id:m.id
     };
+  });
+
+
+  // Enriquecer movimientos persistidos con lote para mostrarlos en la interfaz.
+  const withdrawalAllocationsById=new Map();
+  (withdrawals.allocations||[]).forEach(a=>{
+    const key=String(a.withdrawal_id||a.withdrawalId||'');
+    if(!key)return;
+    if(!withdrawalAllocationsById.has(key))withdrawalAllocationsById.set(key,[]);
+    withdrawalAllocationsById.get(key).push(a);
+  });
+
+  db.movements=db.movements.map(m=>{
+    if(m.type==='withdrawal'){
+      const allocations=withdrawalAllocationsById.get(String(m.reference_id||''))||[];
+      const first=allocations[0];
+      return {...m,allocations,lotId:first?.lot_id||first?.lotId||m.lotId||''};
+    }
+    return m;
   });
 
   // Compatibilidad: solo reconstruimos compras si D1 todavía no tiene ningún
@@ -3171,22 +3201,32 @@ function movementContext(m){
   const type=m.type||'';
   const sign=type==='purchase'?'+':'−';
   const direction=type==='purchase'?'in':(type==='production'||type==='withdrawal'?'out':'neutral');
-  const unit=m.category==='ingredient'?ingredientUnit(m.item):((db.otherSupplies||[]).find(s=>s.name===m.item)?.unit||'un');
+  const unit=m.category==='ingredient'
+    ?ingredientUnit(m.item)
+    :((db.otherSupplies||[]).find(s=>s.name===m.item)?.unit||'un');
   const qty=Number(m.quantity||0);
   let detail='';
+
   if(type==='production'){
     const order=(db.orders||[]).find(o=>String(o.id)===String(m.orderId||m.reference_id));
     detail=order?.number?'Pedido '+order.number:'';
   }else if(type==='purchase'){
     const purchase=(db.purchases||[]).find(p=>String(p.id)===String(m.purchaseId||m.reference_id));
-    detail=purchase?.docType&&purchase?.docNumber?(purchase.docType+' '+purchase.docNumber):(purchase?.docNumber?'Documento '+purchase.docNumber:'Compra');
+    const line=(purchase?.lines||[]).find(l=>
+      String(l.item||'')===String(m.item||'') &&
+      (!m.lotId || String(l.lotId||l.lot_id||'')===String(m.lotId))
+    ) || (purchase?.lines||[]).find(l=>String(l.item||'')===String(m.item||''));
+    const lot=m.lotNumber||line?.lotNumber||line?.lot_number||line?.lotId||line?.lot_id||'';
+    detail=lot?'Lote '+lot:'';
   }else if(type==='withdrawal'){
     const allocations=m.allocations||[];
-    const lot=allocations[0]?.lotId;
-    detail=lot?lotLabel(lot):'';
+    const lot=allocations[0]?.lotId||allocations[0]?.lot_id||m.lotId||m.lot_id||'';
+    detail=lot?'Lote '+(m.lotNumber||lotLabel(lot)):'';
   }
+
   return {sign,direction,unit,qty,detail};
 }
+
 function renderMovements(){
   const listEl=document.getElementById('movementList');if(!listEl)return;
   const type=document.getElementById('movementTypeFilter')?.value||'all';
@@ -3196,112 +3236,62 @@ function renderMovements(){
   const to=document.getElementById('movementDateTo')?.value||'';
   const custom=document.getElementById('movementCustomPeriod');
   if(custom)custom.classList.toggle('hidden',period!=='custom');
+
   const rows=[...(db.movements||[])].filter(m=>{
     const item=String(m.item||'').toLowerCase();
     const validMovement=!(m.type==='production'&&!m.item&&!Number(m.quantity||0));
-    return validMovement&&(type==='all'||m.type===type)&&movementPeriodMatch(m.date,period,from,to)&&(!term||item.includes(term));
-  }).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)||String(b.id||'').localeCompare(String(a.id||'')));
-  const count=document.getElementById('movementCount');if(count)count.textContent=rows.length+' movimiento'+(rows.length===1?'':'s');
+    return validMovement &&
+      (type==='all'||m.type===type) &&
+      movementPeriodMatch(m.date,period,from,to) &&
+      (!term||item.includes(term));
+  }).sort((a,b)=>
+    new Date(b.date||0)-new Date(a.date||0) ||
+    String(b.id||'').localeCompare(String(a.id||''))
+  );
+
+  const count=document.getElementById('movementCount');
+  if(count)count.textContent=rows.length+' movimiento'+(rows.length===1?'':'s');
 
   const summary=document.getElementById('movementSummary');
   if(summary&&term){
     const inQty=rows.filter(m=>m.type==='purchase').reduce((s,m)=>s+Number(m.quantity||0),0);
     const outQty=rows.filter(m=>m.type==='production'||m.type==='withdrawal').reduce((s,m)=>s+Number(m.quantity||0),0);
-    const unit=rows.find(m=>m.category==='ingredient')?.category==='ingredient'?ingredientUnit(rows.find(m=>m.category==='ingredient')?.item):((db.otherSupplies||[]).find(s=>s.name===rows[0]?.item)?.unit||'un');
+    const first=rows.find(m=>m.category==='ingredient');
+    const unit=first?ingredientUnit(first.item):((db.otherSupplies||[]).find(s=>s.name===rows[0]?.item)?.unit||'un');
     summary.classList.remove('hidden');
-    summary.innerHTML='<div class="movement-summary-item in"><b>Entradas</b><span>+'+inQty.toLocaleString('es-CL')+' '+esc(unit)+'</span></div><div class="movement-summary-item out"><b>Salidas</b><span>−'+outQty.toLocaleString('es-CL')+' '+esc(unit)+'</span></div><div class="movement-summary-item net"><b>Movimiento neto</b><span>'+(inQty-outQty>=0?'+':'−')+Math.abs(inQty-outQty).toLocaleString('es-CL')+' '+esc(unit)+'</span></div>';
-  }else if(summary){summary.classList.add('hidden');summary.innerHTML=''}
+    summary.innerHTML=
+      '<div class="movement-summary-item in"><b>Entradas</b><span>+'+
+      inQty.toLocaleString('es-CL')+' '+esc(unit)+
+      '</span></div><div class="movement-summary-item out"><b>Salidas</b><span>−'+
+      outQty.toLocaleString('es-CL')+' '+esc(unit)+
+      '</span></div><div class="movement-summary-item net"><b>Movimiento neto</b><span>'+
+      (inQty-outQty>=0?'+':'−')+Math.abs(inQty-outQty).toLocaleString('es-CL')+' '+esc(unit)+
+      '</span></div>';
+  }else if(summary){
+    summary.classList.add('hidden');
+    summary.innerHTML='';
+  }
 
   listEl.innerHTML=rows.length?rows.map(m=>{
     const c=movementContext(m);
     const date=esc(formatLotDate(m.date));
-    const detailParts=[];
-    if(c.detail)detailParts.push(c.detail);
-    if(m.type==='withdrawal'&&m.reason)detailParts.push('Tipo: '+esc(m.reason));
-    if(m.note)detailParts.push(esc(m.note));
     const cost=Number(m.total_cost||m.cost||0);
-    return '<div class="movement-card"><div class="movement-head"><div><div class="movement-type '+c.direction+'">'+esc(movementTypeLabel(m.type))+'</div><div class="movement-item">'+esc(m.item||'Movimiento')+'</div><div class="movement-meta">'+date+(detailParts.length?' · '+detailParts.join(' · '):'')+'</div></div><div class="movement-right"><div class="movement-qty '+c.direction+'">'+c.sign+c.qty.toLocaleString('es-CL')+' '+esc(c.unit)+'</div><div class="movement-cost">Costo: '+money(Math.round(cost))+'</div></div></div></div>'
+
+    return '<div class="movement-card">'+
+      '<div class="movement-head">'+
+        '<div class="movement-main">'+
+          '<div class="movement-topline">'+
+            '<div class="movement-type '+c.direction+'">'+esc(movementTypeLabel(m.type))+'</div>'+
+            '<div class="movement-qty '+c.direction+'">'+c.sign+c.qty.toLocaleString('es-CL')+' '+esc(c.unit)+'</div>'+
+          '</div>'+
+          '<div class="movement-item">'+esc(m.item||'Movimiento')+'</div>'+
+          '<div class="movement-meta">'+date+(c.detail?' · '+esc(c.detail):'')+'</div>'+
+          '<div class="movement-cost">Costo: '+money(Math.round(cost))+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
   }).join(''):'<div class="empty-state muted">No hay movimientos que coincidan con los filtros.</div>';
 }
-async function logout(){try{await apiJson('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'}})}catch{}currentUser=null;document.getElementById('app')?.classList.add('hidden');document.getElementById('loginScreen')?.classList.remove('hidden');show('home');}
-
-  // AUTENTICACIÓN
-async function login(){
-  const userEl=document.getElementById('loginUser');
-  const passEl=document.getElementById('loginPassword');
-
-  // Leer los valores directamente de los inputs para que también funcione
-  // cuando Chrome/Android/iOS completa automáticamente usuario y contraseña.
-  const username=String(userEl?.value||'').trim();
-  const password=String(passEl?.value||'');
-
-  if(!username||!password){
-    alert('Ingresa tu usuario y contraseña.');
-    return;
-  }
-
-  const btn=document.querySelector('.login-button');
-  if(btn){btn.disabled=true;btn.textContent='INGRESANDO...';}
-
-  try{
-    const res=await fetch('/api/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body:JSON.stringify({username,password})
-    });
-
-    const data=await res.json();
-
-    if(!res.ok||!data.ok){
-      throw new Error(data.error||'No fue posible iniciar sesión.');
-    }
-
-    window.currentUser=data.user||null;
-    document.getElementById('loginScreen')?.classList.add('hidden');
-    document.getElementById('app')?.classList.remove('hidden');
-
-    await loadD1Data();
-    renderHome();
-    renderSettings();
-
-  }catch(err){
-    alert(err?.message||'No fue posible iniciar sesión.');
-  }finally{
-    if(btn){
-      btn.disabled=false;
-      btn.textContent='INGRESAR';
-    }
-  }
-}
-
-async function checkSession(){
-  try{
-    const response=await fetch('/api/me',{method:'GET',credentials:'include'});
-    if(!response.ok){
-      document.getElementById('loginScreen')?.classList.remove('hidden');
-      document.getElementById('app')?.classList.add('hidden');
-      return;
-    }
-    const data=await response.json();
-    if(data.authenticated){
-      currentUser=data.user||null;
-      await loadD1Data();
-      document.getElementById('loginScreen')?.classList.add('hidden');
-      document.getElementById('app')?.classList.remove('hidden');
-      resetModals();
-      show('home');
-    }else{
-      document.getElementById('loginScreen')?.classList.remove('hidden');
-      document.getElementById('app')?.classList.add('hidden');
-    }
-  }catch(error){
-    console.error('Error verificando sesión:',error);
-    document.getElementById('loginScreen')?.classList.remove('hidden');
-    document.getElementById('app')?.classList.add('hidden');
-  }
-}
-
 function forgotPassword(){
   alert('Para recuperar o cambiar la contraseña, contacta al administrador de La Bocadería.');
 }
@@ -3326,7 +3316,16 @@ checkSession();
 
 <script>
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("./sw.js?v=20261004-1", {
+        updateViaCache: "none"
+      });
+      await registration.update();
+    } catch (error) {
+      console.warn("No se pudo actualizar el Service Worker:", error);
+    }
+  });
 }
 </script>
 
