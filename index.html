@@ -1085,42 +1085,56 @@ async function loadD1Data(){
   }));
   db.purchases=purchases.purchases||[];
   db.production=production.production||[];
+  const productionById=new Map(db.production.map(p=>[String(p.id),p]));
   const productionByOrder=new Map(db.production.filter(p=>p.orderId).map(p=>[String(p.orderId),p]));
   db.orders.forEach(o=>{const p=productionByOrder.get(String(o.id));if(p){o.productionCost=p.cost;o.productionSale=p.sale;o.productionGain=p.gain;o.productionMargin=p.margin;o.preparedAt=p.date;o.stockApplied=true}});
   db.withdrawals=withdrawals.withdrawals||[];
   window.__lastWithdrawalAllocations=withdrawals.allocations||[];
-  db.movements=(movements.movements||[]).map(m=>({
-    ...m,
-    category:m.ingredient_id?'ingredient':m.supply_id?'other':'',
-    item:m.ingredient_name||m.supply_name||'',
-    cost:Number(m.total_cost||0),
-    purchaseId:m.type==='purchase'?m.reference_id:'',
-    orderId:m.type==='production'?m.reference_id:'',
-    id:m.id
-  }));
 
-  // Las compras también forman parte del historial de movimientos, aunque su entrada
-  // de stock se materializa mediante purchase_lots.
-  const purchaseMovementKeys=new Set(db.movements.map(m=>String(m.type||'')+'|'+String(m.id||'')));
-  (db.purchases||[]).forEach(p=>(p.lines||[]).forEach(l=>{
-    const key='purchase|'+String(p.id||'')+'|'+String(l.id||l.lotId||'');
-    if(purchaseMovementKeys.has(key))return;
-    db.movements.push({id:String(p.id||'')+'|'+String(l.id||l.lotId||''),type:'purchase',date:p.date,category:l.category,item:l.item,quantity:Number(l.quantity||l.qty||0),unit_cost:Number(l.unitCost||0),total_cost:Number(l.cost||0),purchaseId:p.id});
-    purchaseMovementKeys.add(key);
-  }));
+  // Los movimientos de D1 son la fuente oficial. En producción, D1 guarda un
+  // movimiento por ingrediente/insumo consumido y reference_id = productionId.
+  // Enriquecemos cada movimiento con el pedido asociado para mostrar LB-xxxxx.
+  db.movements=(movements.movements||[]).map(m=>{
+    const productionRecord=m.type==='production'?productionById.get(String(m.reference_id||'')):null;
+    return {
+      ...m,
+      category:m.ingredient_id?'ingredient':m.supply_id?'other':'',
+      item:m.ingredient_name||m.supply_name||'',
+      cost:Number(m.total_cost||0),
+      purchaseId:m.type==='purchase'?m.reference_id:'',
+      orderId:m.type==='production'?(productionRecord?.orderId||''):'',
+      productionId:m.type==='production'?m.reference_id:'',
+      id:m.id
+    };
+  });
 
-  // Compatibilidad con registros históricos. Si el movimiento ya viene desde D1,
-  // no lo duplicamos al reconstruir los datos auxiliares.
-  const movementKeySet=new Set(db.movements.map(m=>String(m.type||'')+'|'+String(m.id||'')));
+  // Compatibilidad: solo reconstruimos compras si D1 todavía no tiene ningún
+  // movimiento de compra para ese documento. Esto evita duplicados.
+  const purchaseRefsInD1=new Set(db.movements.filter(m=>m.type==='purchase'&&m.reference_id).map(m=>String(m.reference_id)));
+  (db.purchases||[]).forEach(p=>{
+    if(purchaseRefsInD1.has(String(p.id)))return;
+    (p.lines||[]).forEach(l=>{
+      db.movements.push({
+        id:String(p.id||'')+'|'+String(l.id||l.lotId||''),
+        type:'purchase',date:p.date,category:l.category,item:l.item,
+        quantity:Number(l.quantity||l.qty||0),unit_cost:Number(l.unitCost||0),
+        total_cost:Number(l.cost||0),purchaseId:p.id,reference_id:p.id,
+        lotId:l.lotId||'',lotNumber:l.lotNumber||null
+      });
+    });
+  });
+
+  // Compatibilidad con históricos antiguos que no tengan movimientos de producción.
+  // Si D1 ya tiene uno o más movimientos para una producción, no agregamos otro
+  // movimiento agregado que duplicaría la información.
+  const productionRefsInD1=new Set(db.movements.filter(m=>m.type==='production'&&m.reference_id).map(m=>String(m.reference_id)));
   db.production.forEach(p=>{
-    const key='production|'+String(p.id||'');
-    if(movementKeySet.has(key))return;
+    if(productionRefsInD1.has(String(p.id)))return;
     const ingredients={};
     const supplies={};
     (p.ingredients||[]).forEach(x=>{ingredients[x.ingredient]=Number(x.quantity||0)});
     (p.supplies||[]).forEach(x=>{supplies[x.supply]=Number(x.quantity||0)});
     db.movements.push({id:p.id,type:'production',date:p.date,orderId:p.orderId,items:(p.items||[]).map(x=>({product:x.product,qty:x.qty})),ingredients,supplies,cost:p.cost,sale:p.sale,gain:p.gain,margin:p.margin});
-    movementKeySet.add(key);
   });
   db.withdrawals.forEach(w=>{
     const key='withdrawal|'+String(w.id||'');
@@ -2541,6 +2555,13 @@ function csvCell(v){const s=String(v??'');return '"'+s.replace(/"/g,'""')+'"'}
 function csvDate(v){if(!v)return '';const raw=String(v).slice(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(raw)){const [y,m,d]=raw.split('-');return d+'/'+m+'/'+y}return String(v)}
 function lotLabel(lotId){
   if(!lotId)return '—';
+  for(const p of (db.purchases||[])){
+    for(const l of (p.lines||[])){
+      if(String(l.lotId||'')===String(lotId) && l.lotNumber!=null){
+        return 'LOT-'+String(Number(l.lotNumber)||0).padStart(4,'0');
+      }
+    }
+  }
   const all=[];
   [...(db.purchases||[])].sort((a,b)=>new Date(a.date||0)-new Date(b.date||0)||String(a.id||'').localeCompare(String(b.id||''))).forEach(p=>(p.lines||[]).forEach(l=>{if(l.lotId&&!all.includes(String(l.lotId)))all.push(String(l.lotId))}));
   const idx=all.indexOf(String(lotId));
@@ -3143,7 +3164,7 @@ function renderMovements(){
     if(m.type==='withdrawal'&&m.reason)detailParts.push('Tipo: '+esc(m.reason));
     if(m.note)detailParts.push(esc(m.note));
     const cost=Number(m.total_cost||m.cost||0);
-    return '<div class="movement-card"><div class="movement-head"><div><div class="movement-type '+c.direction+'">'+esc(movementTypeLabel(m.type))+'</div><div class="movement-item">'+esc(m.item||'Movimiento')+'</div><div class="movement-meta">'+date+(detailParts.length?' · '+detailParts.join(' · '):'')+'</div></div><div class="movement-qty '+c.direction+'">'+c.sign+c.qty.toLocaleString('es-CL')+' '+esc(c.unit)+'</div></div><div class="movement-detail">Costo: '+money(Math.round(cost))+'</div></div>'
+    return '<div class="movement-card"><div class="movement-head"><div><div class="movement-type '+c.direction+'">'+esc(movementTypeLabel(m.type))+'</div><div class="movement-item">'+esc(m.item||'Movimiento')+'</div><div class="movement-meta">'+date+(detailParts.length?' · '+detailParts.join(' · '):'')+'</div></div><div class="movement-qty '+c.direction+'">'+c.sign+c.qty.toLocaleString('es-CL')+' '+esc(c.unit)+' <span class="movement-cost-inline">· Costo: '+money(Math.round(cost))+'</span></div></div></div>'
   }).join(''):'<div class="empty-state muted">No hay movimientos que coincidan con los filtros.</div>';
 }
 async function logout(){try{await apiJson('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'}})}catch{}currentUser=null;document.getElementById('app')?.classList.add('hidden');document.getElementById('loginScreen')?.classList.remove('hidden');show('home');}
