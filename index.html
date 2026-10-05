@@ -3298,6 +3298,20 @@ function renderMovements(){
     '</div>';
   }).join(''):'<div class="empty-state muted">No hay movimientos que coincidan con los filtros.</div>';
 }
+async function logout(){try{await apiJson('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'}})}catch{}currentUser=null;document.getElementById('app')?.classList.add('hidden');document.getElementById('loginScreen')?.classList.remove('hidden');show('home');}
+
+// AUTENTICACIÓN
+async function login(){
+  const userEl=document.getElementById('loginUser'); const passEl=document.getElementById('loginPassword');
+  const username=String(userEl?.value||'').trim(); const password=String(passEl?.value||'');
+  if(!username||!password){alert('Ingresa tu usuario y contraseña.');return;}
+  const btn=document.querySelector('.login-button'); if(btn){btn.disabled=true;btn.textContent='INGRESANDO...';}
+  try{const res=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({username,password})}); const data=await res.json(); if(!res.ok||!data.ok)throw new Error(data.error||'No fue posible iniciar sesión.'); window.currentUser=data.user||null; document.getElementById('loginScreen')?.classList.add('hidden'); document.getElementById('app')?.classList.remove('hidden'); await loadD1Data(); renderHome(); renderSettings();}catch(err){alert(err?.message||'No fue posible iniciar sesión.');}finally{if(btn){btn.disabled=false;btn.textContent='INGRESAR';}}
+}
+async function checkSession(){
+ try{const response=await fetch('/api/me',{method:'GET',credentials:'include'}); if(!response.ok){document.getElementById('loginScreen')?.classList.remove('hidden');document.getElementById('app')?.classList.add('hidden');return;} const data=await response.json(); if(data.authenticated){currentUser=data.user||null;await loadD1Data();document.getElementById('loginScreen')?.classList.add('hidden');document.getElementById('app')?.classList.remove('hidden');resetModals();show('home');}else{document.getElementById('loginScreen')?.classList.remove('hidden');document.getElementById('app')?.classList.add('hidden');}}catch(error){console.error('Error verificando sesión:',error);document.getElementById('loginScreen')?.classList.remove('hidden');document.getElementById('app')?.classList.add('hidden');}
+}
+
 function forgotPassword(){
   alert('Para recuperar o cambiar la contraseña, contacta al administrador de La Bocadería.');
 }
