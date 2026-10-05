@@ -433,7 +433,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
   display:block;
   margin-top:6px;
   color:#8f8585;
-  font-size:14px;
+  font-size:11px;
   font-weight:400;
 }
 </style>
@@ -442,7 +442,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 <style id="movement-layout-final-style">
 .movement-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex:0 0 auto;min-width:112px}
 .movement-right .movement-qty{white-space:nowrap}
-.movement-right .movement-cost{display:block;margin-top:6px;color:#8f8585;font-size:14px;font-weight:400;white-space:nowrap}
+.movement-right .movement-cost{display:block;margin-top:6px;color:#8f8585;font-size:11px;font-weight:400;white-space:nowrap}
 </style>
 
 
@@ -453,7 +453,7 @@ label{font-size:12px;color:var(--muted);font-weight:700}
 .movement-topline .movement-qty{flex:none;white-space:nowrap}
 .movement-main .movement-item{margin-top:5px}
 .movement-main .movement-meta{margin-top:4px}
-.movement-main .movement-cost{display:block;margin-top:5px;color:#8f8585;font-size:14px;font-weight:400}
+.movement-main .movement-cost{display:block;margin-top:5px;color:#8f8585;font-size:11px;font-weight:400}
 </style>
 
 </head>
@@ -3216,8 +3216,14 @@ function movementContext(m){
       String(l.item||'')===String(m.item||'') &&
       (!m.lotId || String(l.lotId||l.lot_id||'')===String(m.lotId))
     ) || (purchase?.lines||[]).find(l=>String(l.item||'')===String(m.item||''));
-    const lot=m.lotNumber||line?.lotNumber||line?.lot_number||line?.lotId||line?.lot_id||'';
-    detail=lot?'Lote '+lot:'';
+    // Mostrar el lote que ya fue asignado a esta línea de compra.
+    // Si existe lotId, usamos ese lote como fuente de verdad y lo
+    // resolvemos con lotLabel(), igual que en Stock/Retiros.
+    const assignedLot=m.lotId||m.lot_id||line?.lotId||line?.lot_id||'';
+    const lot=assignedLot
+      ? lotLabel(assignedLot)
+      : (m.lotNumber||line?.lotNumber||line?.lot_number||'');
+    detail=lot&&lot!=='—'?'Lote '+lot:'';
   }else if(type==='withdrawal'){
     const allocations=m.allocations||[];
     const lot=allocations[0]?.lotId||allocations[0]?.lot_id||m.lotId||m.lot_id||'';
@@ -3292,85 +3298,6 @@ function renderMovements(){
     '</div>';
   }).join(''):'<div class="empty-state muted">No hay movimientos que coincidan con los filtros.</div>';
 }
-async function logout(){try{await apiJson('/api/logout',{method:'POST',headers:{'Content-Type':'application/json'}})}catch{}currentUser=null;document.getElementById('app')?.classList.add('hidden');document.getElementById('loginScreen')?.classList.remove('hidden');show('home');}
-
-  // AUTENTICACIÓN
-async function login(){
-  const userEl=document.getElementById('loginUser');
-  const passEl=document.getElementById('loginPassword');
-
-  // Leer los valores directamente de los inputs para que también funcione
-  // cuando Chrome/Android/iOS completa automáticamente usuario y contraseña.
-  const username=String(userEl?.value||'').trim();
-  const password=String(passEl?.value||'');
-
-  if(!username||!password){
-    alert('Ingresa tu usuario y contraseña.');
-    return;
-  }
-
-  const btn=document.querySelector('.login-button');
-  if(btn){btn.disabled=true;btn.textContent='INGRESANDO...';}
-
-  try{
-    const res=await fetch('/api/login',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      credentials:'include',
-      body:JSON.stringify({username,password})
-    });
-
-    const data=await res.json();
-
-    if(!res.ok||!data.ok){
-      throw new Error(data.error||'No fue posible iniciar sesión.');
-    }
-
-    window.currentUser=data.user||null;
-    document.getElementById('loginScreen')?.classList.add('hidden');
-    document.getElementById('app')?.classList.remove('hidden');
-
-    await loadD1Data();
-    renderHome();
-    renderSettings();
-
-  }catch(err){
-    alert(err?.message||'No fue posible iniciar sesión.');
-  }finally{
-    if(btn){
-      btn.disabled=false;
-      btn.textContent='INGRESAR';
-    }
-  }
-}
-
-async function checkSession(){
-  try{
-    const response=await fetch('/api/me',{method:'GET',credentials:'include'});
-    if(!response.ok){
-      document.getElementById('loginScreen')?.classList.remove('hidden');
-      document.getElementById('app')?.classList.add('hidden');
-      return;
-    }
-    const data=await response.json();
-    if(data.authenticated){
-      currentUser=data.user||null;
-      await loadD1Data();
-      document.getElementById('loginScreen')?.classList.add('hidden');
-      document.getElementById('app')?.classList.remove('hidden');
-      resetModals();
-      show('home');
-    }else{
-      document.getElementById('loginScreen')?.classList.remove('hidden');
-      document.getElementById('app')?.classList.add('hidden');
-    }
-  }catch(error){
-    console.error('Error verificando sesión:',error);
-    document.getElementById('loginScreen')?.classList.remove('hidden');
-    document.getElementById('app')?.classList.add('hidden');
-  }
-}
-
 function forgotPassword(){
   alert('Para recuperar o cambiar la contraseña, contacta al administrador de La Bocadería.');
 }
