@@ -2122,6 +2122,7 @@ async function handleProduction(request, env) {
       const normalizedSupplies = [];
       const lotUpdates = [];
       const movementStatements = [];
+      const allocationStatements = [];
       let totalCost = 0;
 
       for (const item of ingredients) {
@@ -2138,6 +2139,10 @@ async function handleProduction(request, env) {
         });
         totalCost += result.totalCost;
         for (const a of result.allocations) {
+          allocationStatements.push(env.DB.prepare(`
+            INSERT INTO production_lot_allocations (id, production_id, category, item_id, lot_id, quantity, unit_cost)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(uidServer("pla"), productionId, "ingredient", item.ingredientId, a.lotId, a.quantity, a.unitCost));
           lotUpdates.push(
             env.DB.prepare(`
               UPDATE purchase_lots
@@ -2177,6 +2182,10 @@ async function handleProduction(request, env) {
         });
         totalCost += result.totalCost;
         for (const a of result.allocations) {
+          allocationStatements.push(env.DB.prepare(`
+            INSERT INTO production_lot_allocations (id, production_id, category, item_id, lot_id, quantity, unit_cost)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(uidServer("pla"), productionId, "other", item.supplyId, a.lotId, a.quantity, a.unitCost));
           lotUpdates.push(
             env.DB.prepare(`
               UPDATE purchase_lots
@@ -2285,7 +2294,13 @@ async function handleProduction(request, env) {
         `).bind(data.orderId)
       );
 
-      statements.push(...lotUpdates, ...movementStatements);
+      // La tabla conserva el detalle exacto de cada lote consumido para permitir una reversión trazable.
+      statements.push(env.DB.prepare(`CREATE TABLE IF NOT EXISTS production_lot_allocations (
+        id TEXT PRIMARY KEY, production_id TEXT NOT NULL, category TEXT NOT NULL,
+        item_id TEXT NOT NULL, lot_id TEXT NOT NULL, quantity REAL NOT NULL,
+        unit_cost REAL NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`));
+      statements.push(...lotUpdates, ...movementStatements, ...allocationStatements);
 
       await env.DB.batch(statements);
 
@@ -2297,6 +2312,43 @@ async function handleProduction(request, env) {
         gain,
         margin
       });
+    }
+
+    if (action === "undo_preparation") {
+      if (!data?.orderId) return json({ ok: false, error: "Falta el pedido" }, 400);
+      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS production_lot_allocations (
+        id TEXT PRIMARY KEY, production_id TEXT NOT NULL, category TEXT NOT NULL,
+        item_id TEXT NOT NULL, lot_id TEXT NOT NULL, quantity REAL NOT NULL,
+        unit_cost REAL NOT NULL, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`).run();
+      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS production_reversals (
+        id TEXT PRIMARY KEY, production_id TEXT NOT NULL UNIQUE, order_id TEXT NOT NULL,
+        reason TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`).run();
+      const order = await env.DB.prepare(`SELECT id, status FROM orders WHERE id = ?`).bind(data.orderId).first();
+      if (!order) return json({ ok: false, error: "Pedido no encontrado" }, 404);
+      if (order.status !== "Preparado") return json({ ok: false, error: "Solo se puede deshacer un pedido en estado Preparado" }, 400);
+      const production = await env.DB.prepare(`SELECT id FROM production WHERE order_id = ? ORDER BY created_at DESC LIMIT 1`).bind(data.orderId).first();
+      if (!production) return json({ ok: false, error: "No se encontró una producción asociada al pedido" }, 400);
+      const reversed = await env.DB.prepare(`SELECT id FROM production_reversals WHERE production_id = ?`).bind(production.id).first();
+      if (reversed) return json({ ok: false, error: "Esta producción ya fue revertida" }, 400);
+      const allocations = await env.DB.prepare(`SELECT category, item_id, lot_id, quantity, unit_cost FROM production_lot_allocations WHERE production_id = ?`).bind(production.id).all();
+      const rows = allocations.results || [];
+      if (!rows.length) return json({ ok: false, error: "Esta producción es anterior al registro de trazabilidad por lote. No se puede revertir automáticamente sin arriesgar el stock." }, 409);
+      const statements = [];
+      for (const a of rows) {
+        const lot = await env.DB.prepare(`SELECT id FROM purchase_lots WHERE id = ?`).bind(a.lot_id).first();
+        if (!lot) return json({ ok: false, error: `No se encuentra el lote ${a.lot_id}; no se realizó ningún cambio.` }, 409);
+        statements.push(env.DB.prepare(`UPDATE purchase_lots SET quantity_available = quantity_available + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(Number(a.quantity), a.lot_id));
+        statements.push(env.DB.prepare(`INSERT INTO movements (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id) VALUES (?, ?, 'production_reversal', ?, ?, ?, ?, ?, ?)`).bind(
+          uidServer("movement"), new Date().toISOString(), a.category === "ingredient" ? a.item_id : null,
+          a.category === "other" ? a.item_id : null, Number(a.quantity), Number(a.unit_cost), Number(a.quantity) * Number(a.unit_cost), production.id
+        ));
+      }
+      statements.push(env.DB.prepare(`INSERT INTO production_reversals (id, production_id, order_id, reason) VALUES (?, ?, ?, ?)`).bind(uidServer("prv"), production.id, data.orderId, data.reason || "Deshacer preparación"));
+      statements.push(env.DB.prepare(`UPDATE orders SET status = 'Preparación', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'Preparado'`).bind(data.orderId));
+      await env.DB.batch(statements);
+      return json({ ok: true, message: "Preparación revertida y stock restituido por lote." });
     }
 
     if (action === "update" || action === "delete") {
