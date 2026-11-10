@@ -1490,7 +1490,7 @@ function renderProduction(){
   document.getElementById('countToMake').textContent='('+toMake.length+')';document.getElementById('countReady').textContent='('+ready.length+')';
   const card=o=>'<div class="card production-card"><div class="titleline"><div><b>'+esc(o.number||'')+'</b><div class="muted">'+esc(o.client)+'</div>'+orderProductsHtml(o)+'</div>'+statusBadge(o.status)+'</div><div class="muted">Entrega: '+(o.date?new Date(o.date+'T12:00:00').toLocaleDateString('es-CL',{day:'2-digit',month:'short'}):'')+' · '+(o.time||'')+'</div>';
   pendingEl.innerHTML=toMake.length?toMake.map(o=>card(o)+'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn danger small" style="flex:1" onclick="cancelOrder(\''+o.id+'\')">Cancelar pedido</button><button class="btn small" style="flex:1" onclick="openProduction(\''+o.id+'\')">✓ Marcar como preparado</button></div></div>').join(''):'<div class="card empty-state muted">No hay pedidos por preparar.</div>';
-  readyEl.innerHTML=ready.length?ready.map(o=>card(o)+'<div class="helper" style="margin-top:10px">✓ Preparado. Ahora vuelve a <b>Pedidos</b> para marcarlo como entregado.</div></div>').join(''):'<div class="card empty-state muted">Todavía no hay pedidos preparados.</div>';applyProductionTab();
+  readyEl.innerHTML=ready.length?ready.map(o=>card(o)+'<div class="helper" style="margin-top:10px">✓ Preparado. Ahora vuelve a <b>Pedidos</b> para marcarlo como entregado.</div><button class="btn small danger" style="margin-top:9px;width:100%" onclick="undoPreparation(\''+o.id+'\')">↶ Deshacer preparación</button></div>').join(''):'<div class="card empty-state muted">Todavía no hay pedidos preparados.</div>';applyProductionTab();
 }
 let productionTab='toMake';
 
@@ -1636,6 +1636,18 @@ async function saveProduction(){
     alert(error.message);
   }
 }
+async function undoPreparation(id){
+  const o=db.orders.find(x=>x.id===id);
+  if(!o||o.status!=='Preparado')return;
+  if(!confirm('¿Deshacer la preparación de '+(o.number||'este pedido')+'? Se restituirán los ingredientes a sus lotes originales y el pedido volverá a Preparación.'))return;
+  try{
+    await apiJson('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'undo_preparation',data:{orderId:id,reason:'Deshacer preparación desde Producción'}})});
+    await loadD1Data();
+    renderOrders();
+    alert('Preparación revertida. El stock fue restituido y el pedido volvió a Preparación.');
+  }catch(error){alert(error.message)}
+}
+
 async function markDelivered(id){
   const o=db.orders.find(x=>x.id===id);
   if(!o||o.status!=='Preparado')return;
