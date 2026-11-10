@@ -2334,21 +2334,63 @@ async function handleProduction(request, env) {
       if (reversed) return json({ ok: false, error: "Esta producción ya fue revertida" }, 400);
       const allocations = await env.DB.prepare(`SELECT category, item_id, lot_id, quantity, unit_cost FROM production_lot_allocations WHERE production_id = ?`).bind(production.id).all();
       const rows = allocations.results || [];
-      if (!rows.length) return json({ ok: false, error: "Esta producción es anterior al registro de trazabilidad por lote. No se puede revertir automáticamente sin arriesgar el stock." }, 409);
       const statements = [];
-      for (const a of rows) {
-        const lot = await env.DB.prepare(`SELECT id FROM purchase_lots WHERE id = ?`).bind(a.lot_id).first();
-        if (!lot) return json({ ok: false, error: `No se encuentra el lote ${a.lot_id}; no se realizó ningún cambio.` }, 409);
-        statements.push(env.DB.prepare(`UPDATE purchase_lots SET quantity_available = quantity_available + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(Number(a.quantity), a.lot_id));
-        statements.push(env.DB.prepare(`INSERT INTO movements (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id) VALUES (?, ?, 'production_reversal', ?, ?, ?, ?, ?, ?)`).bind(
-          uidServer("movement"), new Date().toISOString(), a.category === "ingredient" ? a.item_id : null,
-          a.category === "other" ? a.item_id : null, Number(a.quantity), Number(a.unit_cost), Number(a.quantity) * Number(a.unit_cost), production.id
-        ));
+      const now = new Date().toISOString();
+      let restoredByAdjustment = false;
+
+      if (rows.length) {
+        // Producciones nuevas: devolver exactamente a los lotes de origen.
+        for (const a of rows) {
+          const lot = await env.DB.prepare(`SELECT id FROM purchase_lots WHERE id = ?`).bind(a.lot_id).first();
+          if (!lot) return json({ ok: false, error: `No se encuentra el lote ${a.lot_id}; no se realizó ningún cambio.` }, 409);
+          statements.push(env.DB.prepare(`UPDATE purchase_lots SET quantity_available = quantity_available + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(Number(a.quantity), a.lot_id));
+          statements.push(env.DB.prepare(`INSERT INTO movements (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id) VALUES (?, ?, 'production_reversal', ?, ?, ?, ?, ?, ?)`).bind(
+            uidServer("movement"), now, a.category === "ingredient" ? a.item_id : null,
+            a.category === "other" ? a.item_id : null, Number(a.quantity), Number(a.unit_cost), Number(a.quantity) * Number(a.unit_cost), production.id
+          ));
+        }
+      } else {
+        // Producciones históricas: las tablas antiguas guardan cantidades y costos,
+        // pero no el lote de origen. Crear lotes de ajuste identificados, sin fingir
+        // que pertenecen a una compra original.
+        const [oldIngredients, oldSupplies] = await env.DB.batch([
+          env.DB.prepare(`SELECT ingredient_id AS item_id, quantity, unit_cost FROM production_ingredients WHERE production_id = ?`).bind(production.id),
+          env.DB.prepare(`SELECT supply_id AS item_id, quantity, unit_cost FROM production_supplies WHERE production_id = ?`).bind(production.id)
+        ]);
+        const historicRows = [
+          ...(oldIngredients.results || []).map(x => ({...x, category:"ingredient"})),
+          ...(oldSupplies.results || []).map(x => ({...x, category:"other"}))
+        ].filter(x => Number(x.quantity) > 0 && x.item_id);
+        if (!historicRows.length) return json({ ok: false, error: "No hay detalle histórico de ingredientes o insumos para restituir. No se realizó ningún cambio." }, 409);
+
+        const purchaseId = uidServer("adj-purchase");
+        const maxLot = await env.DB.prepare(`SELECT COALESCE(MAX(lot_number), 0) AS n FROM purchase_lots`).first();
+        let lotNumber = Number(maxLot?.n || 0) + 1;
+        statements.push(env.DB.prepare(`INSERT INTO purchases (id, doc_type, doc_number, date, supplier_id) VALUES (?, ?, ?, ?, NULL)`)
+          .bind(purchaseId, "Ajuste de stock", `REV-${production.id}`, now));
+
+        for (const item of historicRows) {
+          const qty = Number(item.quantity) || 0;
+          const unitCost = Number(item.unit_cost) || 0;
+          const itemId = uidServer("adj-item");
+          const lotId = uidServer("adj-lot");
+          statements.push(env.DB.prepare(`INSERT INTO purchase_items (id, purchase_id, ingredient_id, supply_id, quantity, unit_cost) VALUES (?, ?, ?, ?, ?, ?)`)
+            .bind(itemId, purchaseId, item.category === "ingredient" ? item.item_id : null, item.category === "other" ? item.item_id : null, qty, unitCost));
+          statements.push(env.DB.prepare(`INSERT INTO purchase_lots (id, purchase_item_id, quantity_initial, quantity_available, unit_cost, lot_number) VALUES (?, ?, ?, ?, ?, ?)`)
+            .bind(lotId, itemId, qty, qty, unitCost, lotNumber++));
+          statements.push(env.DB.prepare(`INSERT INTO movements (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id) VALUES (?, ?, 'production_reversal', ?, ?, ?, ?, ?, ?)`)
+            .bind(uidServer("movement"), now, item.category === "ingredient" ? item.item_id : null, item.category === "other" ? item.item_id : null, qty, unitCost, qty * unitCost, production.id));
+        }
+        restoredByAdjustment = true;
       }
-      statements.push(env.DB.prepare(`INSERT INTO production_reversals (id, production_id, order_id, reason) VALUES (?, ?, ?, ?)`).bind(uidServer("prv"), production.id, data.orderId, data.reason || "Deshacer preparación"));
+
+      statements.push(env.DB.prepare(`INSERT INTO production_reversals (id, production_id, order_id, reason) VALUES (?, ?, ?, ?)`)
+        .bind(uidServer("prv"), production.id, data.orderId, data.reason || "Deshacer preparación"));
       statements.push(env.DB.prepare(`UPDATE orders SET status = 'Preparación', updated_at = CURRENT_TIMESTAMP WHERE id = ? AND status = 'Preparado'`).bind(data.orderId));
       await env.DB.batch(statements);
-      return json({ ok: true, message: "Preparación revertida y stock restituido por lote." });
+      return json({ ok: true, restoredByAdjustment, message: restoredByAdjustment
+        ? "Preparación revertida. El stock se restituyó mediante lotes de ajuste histórico; no se atribuyó a compras originales."
+        : "Preparación revertida y stock restituido a los lotes originales." });
     }
 
     if (action === "update" || action === "delete") {
