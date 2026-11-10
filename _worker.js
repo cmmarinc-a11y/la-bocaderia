@@ -2339,10 +2339,50 @@ async function handleProduction(request, env) {
       let restoredByAdjustment = false;
 
       if (rows.length) {
-        // Producciones nuevas: devolver exactamente a los lotes de origen.
+        // Antes de restituir, comprobar que las asignaciones cubren TODO el consumo
+        // registrado y que cada lote corresponde al ingrediente/insumo correcto.
+        // Así evitamos devolver solo una parte del stock o sumarlo al lote equivocado.
+        const [oldIngredients, oldSupplies] = await env.DB.batch([
+          env.DB.prepare(`SELECT ingredient_id AS item_id, quantity FROM production_ingredients WHERE production_id = ?`).bind(production.id),
+          env.DB.prepare(`SELECT supply_id AS item_id, quantity FROM production_supplies WHERE production_id = ?`).bind(production.id)
+        ]);
+        const expected = new Map();
+        for (const x of (oldIngredients.results || [])) {
+          const key = `ingredient:${x.item_id}`;
+          expected.set(key, (expected.get(key) || 0) + Number(x.quantity || 0));
+        }
+        for (const x of (oldSupplies.results || [])) {
+          const key = `other:${x.item_id}`;
+          expected.set(key, (expected.get(key) || 0) + Number(x.quantity || 0));
+        }
+        const allocated = new Map();
         for (const a of rows) {
-          const lot = await env.DB.prepare(`SELECT id FROM purchase_lots WHERE id = ?`).bind(a.lot_id).first();
-          if (!lot) return json({ ok: false, error: `No se encuentra el lote ${a.lot_id}; no se realizó ningún cambio.` }, 409);
+          const key = `${a.category}:${a.item_id}`;
+          allocated.set(key, (allocated.get(key) || 0) + Number(a.quantity || 0));
+        }
+        for (const [key, quantity] of expected.entries()) {
+          if (Math.abs((allocated.get(key) || 0) - quantity) > 0.000001) {
+            return json({ ok: false, error: `Las asignaciones de lotes de ${key} no coinciden con el consumo registrado. No se modificó el stock; se requiere revisar esta producción.` }, 409);
+          }
+        }
+        for (const [key, quantity] of allocated.entries()) {
+          if (!expected.has(key) || Math.abs(quantity - expected.get(key)) > 0.000001) {
+            return json({ ok: false, error: `Hay asignaciones de lote inconsistentes (${key}). No se modificó el stock.` }, 409);
+          }
+        }
+
+        // Producciones con trazabilidad: devolver exactamente a los lotes de origen.
+        for (const a of rows) {
+          const lot = await env.DB.prepare(`
+            SELECT pl.id
+            FROM purchase_lots pl
+            JOIN purchase_items pi ON pi.id = pl.purchase_item_id
+            WHERE pl.id = ?
+              AND ((? = 'ingredient' AND pi.ingredient_id = ?)
+                OR (? = 'other' AND pi.supply_id = ?))
+          `).bind(a.lot_id, a.category, a.item_id, a.category, a.item_id).first();
+          if (!lot) return json({ ok: false, error: `El lote ${a.lot_id} no existe o no corresponde al producto consumido; no se realizó ningún cambio.` }, 409);
+          if (!(Number(a.quantity) > 0)) return json({ ok: false, error: `La cantidad asignada al lote ${a.lot_id} no es válida; no se realizó ningún cambio.` }, 409);
           statements.push(env.DB.prepare(`UPDATE purchase_lots SET quantity_available = quantity_available + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(Number(a.quantity), a.lot_id));
           statements.push(env.DB.prepare(`INSERT INTO movements (id, date, type, ingredient_id, supply_id, quantity, unit_cost, total_cost, reference_id) VALUES (?, ?, 'production_reversal', ?, ?, ?, ?, ?, ?)`).bind(
             uidServer("movement"), now, a.category === "ingredient" ? a.item_id : null,
