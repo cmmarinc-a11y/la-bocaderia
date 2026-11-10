@@ -929,6 +929,16 @@ label{font-size:12px;color:var(--muted);font-weight:700}
  </div>
 </div>
 
+  <!-- MODAL: SELECCIONAR LOTES PARA DEVOLUCIÓN -->
+<div id="undoLotsModal" class="modal hidden" onclick="closeModal(event,'undoLotsModal')">
+ <div class="sheet" onclick="event.stopPropagation()">
+  <div class="titleline"><b>Devolver ingredientes al stock</b><button class="btn small light" onclick="closeModal(null,'undoLotsModal')">Cerrar</button></div>
+  <div class="helper">Selecciona el lote existente al que deseas devolver cada ingrediente o insumo. Se muestran primero los lotes más nuevos. El stock no cambiará hasta confirmar.</div>
+  <div id="undoLotsContent" style="margin-top:12px"></div>
+  <button id="confirmUndoLotsBtn" class="btn" onclick="confirmUndoPreparation()">Confirmar devolución</button>
+ </div>
+</div>
+
   <!-- MODAL: CLIENTE -->
 <div id="clientModal" class="modal hidden" onclick="closeModal(event,'clientModal')">
  <div class="sheet" onclick="event.stopPropagation()">
@@ -1636,16 +1646,38 @@ async function saveProduction(){
     alert(error.message);
   }
 }
+let undoPreparationDraft=null;
 async function undoPreparation(id){
   const o=db.orders.find(x=>x.id===id);
   if(!o||o.status!=='Preparado')return;
-  if(!confirm('¿Deshacer la preparación de '+(o.number||'este pedido')+'? Se restituirán los ingredientes al stock y el pedido volverá a Preparación. Si es una producción histórica, se crearán lotes de ajuste identificados.'))return;
   try{
-    await apiJson('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'undo_preparation',data:{orderId:id,reason:'Deshacer preparación desde Producción'}})});
-    await loadD1Data();
-    renderOrders();
-    alert('Preparación revertida. El stock fue restituido y el pedido volvió a Preparación.');
+    const result=await apiJson('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'undo_preview',data:{orderId:id}})});
+    undoPreparationDraft={orderId:id,productionId:result.productionId,items:result.items||[]};
+    renderUndoLotsModal();
+    openModal('undoLotsModal');
   }catch(error){alert(error.message)}
+}
+function renderUndoLotsModal(){
+  const root=document.getElementById('undoLotsContent'); if(!root||!undoPreparationDraft)return;
+  root.innerHTML=undoPreparationDraft.items.map((item,index)=>{
+    const lots=(item.lots||[]);
+    const options=lots.map(l=>'<option value="'+esc(l.lot_id)+'">Lote #'+esc(l.lot_number||'—')+' · '+esc(l.purchase_date||'Sin fecha')+' · '+esc(l.supplier_name||'Sin proveedor')+' · Stock actual: '+Number(l.quantity_available||0).toLocaleString('es-CL')+'</option>').join('');
+    return '<div class="card" style="margin-bottom:10px"><b>'+esc(item.item_name||'Ingrediente/insumo')+'</b><div class="helper">'+(item.category==='ingredient'?'Ingrediente':'Otro insumo')+' · Devolver: <b>'+Number(item.quantity).toLocaleString('es-CL')+' '+esc(item.unit||'un.')+'</b></div>'+(lots.length?'<label>Selecciona el lote de destino</label><select data-undo-index="'+index+'">'+options+'</select>':'<div class="helper" style="color:#b42318">No existen lotes registrados para este producto. No se podrá completar la devolución.</div>')+'</div>';
+  }).join('');
+  const btn=document.getElementById('confirmUndoLotsBtn'); if(btn)btn.disabled=!undoPreparationDraft.items.length||undoPreparationDraft.items.some(x=>!(x.lots||[]).length);
+}
+async function confirmUndoPreparation(){
+  if(!undoPreparationDraft)return;
+  const selections=[...document.querySelectorAll('#undoLotsContent select[data-undo-index]')];
+  const items=undoPreparationDraft.items.map((item,index)=>({category:item.category,itemId:item.item_id,quantity:Number(item.quantity),lotId:document.querySelector('#undoLotsContent select[data-undo-index="'+index+'"]')?.value||''}));
+  if(items.some(x=>!x.lotId)){alert('Selecciona un lote para cada ingrediente e insumo.');return;}
+  const btn=document.getElementById('confirmUndoLotsBtn'); if(btn){btn.disabled=true;btn.textContent='Procesando...';}
+  try{
+    await apiJson('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'undo_confirm',data:{orderId:undoPreparationDraft.orderId,productionId:undoPreparationDraft.productionId,items,reason:'Devolución manual a lotes existentes'}})});
+    closeModal(null,'undoLotsModal'); undoPreparationDraft=null;
+    await loadD1Data(); renderOrders();
+    alert('Preparación revertida. El stock volvió a los lotes seleccionados y el pedido regresó a Preparación.');
+  }catch(error){alert(error.message)}finally{if(btn){btn.disabled=false;btn.textContent='Confirmar devolución';}}
 }
 
 async function markDelivered(id){
