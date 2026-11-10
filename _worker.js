@@ -2406,8 +2406,36 @@ async function handleProduction(request, env) {
         const purchaseId = uidServer("adj-purchase");
         const maxLot = await env.DB.prepare(`SELECT COALESCE(MAX(lot_number), 0) AS n FROM purchase_lots`).first();
         let lotNumber = Number(maxLot?.n || 0) + 1;
-        statements.push(env.DB.prepare(`INSERT INTO purchases (id, doc_type, doc_number, date, supplier_id) VALUES (?, ?, ?, ?, NULL)`)
-          .bind(purchaseId, "Ajuste de stock", `REV-${production.id}`, now));
+
+        // purchases.supplier_id es NOT NULL en el esquema actual de D1.
+        // Usamos un proveedor interno identificable para ajustes históricos.
+        let adjustmentSupplier = await env.DB.prepare(`
+          SELECT id FROM suppliers
+          WHERE name = ?
+          ORDER BY rowid
+          LIMIT 1
+        `).bind("Ajuste interno de stock").first();
+
+        if (!adjustmentSupplier) {
+          const adjustmentSupplierId = uidServer("sup-adjustment");
+          statements.push(env.DB.prepare(`
+            INSERT INTO suppliers (id, name, supplies, location, contact, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).bind(
+            adjustmentSupplierId,
+            "Ajuste interno de stock",
+            "Regularizaciones internas de inventario",
+            "",
+            "",
+            "active"
+          ));
+          adjustmentSupplier = { id: adjustmentSupplierId };
+        }
+
+        statements.push(env.DB.prepare(`
+          INSERT INTO purchases (id, doc_type, doc_number, date, supplier_id)
+          VALUES (?, ?, ?, ?, ?)
+        `).bind(purchaseId, "Ajuste de stock", `REV-${production.id}`, now, adjustmentSupplier.id));
 
         for (const item of historicRows) {
           const qty = Number(item.quantity) || 0;
