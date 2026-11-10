@@ -1639,7 +1639,7 @@ async function saveProduction(){
 async function undoPreparation(id){
   const o=db.orders.find(x=>x.id===id);
   if(!o||o.status!=='Preparado')return;
-  if(!confirm('¿Deshacer la preparación de '+(o.number||'este pedido')+'? Se restituirán los ingredientes a sus lotes originales y el pedido volverá a Preparación.'))return;
+  if(!confirm('¿Deshacer la preparación de '+(o.number||'este pedido')+'? Se restituirán los ingredientes al stock y el pedido volverá a Preparación. Si es una producción histórica, se crearán lotes de ajuste identificados.'))return;
   try{
     await apiJson('/api/production',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'undo_preparation',data:{orderId:id,reason:'Deshacer preparación desde Producción'}})});
     await loadD1Data();
