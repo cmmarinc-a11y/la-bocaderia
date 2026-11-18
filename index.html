@@ -1125,8 +1125,14 @@ async function loadD1Data(){
   db.purchases=purchases.purchases||[];
   db.production=production.production||[];
   const productionById=new Map(db.production.map(p=>[String(p.id),p]));
-  const productionByOrder=new Map(db.production.filter(p=>p.orderId).map(p=>[String(p.orderId),p]));
-  db.orders.forEach(o=>{const p=productionByOrder.get(String(o.id));if(p){o.productionCost=p.cost;o.productionSale=p.sale;o.productionGain=p.gain;o.productionMargin=p.margin;o.preparedAt=p.date;o.stockApplied=true}});
+  // Solo la producción vigente alimenta costos y reportes. Las revertidas
+  // permanecen en db.production para conservar el historial y proteger recetas.
+  const productionByOrder=new Map(db.production.filter(p=>p.orderId&&!p.isReversed).map(p=>[String(p.orderId),p]));
+  db.orders.forEach(o=>{
+    const p=productionByOrder.get(String(o.id));
+    if(p){o.productionCost=Number(p.cost)||0;o.productionSale=Number(p.sale)||0;o.productionGain=Number(p.gain)||0;o.productionMargin=Number(p.margin)||0;o.preparedAt=p.date;o.stockApplied=true}
+    else {delete o.productionCost;delete o.productionSale;delete o.productionGain;delete o.productionMargin;delete o.preparedAt;o.stockApplied=false}
+  });
   db.withdrawals=withdrawals.withdrawals||[];
   window.__lastWithdrawalAllocations=withdrawals.allocations||[];
 
@@ -2540,7 +2546,9 @@ function renderReports(){
   const filter=periodFilter();
   const delivered=(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date));
   const sales=delivered.reduce((s,o)=>s+Number(o.price||0),0);
-  const cost=delivered.reduce((s,o)=>s+Number(o.productionCost||calculateRecipeCostFromRecipe(getRecipe(productionItems(o)[0]?.product))*(productionItems(o)[0]?.qty||1)),0);
+  // El costo del informe general proviene del registro real de producción en D1,
+  // nunca del costo actual de una receta.
+  const cost=delivered.reduce((s,o)=>s+Number(o.productionCost||0),0);
   const gain=sales-cost;
   const k=document.querySelectorAll('#reports .kpi .card');if(k[0])k[0].querySelector('.big').textContent=money(sales);if(k[1])k[1].querySelector('.big').textContent=money(gain);
   const summary=document.querySelector('#reports .card:nth-of-type(2)');
@@ -2557,63 +2565,30 @@ function renderReports(){
   if(productContainer){
 
     const products={};
-
     delivered.forEach(o=>{
-
-      productionItems(o).forEach(item=>{
-
+      const items=productionItems(o).filter(item=>item.product);
+      const singleProduct=items.length===1;
+      items.forEach(item=>{
         const product=item.product;
-        if(!product)return;
-
         const qty=Number(item.qty||1);
         const recipe=getRecipe(product);
-
-        const unitPrice=Number(
-          item.unitPrice||
-          recipe?.salePrice||
-          0
-        );
-
-        const unitCost=recipe
-          ? Number(calculateRecipeCostFromRecipe(recipe)||0)
-          : 0;
-
-        if(!products[product]){
-          products[product]={
-            qty:0,
-            sales:0,
-            cost:0
-          };
-        }
-
+        const unitPrice=Number(item.unitPrice||recipe?.salePrice||0);
+        if(!products[product])products[product]={qty:0,sales:0,cost:0,costKnown:true};
         products[product].qty+=qty;
         products[product].sales+=unitPrice*qty;
-        products[product].cost+=unitCost*qty;
-
+        // D1 guarda el costo real por pedido, pero no una distribución histórica
+        // por producto cuando el pedido contiene más de una receta.
+        if(singleProduct)products[product].cost+=Number(o.productionCost||0);
+        else products[product].costKnown=false;
       });
-
     });
-
     const productList=Object.entries(products)
       .map(([name,data])=>{
-
         const margin=data.sales-data.cost;
-        const marginPct=data.sales
-          ? (margin/data.sales)*100
-          : 0;
-
-        return{
-          name,
-          qty:data.qty,
-          sales:data.sales,
-          cost:data.cost,
-          margin,
-          marginPct
-        };
-
+        const marginPct=data.sales?(margin/data.sales)*100:0;
+        return{name,qty:data.qty,sales:data.sales,cost:data.cost,costKnown:data.costKnown,margin,marginPct};
       })
       .sort((a,b)=>b.sales-a.sales);
-
 
     if(!productList.length){
 
@@ -2648,7 +2623,7 @@ function renderReports(){
               </div>
 
               <b style="color:var(--accent)">
-                ${marginText}
+                ${p.costKnown?marginText:'—'}
               </b>
 
             </div>
@@ -2662,12 +2637,12 @@ function renderReports(){
 
               <div class="report-product-stat">
                 <b>Costo</b>
-                <span>${money(p.cost)}</span>
+                <span>${p.costKnown?money(p.cost):'No asignable'}</span>
               </div>
 
               <div class="report-product-stat">
                 <b>Margen</b>
-                <span>${money(p.margin)}</span>
+                <span>${p.costKnown?money(p.margin):'—'}</span>
               </div>
 
             </div>
@@ -2676,6 +2651,9 @@ function renderReports(){
         `;
 
       }).join('');
+      if(productList.some(p=>!p.costKnown)){
+        productContainer.insertAdjacentHTML('beforeend','<div class="helper">En pedidos con más de un producto, D1 conserva el costo real total del pedido, pero no permite repartirlo históricamente por receta. Por eso el costo y margen por producto se muestran como no asignables en esos casos.</div>');
+      }
 
     }
 
@@ -2708,7 +2686,7 @@ function downloadReportCSV(type){
     const rows=[];(db.purchases||[]).filter(p=>filter(p.date)).forEach(p=>(p.lines||[]).forEach(l=>rows.push([p.id,csvDate(p.date),p.docType,p.docNumber,p.supplierName||p.supplier||'',l.category==='ingredient'?'Ingrediente':'Otro insumo',l.item,l.quantity,getPurchaseUnit(l.category,l.item),Number(l.cost||0),Number(l.quantity)>0?Math.round(Number(l.cost)/Number(l.quantity)):0,lotLabel(l.lotId)])));downloadCSV('reporte_compras.csv',['Compra','Fecha','Documento','N° documento','Proveedor','Tipo','Producto','Cantidad','Unidad','Costo total','Costo unitario','Lote'],rows);return;
   }
   if(type==='production'){
-    const rows=[];(db.production||[]).filter(p=>filter(p.date)).forEach(p=>(p.items||[]).forEach(i=>rows.push([p.id,csvDate(p.date),p.orderId||'',i.product||'',Number(i.qty||0),Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),Number(i.subtotal||((Number(i.qty||0))*Number(i.unitPrice||getRecipe(i.product)?.salePrice||0))),Number(p.cost||0),Number(p.sale||0),Number(p.gain||0),p.margin!=null?(Number(p.margin)*100).toFixed(1)+'%':''])));downloadCSV('reporte_produccion.csv',['Producción','Fecha','Pedido','Producto','Cantidad','Precio Unitario','Subtotal','Costo producción','Venta','Ganancia','Margen'],rows);return;
+    const rows=[];(db.production||[]).filter(p=>!p.isReversed&&filter(p.date)).forEach(p=>(p.items||[]).forEach((i,index)=>rows.push([p.id,csvDate(p.date),p.orderId||'',i.product||'',Number(i.qty||0),Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),Number(i.subtotal||((Number(i.qty||0))*Number(i.unitPrice||getRecipe(i.product)?.salePrice||0))),index===0?Number(p.cost||0):'',index===0?Number(p.sale||0):'',index===0?Number(p.gain||0):'',index===0&&p.margin!=null?(Number(p.margin)*100).toFixed(1)+'%':''])));downloadCSV('reporte_produccion.csv',['Producción','Fecha','Pedido','Producto','Cantidad','Precio Unitario','Subtotal','Costo producción (total pedido)','Venta (total pedido)','Ganancia (total pedido)','Margen (total pedido)'],rows);return;
   }
   if(type==='withdrawals'){
     const rows=[];(db.withdrawals||[]).filter(w=>filter(w.date)).forEach(w=>{const allocs=(window.__lastWithdrawalAllocations||[]).filter(a=>String(a.withdrawal_id)===String(w.id));if(!allocs.length)rows.push([w.id,csvDate(w.date),w.ingredient_id?'Ingrediente':'Otro insumo',w.ingredient_name||w.supply_name||'',w.quantity||0,w.reason||'',w.note||'','']);else allocs.forEach(a=>rows.push([w.id,csvDate(w.date),w.ingredient_id?'Ingrediente':'Otro insumo',w.ingredient_name||w.supply_name||'',a.quantity||0,w.reason||'',w.note||'',lotLabel(a.lot_id)]));});downloadCSV('reporte_retiros.csv',['Retiro','Fecha','Tipo','Insumo','Cantidad','Motivo','Observación','Lote'],rows);return;
@@ -2720,7 +2698,7 @@ function downloadReportCSV(type){
     const rows=[];ingredientNames().forEach(n=>rows.push(['Ingrediente',n,db.inventory[n]||0,ingredientUnit(n),Math.round(currentUnitCost('ingredient',n))]));(db.otherSupplies||[]).forEach(s=>rows.push(['Otro insumo',s.name,db.otherInventory[s.name]||0,s.unit||'un',Math.round(currentUnitCost('other',s.name))]));downloadCSV('reporte_stock.csv',['Tipo','Producto','Stock','Unidad','Costo unitario'],rows);return;
   }
   if(type==='profitability'){
-    const rows=[];(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date)).forEach(o=>productionItems(o).forEach(i=>{const qty=Number(i.qty||1),unitPrice=Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),unitCost=getRecipe(i.product)?Number(calculateRecipeCostFromRecipe(getRecipe(i.product))||0):0;rows.push([o.number,csvDate(o.date),o.client||'',i.product||'',qty,unitPrice,unitPrice*qty,unitCost,unitCost*qty,(unitPrice-unitCost)*qty,unitPrice?(((unitPrice-unitCost)/unitPrice)*100).toFixed(1)+'%':'']);}));downloadCSV('reporte_rentabilidad.csv',['Pedido','Fecha','Cliente','Producto','Cantidad','Precio Unitario','Venta','Costo unitario','Costo total','Ganancia','Margen'],rows);return;
+    const rows=[];(db.orders||[]).filter(o=>o.status==='Entregado'&&filter(o.deliveredAt||o.date)).forEach(o=>{const items=productionItems(o).filter(i=>i.product);const singleProduct=items.length===1;items.forEach(i=>{const qty=Number(i.qty||1),unitPrice=Number(i.unitPrice||getRecipe(i.product)?.salePrice||0),sale=unitPrice*qty;const totalCost=singleProduct?Number(o.productionCost||0):null;const unitCost=singleProduct&&qty?totalCost/qty:null;const gain=singleProduct?sale-totalCost:null;rows.push([o.number,csvDate(o.date),o.client||'',i.product||'',qty,unitPrice,sale,unitCost==null?'':unitCost,totalCost==null?'':totalCost,gain==null?'':gain,singleProduct&&sale?((gain/sale)*100).toFixed(1)+'%':'']);});});downloadCSV('reporte_rentabilidad.csv',['Pedido','Fecha','Cliente','Producto','Cantidad','Precio Unitario','Venta','Costo unitario (histórico)','Costo total (histórico)','Ganancia','Margen'],rows);return;
   }
 }
 
