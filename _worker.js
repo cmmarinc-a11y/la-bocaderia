@@ -1969,12 +1969,20 @@ async function handleProduction(request, env) {
     if (!user) return json({ error: "No autorizado" }, 401);
 
     if (request.method === "GET") {
+      // La reversión se conserva como historial; no se elimina la producción original.
+      await env.DB.prepare(`CREATE TABLE IF NOT EXISTS production_reversals (
+        id TEXT PRIMARY KEY, production_id TEXT NOT NULL UNIQUE, order_id TEXT NOT NULL,
+        reason TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`).run();
       const [productionResult, itemsResult, ingredientsResult, suppliesResult] = await env.DB.batch([
         env.DB.prepare(`
           SELECT p.id, p.order_id, o.number AS order_number, p.date,
-                 p.sale, p.cost, p.gain, p.margin, p.created_at, p.updated_at
+                 p.sale, p.cost, p.gain, p.margin, p.created_at, p.updated_at,
+                 CASE WHEN pr.id IS NULL THEN 0 ELSE 1 END AS is_reversed,
+                 pr.reason AS reversal_reason, pr.created_at AS reversed_at
           FROM production p
           LEFT JOIN orders o ON o.id = p.order_id
+          LEFT JOIN production_reversals pr ON pr.production_id = p.id
           ORDER BY p.date DESC, p.created_at DESC
         `),
         env.DB.prepare(`
@@ -2017,6 +2025,9 @@ async function handleProduction(request, env) {
         cost: Number(p.cost) || 0,
         gain: Number(p.gain) || 0,
         margin: Number(p.margin) || 0,
+        isReversed: Number(p.is_reversed) === 1,
+        reversalReason: p.reversal_reason || "",
+        reversedAt: p.reversed_at || "",
         items: itemRows.filter(x => x.production_id === p.id).map(x => ({
           id: x.id,
           recipeId: x.recipe_id,
